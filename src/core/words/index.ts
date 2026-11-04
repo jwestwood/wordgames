@@ -80,3 +80,5 @@ export function pickRandom<T>(items: readonly T[], rng: () => number = Math.rand
   if (items.length === 0) throw new Error('pickRandom: empty list');
   return items[Math.floor(rng() * items.length)];
 }
+
+export { loadTier, loadWords, byLength, type WordTier } from './wordlist';
