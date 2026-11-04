@@ -257,14 +257,6 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
               label="Letters: tap to add to your guess"
             />
           </div>
-          <p
-            className={`lw__feedback lw__feedback--${feedback?.tone ?? 'info'}${feedback ? '' : ' lw__feedback--hidden'}`}
-            role="status"
-          >
-            {feedback
-              ? `${feedback.tone === 'good' ? '✓' : feedback.tone === 'bad' ? '✗' : '•'} ${feedback.text}`
-              : '\u00a0'}
-          </p>
           <div className="lw__controls">
             <Button
               variant="danger"
@@ -317,6 +309,14 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
               ))
             )}
           </div>
+          <p
+            className={`lw__feedback lw__feedback--${feedback?.tone ?? 'info'}${feedback ? '' : ' lw__feedback--hidden'}`}
+            role="status"
+          >
+            {feedback
+              ? `${feedback.tone === 'good' ? '✓' : feedback.tone === 'bad' ? '✗' : '•'} ${feedback.text}`
+              : '\u00a0'}
+          </p>
         </Panel>
 
         <div className="lw__side">
