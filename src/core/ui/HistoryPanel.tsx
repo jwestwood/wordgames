@@ -16,6 +16,8 @@ export interface HistoryGame {
   id: string;
   title: string;
   puzzleVersion?: string;
+  /** Optional branding; the icon is shown next to the game name. */
+  brand?: { Icon: ComponentType<{ size?: number; className?: string }> };
   /** Optional mini, non-interactive puzzle preview shown prominently on each card. */
   HistoryPreview?: ComponentType<{ entry: HistoryEntry }>;
 }
@@ -131,7 +133,10 @@ function HistoryItem({
         )}
         <span className="history__body">
           <span className="history__row">
-            <strong className="history__name">{game?.title ?? e.gameId}</strong>
+            <strong className="history__name">
+              {game?.brand && <game.brand.Icon size={20} className="history__icon" />}
+              {game?.title ?? e.gameId}
+            </strong>
             <span className="history__when">{relativeTime(e.lastPlayed, now)}</span>
           </span>
           <span className="history__row">

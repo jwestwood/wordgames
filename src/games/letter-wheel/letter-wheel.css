@@ -119,3 +119,15 @@
 .lw__controls .btn {
   min-height: 2.5rem;
 }
+.lw__title {
+  line-height: 0;
+}
+.lw__logo {
+  max-width: 100%;
+  height: auto;
+}
+.lw__tagline {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-accent);
+  color: var(--color-red);
+}

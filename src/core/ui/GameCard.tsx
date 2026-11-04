@@ -4,7 +4,13 @@ export function GameCard({ game }: { game: GameDefinition }) {
   const playable = game.status === 'playable';
   return (
     <article className="game-card">
-      <h3 className="game-card__title">{game.title}</h3>
+      <div className="game-card__head">
+        {game.brand && <game.brand.Icon size={56} className="game-card__icon" />}
+        <div>
+          <h3 className="game-card__title">{game.title}</h3>
+          {game.brand && <p className="game-card__tagline">{game.brand.tagline}</p>}
+        </div>
+      </div>
       <p className="game-card__desc">{game.description}</p>
       {playable ? (
         <a className="btn btn--primary btn--sm" href={`#/games/${game.id}`}>

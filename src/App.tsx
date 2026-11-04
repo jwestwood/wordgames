@@ -2,6 +2,7 @@ import { Suspense, useState } from 'react';
 import { GameCard, Header, HistoryPanel, IconPalette, IconPawn, MoreGamesCard } from '@core/ui';
 import { StyleGuide } from '@core/ui/StyleGuide';
 import { useHashRoute } from '@core/router';
+import { useDocumentBrand } from '@core/brand';
 import { findGame, games } from './games';
 
 export default function App() {
@@ -9,6 +10,7 @@ export default function App() {
   const game = section === 'games' && id ? findGame(id) : undefined;
   const Game = game?.component;
   const [historyOpen, setHistoryOpen] = useState(false);
+  useDocumentBrand(game?.title, game?.brand?.tagline, game?.brand?.favicon);
 
   return (
     <main className="app">
@@ -27,7 +29,7 @@ export default function App() {
         games={games.filter((g) => g.status === 'playable')}
       />
       {section === 'style-guide' ? (
-        <StyleGuide />
+        <StyleGuide games={games} />
       ) : Game ? (
         <Suspense fallback={<p>Loading…</p>}>
           <Game />

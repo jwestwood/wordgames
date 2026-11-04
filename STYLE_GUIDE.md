@@ -133,3 +133,20 @@ Register it in `src/games`; global styles load automatically via `@core/ui`. If 
 All header buttons (nav icons, Past Games, mute) use one shared `.site-header__btn` style: secondary paper background, fixed 2.5rem height so icon and text buttons line up.
 
 Text selection (`::selection`, incl. inputs) uses `--color-selection-bg` (red-dark) / `--color-selection-fg` (paper-light); pairs are in the contrast tests.
+
+## Branding
+
+Every game gets a square **icon**, a wide **logo** (~4:1) and a **tagline** (`GameDefinition.brand`, see
+ARCHITECTURE.md). Live examples: style guide › Branding (icons at 32/64/192px and the logo).
+
+- **Shared palette and fonts only.** Fill SVGs with theme variables (`var(--color-wood)`), never new
+  colours. Wordmarks use Fraunces (`font-family="Fraunces, Georgia, serif"` with `textLength` so fallbacks
+  keep the width); taglines are set in Special Elite.
+- **One accent touch per game** (e.g. Letter Wheel's red hub). Everything else is paper, tile, wood, ink.
+- **Icon readable at 32px:** bold silhouette, ≤ 6–8 shapes, strokes ≥ 2 units in a 64 viewBox, no text
+  smaller than the centre glyph. Check it in the style guide at 32px before shipping.
+- **Logo:** mark on the left, wordmark on the right, ~4:1 viewBox (e.g. 320×80); scales by height.
+- **Tagline:** ≤ 6 words, playful, says how the game feels; no spoilers or instructions.
+- **Favicon:** a standalone `icon.svg` with hex values (no CSS variables or web fonts — browsers render
+  favicons in isolation); draw letters as paths.
+- Icons next to visible text are decorative (`aria-hidden`); give `title` when standalone.

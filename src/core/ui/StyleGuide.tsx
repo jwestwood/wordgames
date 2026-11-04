@@ -12,6 +12,7 @@ import { Panel } from './Panel';
 import { ScoreDisplay } from './ScoreDisplay';
 import { Tile } from './Tile';
 import { GameCard } from './GameCard';
+import type { GameDefinition } from '../registry';
 import { evaluateGuess, type TileState } from './logic';
 import { colors, contrastPairs } from './theme/tokens';
 import { contrastRatio } from './theme/contrast';
@@ -19,7 +20,7 @@ import { contrastRatio } from './theme/contrast';
 const STATES: TileState[] = ['default', 'selected', 'correct', 'present', 'absent'];
 
 /** Living showcase of the shared design system (route: #/style-guide). */
-export function StyleGuide() {
+export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }) {
   const [open, setOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
@@ -150,6 +151,35 @@ export function StyleGuide() {
             +10
           </Button>
         </div>
+      </Panel>
+
+      <Panel title="Branding">
+        <p className="accent">
+          Each game has a square icon (readable at 32px), a ~4:1 logo and a tagline, drawn from the
+          shared palette and fonts with one accent touch.
+        </p>
+        {games
+          .filter((g) => g.brand)
+          .map((g) => {
+            const { Icon, Logo, tagline } = g.brand!;
+            return (
+              <div key={g.id} className="brand-demo">
+                <h3>{g.title}</h3>
+                <div className="brand-demo__icons">
+                  {[32, 64, 192].map((s) => (
+                    <figure key={s}>
+                      <Icon size={s} title={`${g.title} icon ${s}px`} />
+                      <figcaption>{s}px</figcaption>
+                    </figure>
+                  ))}
+                </div>
+                <div className="brand-demo__logo">
+                  <Logo size={64} />
+                </div>
+                <p className="brand-demo__tagline">“{tagline}”</p>
+              </div>
+            );
+          })}
       </Panel>
 
       <Panel title="Cards">

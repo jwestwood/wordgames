@@ -13,6 +13,7 @@ src/
                    per-seed state, hooks (useGameState, useCountdown, usePersistentState, useSeedState)
     history/       shared puzzle history: versioned localStorage store (upsert/list/remove/clear,
                    200-entry cap), WORDLIST_VERSION (build-time hash of word lists), useHistoryEntry hook
+    brand/         GameBrand type (Icon, Logo, tagline, accent, favicon), documentTitle, useDocumentBrand
     audio/         Web Audio sound manager (lazy unlock on first gesture, preload/decode, deterministic
                    pitch variation, persisted mute, pauses when hidden), shared SOUNDS registry, useSound/useMuted
     ui/            shared components (GameCard, Button, LetterTiles, LetterWheel, WordSlots, Confetti, ...)
@@ -50,6 +51,20 @@ drawing from the RNG. Changing a word list changes puzzles for existing seeds; a
 1. Create `src/games/<id>/index.ts(x)` exporting a `GameDefinition` (set `component` and `status: 'playable'` when ready).
 2. Add it to the array in `src/games/index.ts`.
 3. It is reachable at `#/games/<id>`.
+4. Give it a `brand` (see below).
+
+## Branding
+
+`GameDefinition.brand` (`GameBrand` in `src/core/brand`) holds a game's identity:
+
+- `Icon` — square inline-SVG React component (`{ size, title, className }`), readable at 32px.
+- `Logo` — wide (~4:1) inline-SVG component: mini mark + wordmark; `size` is the height.
+- `tagline` — one short line; `accent` — optional single theme variable (e.g. `var(--color-red)`).
+- `favicon` — optional standalone `.svg` URL (hex colours, no web fonts) swapped in on the game page.
+
+Core uses it everywhere: `GameCard` (icon + tagline), `HistoryPanel` (small icon by the name), the
+style guide's Branding panel, and `App` calls `useDocumentBrand` to set the document title/favicon.
+Brand assets live in `src/games/<id>/brand/` (Letter Wheel: `WheelMark`, `Icon`, `Logo`, `icon.svg`).
 
 ## Puzzle history
 

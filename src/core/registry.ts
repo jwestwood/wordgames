@@ -1,5 +1,8 @@
 import type { ComponentType } from 'react';
 import type { HistoryEntry } from './history';
+import type { GameBrand } from './brand';
+
+export type { GameBrand, BrandMarkProps } from './brand';
 
 export interface HistoryPreviewProps {
   entry: HistoryEntry;
@@ -10,6 +13,8 @@ export interface GameDefinition {
   title: string;
   description: string;
   status: 'coming-soon' | 'playable';
+  /** Per-game branding: icon, wide logo, tagline, optional accent (STYLE_GUIDE.md › Branding). */
+  brand?: GameBrand;
   /**
    * Current puzzle version (algorithm + word list) for history entries; entries recorded with a
    * different version are flagged as stale (the same seed may now give a different puzzle).

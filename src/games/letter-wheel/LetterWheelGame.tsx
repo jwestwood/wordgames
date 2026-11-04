@@ -35,6 +35,8 @@ import {
   type Dictionaries,
   type GuessResult,
 } from './puzzle';
+import { letterWheelBrand } from './brand';
+import { LetterWheelLogo } from './brand/Logo';
 import './letter-wheel.css';
 
 const CENTRE = -1;
@@ -266,7 +268,10 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
     <div className="lw">
       <div className="lw__head">
         <div>
-          <h2 className="lw__title">Letter Wheel</h2>
+          <h2 className="lw__title">
+            <LetterWheelLogo size={52} className="lw__logo" />
+          </h2>
+          <p className="lw__tagline">{letterWheelBrand.tagline}</p>
           <p className="lw__hint">
             Make words of {MIN_WORD}+ letters. Every word must use the centre letter; each letter
             once.

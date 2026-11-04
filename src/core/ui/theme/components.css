@@ -1033,3 +1033,54 @@ button.tile:active {
     gap: var(--space-1);
   }
 }
+
+/* ---------- Branding ---------- */
+.game-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.game-card__icon {
+  flex: none;
+}
+.game-card__head .game-card__title {
+  margin: 0;
+}
+.game-card__tagline {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-accent);
+  color: var(--color-text-muted);
+}
+.history__name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.history__icon {
+  flex: none;
+}
+.brand-demo + .brand-demo {
+  margin-top: var(--space-5);
+}
+.brand-demo__icons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+.brand-demo__icons figure {
+  margin: 0;
+  text-align: center;
+}
+.brand-demo__icons figcaption {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.brand-demo__logo {
+  margin-top: var(--space-4);
+  max-width: 100%;
+  overflow-x: auto;
+}
+.brand-demo__tagline {
+  font-family: var(--font-accent);
+}
