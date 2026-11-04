@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, useState, type ComponentType } from 'react';
 import {
   isStale,
   relativeTime,
@@ -16,6 +16,8 @@ export interface HistoryGame {
   id: string;
   title: string;
   puzzleVersion?: string;
+  /** Optional mini, non-interactive puzzle preview shown prominently on each card. */
+  HistoryPreview?: ComponentType<{ entry: HistoryEntry }>;
 }
 
 export interface HistoryPanelProps {
@@ -115,59 +117,64 @@ function HistoryItem({
 }) {
   const [confirm, setConfirm] = useState(false);
   const stale = isStale(e, game?.puzzleVersion);
+  const Preview = game?.HistoryPreview;
   const pct = e.total > 0 ? Math.floor((e.found / e.total) * 100) : 0;
   return (
     <li className={`history__item${e.completed ? ' history__item--done' : ''}`}>
       <a className="history__open" href={gameHash(e.gameId, e.seed)} onClick={onOpen}>
-        <span className="history__row">
-          <strong className="history__name">{game?.title ?? e.gameId}</strong>
-          <span className="history__when">{relativeTime(e.lastPlayed, now)}</span>
-        </span>
-        <span className="history__row">
-          <span
-            className="seed__code history__seed"
-            aria-label={`Seed ${e.seed.split('').join(' ')}`}
-          >
-            {[...e.seed].map((c, i) => (
-              <span key={i} className="seed__char" aria-hidden="true">
-                {c}
-              </span>
-            ))}
+        {Preview && (
+          <span className="history__preview">
+            <Suspense fallback={<span className="history__preview-blank" aria-hidden="true" />}>
+              <Preview entry={e} />
+            </Suspense>
           </span>
-          <span className="history__stars" aria-label={`${e.stars} of ${e.maxStars} stars`}>
-            {Array.from({ length: e.maxStars }, (_, i) => (
-              <IconStar
-                key={i}
-                filled={i < e.stars}
-                className={i < e.stars ? 'history__star history__star--on' : 'history__star'}
-              />
-            ))}
+        )}
+        <span className="history__body">
+          <span className="history__row">
+            <strong className="history__name">{game?.title ?? e.gameId}</strong>
+            <span className="history__when">{relativeTime(e.lastPlayed, now)}</span>
           </span>
-        </span>
-        <span className="history__summary">
-          {e.summary}
-          {stale && (
-            <span
-              className="history__stale"
-              title="The word list has changed since you played this seed; the puzzle may differ."
-            >
-              Older word list
+          <span className="history__row">
+            <span className="history__seed" aria-label={`Seed ${e.seed.split('').join(' ')}`}>
+              <span aria-hidden="true">Seed {e.seed}</span>
+            </span>
+            <span className="history__stars" aria-label={`${e.stars} of ${e.maxStars} stars`}>
+              {Array.from({ length: e.maxStars }, (_, i) => (
+                <IconStar
+                  key={i}
+                  filled={i < e.stars}
+                  className={i < e.stars ? 'history__star history__star--on' : 'history__star'}
+                />
+              ))}
+            </span>
+          </span>
+          {((e.summary && !Preview) || stale) && (
+            <span className="history__summary">
+              {!Preview && e.summary}
+              {stale && (
+                <span
+                  className="history__stale"
+                  title="The word list has changed since you played this seed; the puzzle may differ."
+                >
+                  Older word list
+                </span>
+              )}
             </span>
           )}
-        </span>
-        <span className="history__progress">
-          <span
-            className="history__bar"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={e.total}
-            aria-valuenow={e.found}
-            aria-label="Words found"
-          >
-            <span className="history__fill" style={{ width: `${pct}%` }} />
-          </span>
-          <span className="history__count">
-            {e.found}/{e.total}
+          <span className="history__progress">
+            <span
+              className="history__bar"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={e.total}
+              aria-valuenow={e.found}
+              aria-label="Words found"
+            >
+              <span className="history__fill" style={{ width: `${pct}%` }} />
+            </span>
+            <span className="history__count">
+              {e.found}/{e.total}
+            </span>
           </span>
         </span>
       </a>

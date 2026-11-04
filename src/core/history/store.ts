@@ -13,8 +13,13 @@ export const HISTORY_EVENT = 'wordgames:history-change';
 export interface HistoryEntry {
   gameId: string;
   seed: string;
-  /** Short spoiler-free description, e.g. "9 letters · centre R". */
+  /** Optional short spoiler-free description (for games without a visual preview). */
   summary: string;
+  /**
+   * Optional game-specific, spoiler-free data for the card's mini preview (plain JSON object),
+   * e.g. `{ letters: 'aeinrst', centre: 'r' }`. Rendered by the game's `HistoryPreview`.
+   */
+  preview?: HistoryPreviewData;
   found: number;
   total: number;
   stars: number;
@@ -26,6 +31,8 @@ export interface HistoryEntry {
   /** Puzzle/word-list version the entry was created with (flags stale entries). */
   version: string;
 }
+
+export type HistoryPreviewData = Record<string, unknown>;
 
 export type HistoryStatus = 'all' | 'in-progress' | 'completed';
 
@@ -50,6 +57,9 @@ function defaultStorage(): StorageLike | undefined {
 const num = (v: unknown, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
 const str = (v: unknown, d = '') => (typeof v === 'string' ? v : d);
 
+const isPlainObject = (v: unknown): v is HistoryPreviewData =>
+  !!v && typeof v === 'object' && !Array.isArray(v);
+
 /** Validate/normalise one raw entry; returns null if unusable. */
 export function sanitiseEntry(raw: unknown): HistoryEntry | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -72,6 +82,7 @@ export function sanitiseEntry(raw: unknown): HistoryEntry | null {
     lastPlayed,
     createdAt: num(r.createdAt, lastPlayed),
     version: str(r.version),
+    ...(isPlainObject(r.preview) ? { preview: r.preview } : {}),
   };
 }
 

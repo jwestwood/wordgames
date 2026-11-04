@@ -3,6 +3,7 @@ import { createRng, ensureSeed, getSeedFromHash, newPuzzle, shuffle } from '@cor
 import { progressFor, useSeedState } from '@core/game';
 import { useHistoryEntry } from '@core/history';
 import { PUZZLE_VERSION } from './version';
+import { toWheelPreview } from './preview';
 import {
   Button,
   centredRect,
@@ -106,7 +107,7 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
   // that already has saved words; merely opening/randomising a puzzle does not add clutter.
   const [guessed, setGuessed] = useState(false);
   useHistoryEntry(GAME_ID, seed, {
-    summary: `${puzzle.target.length} letters · centre ${puzzle.required.toUpperCase()}`,
+    preview: { ...toWheelPreview(puzzle) },
     found: progress.found,
     total: progress.total,
     stars: progress.stars,

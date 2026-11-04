@@ -6,11 +6,14 @@ import {
   upsertHistory,
   type HistoryEntry,
   type HistoryFilter,
+  type HistoryPreviewData,
 } from './store';
 
 export interface HistoryReport {
-  /** Spoiler-free summary, e.g. "9 letters · centre R". */
-  summary: string;
+  /** Optional spoiler-free text summary (games with a `HistoryPreview` usually omit it). */
+  summary?: string;
+  /** Optional spoiler-free data for the game's `HistoryPreview` (plain JSON object). */
+  preview?: HistoryPreviewData;
   found: number;
   total: number;
   stars: number;

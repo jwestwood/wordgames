@@ -8,5 +8,8 @@ export const letterWheel: GameDefinition = {
   description: 'Spin words from a wheel of letters — every word must use the centre letter.',
   status: 'playable',
   puzzleVersion: PUZZLE_VERSION,
+  HistoryPreview: lazy(() =>
+    import('./HistoryPreview').then((m) => ({ default: m.LetterWheelHistoryPreview })),
+  ),
   component: lazy(() => import('./LetterWheelGame').then((m) => ({ default: m.LetterWheelGame }))),
 };

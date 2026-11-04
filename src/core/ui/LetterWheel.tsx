@@ -11,6 +11,8 @@ export interface LetterWheelProps {
   label?: string;
   /** Centre letter is in the current guess (shown in the bold selected style). */
   centreSelected?: boolean;
+  /** Non-interactive picture (e.g. history thumbnails): no buttons, one image label. */
+  static?: boolean;
 }
 
 /** Segmented circle of letter buttons with a highlighted centre letter. */
@@ -22,8 +24,36 @@ export function LetterWheel({
   onLetter,
   label,
   centreSelected = false,
+  static: isStatic = false,
 }: LetterWheelProps) {
   const segs = useMemo(() => wheelSegments(letters.length), [letters.length]);
+  if (isStatic) {
+    return (
+      <svg
+        className="wheel wheel--static"
+        viewBox="0 0 200 200"
+        role="img"
+        aria-label={
+          label ?? `Letter wheel: ${letters.join('').toUpperCase()}, centre ${centre.toUpperCase()}`
+        }
+      >
+        {segs.map((s) => (
+          <g key={s.index} className="wheel__seg">
+            <path d={s.path} />
+            <text x={s.x} y={s.y} dy="0.35em" textAnchor="middle">
+              {letters[s.index].toUpperCase()}
+            </text>
+          </g>
+        ))}
+        <g className="wheel__seg wheel__centre">
+          <circle cx="100" cy="100" r="36" />
+          <text x="100" y="100" dy="0.35em" textAnchor="middle">
+            {centre.toUpperCase()}
+          </text>
+        </g>
+      </svg>
+    );
+  }
   return (
     <svg className="wheel" viewBox="0 0 200 200" role="group" aria-label={label ?? 'Letter wheel'}>
       {segs.map((s) => {

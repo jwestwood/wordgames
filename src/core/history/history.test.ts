@@ -132,6 +132,21 @@ describe('history store', () => {
     expect(() => upsertHistory({ gameId: 'a', seed: '1' }, { storage: broken })).not.toThrow();
   });
 
+  it('stores optional preview data and summary', () => {
+    const s = mem();
+    upsertHistory(
+      { gameId: 'g', seed: 'P', found: 1, total: 2, preview: { letters: 'abc', centre: 'd' } },
+      { storage: s },
+    );
+    const e = getHistoryEntry('g', 'P', s)!;
+    expect(e.preview).toEqual({ letters: 'abc', centre: 'd' });
+    expect(e.summary).toBe('');
+    upsertHistory({ gameId: 'g', seed: 'P', found: 2 }, { storage: s });
+    expect(getHistoryEntry('g', 'P', s)!.preview).toEqual({ letters: 'abc', centre: 'd' });
+    const bad = JSON.stringify({ schema: 1, entries: [{ gameId: 'a', seed: 'b', preview: [1] }] });
+    expect(parseHistory(bad)[0].preview).toBeUndefined();
+  });
+
   it('flags stale versions and formats relative times', () => {
     const e = { ...base, gameId: 'a', seed: 'b', completed: false, lastPlayed: 0, createdAt: 0 };
     expect(isStale(e, 'v1')).toBe(false);
