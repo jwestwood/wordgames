@@ -12,7 +12,19 @@
     {
       "v": 1,
       "rules": "v1",
-      "words": { "common": "542e059d3b91d28c", "extended": "fec9890ecc9c89db" }
+      "words": {
+        "common": "542e059d3b91d28c",
+        "extended": "fec9890ecc9c89db"
+      }
+    },
+    {
+      "v": 2,
+      "rules": "v2",
+      "words": {
+        "common": "fc0653f792876d36",
+        "extended": "49f0cc357a3de157",
+        "targets": "542e059d3b91d28c"
+      }
     }
   ]
 }

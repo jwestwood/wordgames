@@ -125,6 +125,12 @@ writes `golden/vN.json` (`GOLDEN_WRITE=1` run of `src/games/<game>/golden.test.t
 integrity checks. It refuses if beta is identical to the latest version. Review, then commit
 `src/versioned`; on deploy vN becomes the public default.
 
+**Letter Wheel versions:** v1 — original generator and lists (answers = common: SCOWL ≤ 35, Zipf ≥ 3.3).
+v2 — answers come from a looser common list (Zipf ≥ 2.6 + `scripts/wordlist-sources/extra-allowlist.txt`,
+so _pant, veal, antler, leaper_ count), while the wheel is still drawn and sized (core pool 40–80) from the
+strict `targets` list (= v1 common), with the full answer pool capped at 100. ~97% of seeds keep their v1
+wheel and just accept more words. Stats: `npx vite-node scripts/letter-wheel-stats.ts 300 <1|2|beta>`.
+
 **Migration:** `GameDefinition.migrate` runs once at startup. Letter Wheel moves legacy history
 entries stamped `lw1-92d0b432` (the v1 lists) to version `1` and copies their saves from
 `letter-wheel:seed:<seed>` to `letter-wheel:v1:seed:<seed>`; other legacy stamps keep an "Older word
