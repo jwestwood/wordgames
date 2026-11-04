@@ -20,6 +20,10 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      'no-restricted-properties': [
+        'error',
+        { object: 'Math', property: 'random', message: 'Use a seeded Rng from @core/random.' },
+      ],
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },

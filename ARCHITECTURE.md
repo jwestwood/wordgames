@@ -48,4 +48,3 @@ drawing from the RNG. Changing a word list changes puzzles for existing seeds; a
 ## Deployment
 
 Render static site (`render.yaml`): build `npm ci && npm run build`, publish `dist/`, all paths rewritten to `/index.html`. Vite `base` is `/`. Node is pinned to 22 LTS (`.nvmrc`, `engines`, `NODE_VERSION` in render.yaml).
-CI: `.github/workflows/ci.yml` runs lint, test and build on pushes/PRs to master.

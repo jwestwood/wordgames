@@ -1,3 +1,4 @@
+import { createRng } from '@core/random';
 import { describe, expect, it } from 'vitest';
 import { isAnagram, shuffleLetters } from './index';
 
@@ -15,7 +16,7 @@ describe('isAnagram', () => {
 describe('shuffleLetters', () => {
   it('keeps the same letters', () => {
     const word = 'scramble';
-    const out = shuffleLetters(word);
+    const out = shuffleLetters(word, createRng('t'));
     expect(out).toHaveLength(word.length);
     expect([...out].sort()).toEqual([...word].sort());
   });
@@ -47,7 +48,7 @@ describe('normalise / letterCounts / canSpell', () => {
 describe('scramble', () => {
   it('differs from input when possible', () => {
     expect(scramble('abc', () => 0.999)).not.toBe('abc');
-    expect(scramble('aaa')).toBe('aaa');
+    expect(scramble('aaa', () => 0)).toBe('aaa');
   });
 });
 
@@ -60,6 +61,6 @@ describe('word lists', () => {
   });
   it('pickRandom', () => {
     expect(pickRandom(['a', 'b', 'c'], () => 0.5)).toBe('b');
-    expect(() => pickRandom([])).toThrow();
+    expect(() => pickRandom([], () => 0)).toThrow();
   });
 });

@@ -1,3 +1,5 @@
+import type { Rng } from '@core/random';
+
 /** Lowercase and strip everything except a-z. */
 export function normalise(s: string): string {
   return s.toLowerCase().replace(/[^a-z]/g, '');
@@ -27,8 +29,8 @@ export function isAnagram(a: string, b: string): boolean {
   return [...x].sort().join('') === [...y].sort().join('');
 }
 
-/** Returns a Fisher–Yates shuffle of the letters in word. Inject rng for deterministic tests. */
-export function shuffleLetters(word: string, rng: () => number = Math.random): string {
+/** Returns a Fisher–Yates shuffle of the letters in word. Requires a seeded Rng from @core/random. */
+export function shuffleLetters(word: string, rng: Rng): string {
   const chars = [...word];
   for (let i = chars.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -38,7 +40,7 @@ export function shuffleLetters(word: string, rng: () => number = Math.random): s
 }
 
 /** Shuffle that is guaranteed to differ from the input when possible. */
-export function scramble(word: string, rng: () => number = Math.random, maxTries = 20): string {
+export function scramble(word: string, rng: Rng, maxTries = 20): string {
   if (new Set(word).size < 2) return word;
   let out = word;
   for (let i = 0; i < maxTries && out === word; i++) out = shuffleLetters(word, rng);
@@ -76,7 +78,7 @@ export function isValidWord(word: string, dictionary: Set<string>): boolean {
 }
 
 /** Pick a random element. */
-export function pickRandom<T>(items: readonly T[], rng: () => number = Math.random): T {
+export function pickRandom<T>(items: readonly T[], rng: Rng): T {
   if (items.length === 0) throw new Error('pickRandom: empty list');
   return items[Math.floor(rng() * items.length)];
 }

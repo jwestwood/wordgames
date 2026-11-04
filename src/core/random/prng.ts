@@ -1,4 +1,4 @@
-/** Seeded randomness. Games MUST use this (never Math.random) so puzzles are reproducible from a seed. */
+/** Seeded randomness. Games MUST use this (never the global unseeded RNG) so puzzles are reproducible from a seed. */
 export type Rng = () => number;
 
 /** cyrb128: hash a string into four 32-bit ints. */
