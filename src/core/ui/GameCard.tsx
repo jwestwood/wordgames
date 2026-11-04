@@ -4,14 +4,14 @@ export function GameCard({ game }: { game: GameDefinition }) {
   const playable = game.status === 'playable';
   return (
     <article className="game-card">
-      <h3>{game.title}</h3>
-      <p>{game.description}</p>
+      <h3 className="game-card__title">{game.title}</h3>
+      <p className="game-card__desc">{game.description}</p>
       {playable ? (
-        <a className="badge" href={`#/games/${game.id}`}>
+        <a className="btn btn--primary btn--sm" href={`#/games/${game.id}`}>
           Play
         </a>
       ) : (
-        <span className="badge">Coming soon</span>
+        <span className="stamp">Coming soon</span>
       )}
     </article>
   );

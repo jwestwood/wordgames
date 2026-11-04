@@ -1,0 +1,110 @@
+/* Paper / tabletop design tokens. All colours, type, spacing, radii, shadows
+   and motion live here; components consume only these variables. */
+:root {
+  /* Base palette */
+  --color-paper: #f4ebd9;
+  --color-paper-light: #faf5ea;
+  --color-paper-dark: #e9dcc2;
+  --color-tile: #e8d3a9;
+  --color-tile-edge: #d4b984;
+  --color-wood: #c89b5e;
+  --color-wood-dark: #8a6236;
+  --color-ink: #2b2b2b;
+  --color-ink-muted: #5a5145;
+  --color-red: #b23a2e;
+  --color-red-dark: #8e2c22;
+  --color-green: #2f5d50;
+  --color-green-dark: #22463c;
+  --color-absent: #6b6255;
+
+  /* Semantic */
+  --color-bg: var(--color-paper);
+  --color-surface: var(--color-paper-light);
+  --color-text: var(--color-ink);
+  --color-text-muted: var(--color-ink-muted);
+  --color-text-inverse: var(--color-paper-light);
+  --color-accent: var(--color-red);
+  --color-success: var(--color-green);
+  --color-border: rgba(43, 43, 43, 0.18);
+  --color-focus: var(--color-red);
+  --color-overlay: rgba(43, 32, 20, 0.55);
+
+  /* Tile states */
+  --tile-default-bg: var(--color-tile);
+  --tile-default-fg: var(--color-ink);
+  --tile-selected-bg: var(--color-wood);
+  --tile-selected-fg: var(--color-ink);
+  --tile-correct-bg: var(--color-green);
+  --tile-correct-fg: var(--color-paper-light);
+  --tile-present-bg: var(--color-red);
+  --tile-present-fg: var(--color-paper-light);
+  --tile-absent-bg: var(--color-absent);
+  --tile-absent-fg: var(--color-paper-light);
+
+  /* Typography */
+  --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-accent: 'Special Elite', 'Courier New', monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 700;
+
+  /* Spacing (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-paper: 0 1px 2px rgba(60, 40, 15, 0.08), 0 4px 12px rgba(60, 40, 15, 0.08);
+  --shadow-raised: 0 2px 4px rgba(60, 40, 15, 0.12), 0 10px 24px rgba(60, 40, 15, 0.14);
+  --shadow-tile:
+    inset 0 -3px 0 rgba(90, 60, 25, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 2px 3px rgba(60, 40, 15, 0.25);
+  --shadow-tile-pressed: inset 0 -1px 0 rgba(90, 60, 25, 0.3), 0 1px 1px rgba(60, 40, 15, 0.2);
+  --shadow-focus: 0 0 0 3px var(--color-paper-light), 0 0 0 5px var(--color-focus);
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Paper noise (inline SVG, no external images) */
+  --texture-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --texture-wood: repeating-linear-gradient(
+    92deg,
+    rgba(120, 80, 30, 0.06) 0 2px,
+    transparent 2px 7px,
+    rgba(120, 80, 30, 0.04) 7px 9px,
+    transparent 9px 15px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

@@ -1,4 +1,5 @@
-import { GameCard } from '@core/ui';
+import { GameCard, Header } from '@core/ui';
+import { StyleGuide } from '@core/ui/StyleGuide';
 import { useHashRoute } from '@core/router';
 import { findGame, games } from './games';
 
@@ -9,10 +10,17 @@ export default function App() {
 
   return (
     <main className="app">
-      <h1>
-        <a href="#/">Word Games</a>
-      </h1>
-      {Game ? (
+      <Header
+        title="Word Games"
+        tagline="Pull up a chair."
+        nav={[
+          { href: '#/', label: 'Games' },
+          { href: '#/style-guide', label: 'Style guide' },
+        ]}
+      />
+      {section === 'style-guide' ? (
+        <StyleGuide />
+      ) : Game ? (
         <Game />
       ) : (
         <>
