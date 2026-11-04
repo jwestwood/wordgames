@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { trapFocusIndex } from './logic';
+import { sound } from '../audio/hooks';
 
 export interface ModalProps {
   open: boolean;
@@ -10,14 +11,21 @@ export interface ModalProps {
   footer?: ReactNode;
   /** Extra class on the dialog (e.g. a wider/scrolling variant). */
   className?: string;
+  /** Skip the shared open/close sounds (e.g. when a jingle already plays). */
+  silent?: boolean;
 }
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Accessible dialog: focus trap, Escape to close, restores focus on close. */
-export function Modal({ open, onClose, title, children, footer, className }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, className, silent }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  useEffect(() => {
+    if (!open || silent) return;
+    sound.play('open');
+    return () => void sound.play('close');
+  }, [open, silent]);
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;

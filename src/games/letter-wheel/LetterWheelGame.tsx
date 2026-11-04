@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRng, ensureSeed, getSeedFromHash, newPuzzle, shuffle } from '@core/random';
 import { progressFor, useSeedState } from '@core/game';
 import { useHistoryEntry } from '@core/history';
+import { useSound } from '@core/audio';
 import { PUZZLE_VERSION } from './version';
 import { toWheelPreview } from './preview';
 import {
@@ -88,6 +89,7 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
   const [shownStars, setShownStars] = useState(
     () => progressFor(found.length, puzzle.pool.length).stars,
   );
+  const play = useSound();
   const queue = useRef(createAnimationQueue());
   const wheelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -122,69 +124,92 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
     [order, guess],
   );
 
-  const add = useCallback((i: number) => setGuess((g) => (g.includes(i) ? g : [...g, i])), []);
-  const typeLetter = useCallback(
-    (c: string) =>
-      setGuess((g) => {
-        if (c === puzzle.required && !g.includes(CENTRE)) return [...g, CENTRE];
-        const i = puzzle.outer.findIndex((l, idx) => l === c && !g.includes(idx));
-        return i === -1 ? g : [...g, i];
-      }),
-    [puzzle],
+  const add = useCallback(
+    (i: number) => {
+      if (guess.includes(i)) return;
+      play('tap');
+      setGuess([...guess, i]);
+    },
+    [guess, play],
   );
-  const backspace = useCallback(() => setGuess((g) => g.slice(0, -1)), []);
-  const clear = useCallback(() => setGuess([]), []);
+  const typeLetter = useCallback(
+    (c: string) => {
+      if (c === puzzle.required && !guess.includes(CENTRE)) return add(CENTRE);
+      const i = puzzle.outer.findIndex((l, idx) => l === c && !guess.includes(idx));
+      if (i !== -1) add(i);
+    },
+    [puzzle, guess, add],
+  );
+  const backspace = useCallback(() => {
+    if (!guess.length) return;
+    play('delete');
+    setGuess(guess.slice(0, -1));
+  }, [guess, play]);
+  const clear = useCallback(() => {
+    if (!guess.length) return;
+    play('clear');
+    setGuess([]);
+  }, [guess, play]);
   const doShuffle = useCallback(() => {
+    play('shuffle');
     shuffles.current++;
     const rng = createRng(`${seed}:shuffle:${shuffles.current}`, GAME_ID);
     setOrder((o) => shuffle(rng, o));
-  }, [seed]);
+  }, [seed, play]);
 
-  const animateWord = useCallback(async (w: string) => {
-    const wheel = wheelRef.current;
-    const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
-    if (wheel && slot) {
-      void flashElement(wheel);
-      await ensureInView(slot);
-      const to = slot.getBoundingClientRect();
-      const wr = wheel.getBoundingClientRect();
-      const width = Math.min(wr.width * 0.75, to.width * 2.6);
-      const from = centredRect(wr, width, (width / to.width) * to.height);
-      const content = document.createElement('div');
-      content.className = 'word-slots__item word-slots__item--shown';
-      for (const c of w) {
-        const cell = document.createElement('span');
-        cell.className = 'word-slots__cell';
-        cell.textContent = c.toUpperCase();
-        content.appendChild(cell);
+  const animateWord = useCallback(
+    async (w: string) => {
+      const wheel = wheelRef.current;
+      const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
+      if (wheel && slot) {
+        void flashElement(wheel);
+        await ensureInView(slot);
+        const to = slot.getBoundingClientRect();
+        const wr = wheel.getBoundingClientRect();
+        const width = Math.min(wr.width * 0.75, to.width * 2.6);
+        const from = centredRect(wr, width, (width / to.width) * to.height);
+        const content = document.createElement('div');
+        content.className = 'word-slots__item word-slots__item--shown';
+        for (const c of w) {
+          const cell = document.createElement('span');
+          cell.className = 'word-slots__cell';
+          cell.textContent = c.toUpperCase();
+          content.appendChild(cell);
+        }
+        await flyElement(from, to, content, { className: 'fly-word', duration: 1100 });
+        play('word-land');
       }
-      await flyElement(from, to, content, { className: 'fly-word', duration: 1100 });
-    }
-    setHidden((h) => {
-      const n = new Set(h);
-      n.delete(w);
-      return n;
-    });
-    setLatest(w);
-  }, []);
+      setHidden((h) => {
+        const n = new Set(h);
+        n.delete(w);
+        return n;
+      });
+      setLatest(w);
+    },
+    [play],
+  );
 
-  const animateStar = useCallback(async (i: number) => {
-    const wheel = wheelRef.current;
-    const slot = cardRef.current?.querySelector<HTMLElement>(`[data-star-slot="${i}"]`);
-    if (wheel && slot) {
-      await ensureInView(slot);
-      const to = slot.getBoundingClientRect();
-      const wr = wheel.getBoundingClientRect();
-      const from = centredRect(wr, wr.width * 0.4, wr.width * 0.4);
-      const holder = document.createElement('div');
-      holder.style.width = holder.style.height = '100%';
-      const svg = slot.querySelector('svg')?.cloneNode(true) as SVGElement | undefined;
-      svg?.querySelector('path')?.setAttribute('fill', 'currentColor');
-      if (svg) holder.appendChild(svg);
-      await flyElement(from, to, holder, { className: 'fly-star', duration: 1000 });
-    }
-    setShownStars((s) => Math.max(s, i + 1));
-  }, []);
+  const animateStar = useCallback(
+    async (i: number) => {
+      const wheel = wheelRef.current;
+      const slot = cardRef.current?.querySelector<HTMLElement>(`[data-star-slot="${i}"]`);
+      if (wheel && slot) {
+        await ensureInView(slot);
+        const to = slot.getBoundingClientRect();
+        const wr = wheel.getBoundingClientRect();
+        const from = centredRect(wr, wr.width * 0.4, wr.width * 0.4);
+        const holder = document.createElement('div');
+        holder.style.width = holder.style.height = '100%';
+        const svg = slot.querySelector('svg')?.cloneNode(true) as SVGElement | undefined;
+        svg?.querySelector('path')?.setAttribute('fill', 'currentColor');
+        if (svg) holder.appendChild(svg);
+        await flyElement(from, to, holder, { className: 'fly-star', duration: 1000 });
+      }
+      play('star'); // timed to the star landing in its slot
+      setShownStars((s) => Math.max(s, i + 1));
+    },
+    [play],
+  );
 
   const submit = useCallback(() => {
     if (!word) return;
@@ -196,19 +221,25 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
       const after = progressFor(next.length, puzzle.pool.length).stars;
       setFound(next);
       setHidden((h) => new Set(h).add(res.word));
+      play('success');
       showFeedback({ tone: 'good', text: `${res.word.toUpperCase()} — nice!` });
       const q = queue.current;
       q.enqueue(() => animateWord(res.word));
       for (let i = before; i < after; i++) q.enqueue(() => animateStar(i));
-      if (next.length === puzzle.pool.length) q.enqueue(() => setCelebrate(true));
+      if (next.length === puzzle.pool.length)
+        q.enqueue(() => {
+          play('perfect');
+          setCelebrate(true);
+        });
     } else {
+      play(res.reason === 'already-found' ? 'already-found' : 'error');
       showFeedback({
         tone: res.reason === 'already-found' ? 'info' : 'bad',
         text: MESSAGES[res.reason],
       });
     }
     setGuess([]);
-  }, [word, puzzle, found, setFound, showFeedback, animateWord, animateStar]);
+  }, [word, puzzle, found, setFound, showFeedback, animateWord, animateStar, play]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -342,13 +373,27 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
       <Modal
         open={celebrate}
         onClose={() => setCelebrate(false)}
+        silent
         title="Perfect!"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setCelebrate(false)}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                play('button');
+                setCelebrate(false);
+              }}
+            >
               Admire it
             </Button>
-            <Button onClick={() => newPuzzle(GAME_ID)}>New puzzle</Button>
+            <Button
+              onClick={() => {
+                play('dice');
+                newPuzzle(GAME_ID);
+              }}
+            >
+              New puzzle
+            </Button>
           </>
         }
       >

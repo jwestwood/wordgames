@@ -3,6 +3,7 @@ import { newPuzzle, shareLink } from '@core/random';
 import { Button } from './Button';
 import { IconCopy, IconDice, IconLink } from './Icons';
 import { useTransientMessage } from './transient';
+import { sound } from '../audio/hooks';
 
 export interface SeedDisplayProps {
   gameId: string;
@@ -19,6 +20,7 @@ export function SeedDisplay({ gameId, seed, onRandomise, className = '' }: SeedD
   const copy = async (text: string, done: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      sound.play('copy');
       show(done);
     } catch {
       window.prompt('Copy this:', text);
@@ -62,6 +64,7 @@ export function SeedDisplay({ gameId, seed, onRandomise, className = '' }: SeedD
           key={spin}
           onClick={() => {
             setSpin((s) => s + 1);
+            sound.play('dice');
             if (onRandomise) onRandomise();
             else newPuzzle(gameId);
           }}

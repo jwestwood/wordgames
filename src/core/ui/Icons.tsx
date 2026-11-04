@@ -79,3 +79,29 @@ export const IconTrash = (p: IconProps) => (
     <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
   </Icon>
 );
+export const IconSpeaker = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 9h4l5-4v14l-5-4H4z" />
+    <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+  </Icon>
+);
+export const IconSpeakerOff = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 9h4l5-4v14l-5-4H4z" />
+    <path d="M17 9l5 6M22 9l-5 6" />
+  </Icon>
+);
+export const IconPalette = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2 0-1.5-1.5-2-1.5-3.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4-4-7-9-7z" />
+    <circle cx="7.5" cy="11" r="1.2" />
+    <circle cx="10" cy="7" r="1.2" />
+    <circle cx="15" cy="7" r="1.2" />
+  </Icon>
+);
+export const IconPawn = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="6" r="3" />
+    <path d="M9.5 10h5M10 10c0 3-1.5 5-3 7h10c-1.5-2-3-4-3-7M5 21h14v-2.5a1.5 1.5 0 0 0-1.5-1.5h-11A1.5 1.5 0 0 0 5 18.5z" />
+  </Icon>
+);

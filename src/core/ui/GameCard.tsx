@@ -16,3 +16,20 @@ export function GameCard({ game }: { game: GameDefinition }) {
     </article>
   );
 }
+
+/** Placeholder card promising more games (not a registered game). */
+export function MoreGamesCard({
+  title = 'More games coming soon',
+  description = 'New word games are on the way. Check back soon!',
+}: {
+  title?: string;
+  description?: string;
+}) {
+  return (
+    <article className="game-card game-card--placeholder">
+      <h3 className="game-card__title">{title}</h3>
+      <p className="game-card__desc">{description}</p>
+      <span className="stamp">Coming soon</span>
+    </article>
+  );
+}

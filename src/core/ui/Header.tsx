@@ -1,14 +1,18 @@
 import type { ReactNode } from 'react';
 import { Button } from './Button';
-import { IconClock } from './Icons';
+import { IconClock, IconSpeaker, IconSpeakerOff } from './Icons';
+import { useMuted } from '../audio/hooks';
 
 export interface HeaderProps {
   title?: ReactNode;
   tagline?: ReactNode;
-  nav?: Array<{ href: string; label: string }>;
+  /** Nav links; with `icon` they render as icon-only buttons (label becomes aria-label/title). */
+  nav?: Array<{ href: string; label: string; icon?: ReactNode }>;
   children?: ReactNode;
   /** When set, shows a clock button that opens the puzzle history. */
   onHistory?: () => void;
+  /** Show the shared sound on/off toggle (default true). */
+  soundToggle?: boolean;
 }
 
 export function Header({
@@ -17,7 +21,9 @@ export function Header({
   nav = [],
   children,
   onHistory,
+  soundToggle = true,
 }: HeaderProps) {
+  const [muted, toggleMuted] = useMuted();
   return (
     <header className="site-header">
       <div>
@@ -32,7 +38,18 @@ export function Header({
             <ul className="site-header__nav">
               {nav.map((n) => (
                 <li key={n.href}>
-                  <a href={n.href}>{n.label}</a>
+                  {n.icon ? (
+                    <a
+                      className="btn btn--ghost btn--sm btn--icon"
+                      href={n.href}
+                      aria-label={n.label}
+                      title={n.label}
+                    >
+                      {n.icon}
+                    </a>
+                  ) : (
+                    <a href={n.href}>{n.label}</a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -42,12 +59,25 @@ export function Header({
           <Button
             variant="secondary"
             size="sm"
-            className="btn--icon site-header__history"
+            className="site-header__history"
             onClick={onHistory}
-            aria-label="Puzzle history"
-            title="Your puzzles"
+            title="Your past games"
           >
             <IconClock />
+            <span>Past Games</span>
+          </Button>
+        )}
+        {soundToggle && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="btn--icon site-header__sound"
+            onClick={toggleMuted}
+            aria-pressed={!muted}
+            aria-label="Sound"
+            title={muted ? 'Sound off (click to unmute)' : 'Sound on (click to mute)'}
+          >
+            {muted ? <IconSpeakerOff /> : <IconSpeaker />}
           </Button>
         )}
       </div>

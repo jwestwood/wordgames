@@ -13,6 +13,8 @@ src/
                    per-seed state, hooks (useGameState, useCountdown, usePersistentState, useSeedState)
     history/       shared puzzle history: versioned localStorage store (upsert/list/remove/clear,
                    200-entry cap), WORDLIST_VERSION (build-time hash of word lists), useHistoryEntry hook
+    audio/         Web Audio sound manager (lazy unlock on first gesture, preload/decode, deterministic
+                   pitch variation, persisted mute, pauses when hidden), shared SOUNDS registry, useSound/useMuted
     ui/            shared components (GameCard, Button, LetterTiles, LetterWheel, WordSlots, Confetti, ...)
     registry.ts    GameDefinition type
     router.ts      tiny hash router (#/games/<id>) – works on any static host
@@ -63,3 +65,12 @@ entries recorded with another version are stamped "Older word list" in the panel
 ## Deployment
 
 Render static site (`render.yaml`): build `npm ci && npm run build`, publish `dist/`, all paths rewritten to `/index.html`. Vite `base` is `/`. Node is pinned to 22 LTS (`.nvmrc`, `engines`, `NODE_VERSION` in render.yaml).
+
+## Sound
+
+Shared sound names (`tap`, `button`, `error`, `success`, `star`, `perfect`, `shuffle`, `delete`, `clear`,
+`word-land`, `already-found`, `copy`, `dice`, `open`, `close`) live in `src/core/audio/sounds.ts`; files are
+in `public/sounds/` (ogg + mp3, CC0, see `CREDITS.md`). Games call `const play = useSound(); play('tap')`.
+Mute is a header toggle persisted in `localStorage` (`wordgames:muted`). Playback is a silent no-op when
+muted, the tab is hidden, Web Audio is unavailable, or the file has not decoded yet. Never use `Math.random`
+for variation (the manager uses a deterministic counter). `Modal` plays open/close unless `silent`.
