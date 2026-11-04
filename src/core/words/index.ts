@@ -84,3 +84,15 @@ export function pickRandom<T>(items: readonly T[], rng: Rng): T {
 }
 
 export { loadTier, loadWords, byLength, type WordTier } from './wordlist';
+export {
+  letterBag,
+  bagContains,
+  canSpellFrom,
+  letterSignature,
+  createWordIndex,
+  findAnagrams,
+  findSubwords,
+  type LetterBag,
+  type WordIndex,
+  type SubwordOptions,
+} from './subwords';

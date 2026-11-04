@@ -369,3 +369,138 @@ button.tile:active {
   gap: var(--space-4);
   font-size: var(--text-sm);
 }
+
+/* ---------- Letter wheel ---------- */
+.wheel {
+  width: 100%;
+  max-width: 20rem;
+  display: block;
+  margin-inline: auto;
+  filter: drop-shadow(0 3px 4px rgba(60, 40, 20, 0.25));
+}
+.wheel__seg {
+  cursor: pointer;
+  outline: none;
+}
+.wheel__seg path,
+.wheel__seg circle {
+  fill: var(--color-tile);
+  stroke: var(--color-tile-edge);
+  stroke-width: 1.5;
+  transition: fill var(--duration-fast) var(--ease-out);
+}
+.wheel__seg text {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  font-size: 22px;
+  fill: var(--color-ink);
+  pointer-events: none;
+}
+.wheel__seg:hover path,
+.wheel__seg:hover circle {
+  fill: var(--color-wood);
+}
+.wheel__seg:focus-visible path,
+.wheel__seg:focus-visible circle {
+  stroke: var(--color-focus);
+  stroke-width: 3;
+}
+.wheel__seg--used {
+  cursor: default;
+}
+.wheel__seg--used path {
+  fill: var(--color-paper-dark);
+}
+.wheel__seg--used text {
+  fill: var(--color-ink-muted);
+  opacity: 0.55;
+}
+.wheel__centre circle,
+.wheel__centre:hover circle {
+  fill: var(--color-green);
+  stroke: var(--color-green-dark);
+}
+.wheel__centre text {
+  fill: var(--color-paper-light);
+  font-size: 30px;
+}
+
+/* ---------- Word slots ---------- */
+.word-slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+.word-slots__item {
+  display: flex;
+  gap: 2px;
+}
+.word-slots__cell {
+  width: 1rem;
+  height: 1.35rem;
+  display: inline-grid;
+  place-items: center;
+  border-bottom: 2px solid var(--color-wood);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+.word-slots__item--shown .word-slots__cell {
+  border-bottom-color: var(--color-green);
+}
+.word-slots__item--latest .word-slots__cell {
+  color: var(--color-green-dark);
+  animation: slot-pop var(--duration-slow) var(--ease-bounce);
+}
+@keyframes slot-pop {
+  from {
+    transform: translateY(-4px) scale(1.2);
+  }
+}
+
+/* ---------- Confetti ---------- */
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 200;
+}
+.confetti__piece {
+  position: absolute;
+  top: -1rem;
+  width: 0.6rem;
+  height: 0.9rem;
+  border-radius: 1px;
+  animation: confetti-fall 2.5s var(--ease-out) forwards;
+}
+.confetti__piece--0 {
+  background: var(--color-red);
+}
+.confetti__piece--1 {
+  background: var(--color-green);
+}
+.confetti__piece--2 {
+  background: var(--color-wood);
+}
+.confetti__piece--3 {
+  background: var(--color-tile);
+}
+@keyframes confetti-fall {
+  to {
+    transform: translateY(110vh) rotate(var(--confetti-rot, 360deg));
+    opacity: 0.8;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti {
+    display: none;
+  }
+  .word-slots__item--latest .word-slots__cell {
+    animation: none;
+  }
+}

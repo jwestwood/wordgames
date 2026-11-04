@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadJSON, saveJSON } from './storage';
+import { loadSeedState, saveSeedState } from './progress';
 
 /** useState persisted to localStorage under a namespaced key. */
 export function usePersistentState<T>(key: string, initial: T) {
@@ -63,4 +64,22 @@ export function useGameState(gameId: string) {
     [setBest],
   );
   return { phase, score, best, addScore, start, end };
+}
+
+/** State persisted per game+seed; reloads when the seed changes. */
+export function useSeedState<T>(gameId: string, seed: string, initial: T) {
+  const [state, setState] = useState(() => ({ seed, value: loadSeedState(gameId, seed, initial) }));
+  const current =
+    state.seed === seed ? state : { seed, value: loadSeedState(gameId, seed, initial) };
+  if (current !== state) setState(current);
+  const setValue = useCallback(
+    (update: T | ((prev: T) => T)) =>
+      setState((s) => {
+        const value = typeof update === 'function' ? (update as (p: T) => T)(s.value) : update;
+        saveSeedState(gameId, s.seed, value);
+        return { seed: s.seed, value };
+      }),
+    [gameId],
+  );
+  return [current.value, setValue] as const;
 }

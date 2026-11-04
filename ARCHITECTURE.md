@@ -4,12 +4,14 @@
 src/
   core/            shared, game-agnostic code (import via `@core/...`)
     words/         normalise, letterCounts, canSpell, isAnagram, shuffleLetters, scramble,
-                   parseWordList / loadWordList / isValidWord, pickRandom
+                   parseWordList / loadWordList / isValidWord, pickRandom,
+                   multiset subwords: letterBag, canSpellFrom, createWordIndex, findSubwords, findAnagrams
     random/        seeded PRNG (createRng, int, pick, shuffle, sample, weighted),
-                   seed codes (generateSeed, dailySeed), URL helpers (gameHash, shareLink, newPuzzle, ensureSeed)
-    game/          scoring helpers, localStorage persistence, hooks
-                   (useGameState, useCountdown, usePersistentState)
-    ui/            shared components (GameCard, Button, LetterTiles)
+                   seed codes (generateSeed, dailySeed), URL helpers (gameHash, shareLink, newPuzzle, ensureSeed),
+                   selectWithCriteria (seeded retry-until-criteria-pass with deterministic fallback)
+    game/          scoring helpers, progressFor (stars/perfect), localStorage persistence,
+                   per-seed state, hooks (useGameState, useCountdown, usePersistentState, useSeedState)
+    ui/            shared components (GameCard, Button, LetterTiles, LetterWheel, WordSlots, Confetti, ...)
     registry.ts    GameDefinition type
     router.ts      tiny hash router (#/games/<id>) – works on any static host
   games/

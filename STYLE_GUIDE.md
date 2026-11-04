@@ -75,6 +75,9 @@ A JS mirror of the colours is in `theme/tokens.ts` (keep in sync).
 | `GameCard`     | game listing card; "Play" button or "Coming soon" stamp                                                                       |
 | `Header`       | site title, tagline, nav links                                                                                                |
 | `Modal`        | `open`, `onClose`, `title`, `footer`; focus trap, Esc/backdrop close, focus restore                                           |
+| `LetterWheel`  | segmented SVG circle: `centre`, `letters`, `used` indices, `onCentre`, `onLetter` (geometry in `wheel.ts`)                    |
+| `WordSlots`    | word list; unrevealed words as blank letter slots, `latest` highlighted                                                       |
+| `Confetti`     | seeded CSS paper-confetti burst; hidden under reduced motion                                                                  |
 | `ScoreDisplay` | `score`, `delta` (+/−), `best`; live region                                                                                   |
 
 Pure helpers (tested in `ui.test.ts`): `evaluateGuess`, `tileLabel`, `formatScore`, `gridNavigate`, `trapFocusIndex`; `contrastRatio`/`meetsAA` in `theme/contrast.ts`.

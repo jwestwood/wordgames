@@ -13,3 +13,7 @@ export * from './Modal';
 export * from './ScoreDisplay';
 export * from './logic';
 export * from './theme';
+export * from './LetterWheel';
+export * from './Confetti';
+export * from './wheel';
+export * from './WordSlots';

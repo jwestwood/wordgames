@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { GameCard, Header } from '@core/ui';
 import { StyleGuide } from '@core/ui/StyleGuide';
 import { useHashRoute } from '@core/router';
@@ -21,7 +22,9 @@ export default function App() {
       {section === 'style-guide' ? (
         <StyleGuide />
       ) : Game ? (
-        <Game />
+        <Suspense fallback={<p>Loading…</p>}>
+          <Game />
+        </Suspense>
       ) : (
         <>
           <h2>Games</h2>
