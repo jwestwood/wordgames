@@ -4,17 +4,20 @@ export interface WordSlotsProps {
   revealed: ReadonlySet<string>;
   /** Most recently revealed word (highlighted). */
   latest?: string;
+  /** Words treated as not yet shown (e.g. while an animation flies them in). */
+  hidden?: ReadonlySet<string>;
 }
 
 /** A list of words where unrevealed ones show as blank letter slots (length visible). */
-export function WordSlots({ words, revealed, latest }: WordSlotsProps) {
+export function WordSlots({ words, revealed, latest, hidden }: WordSlotsProps) {
   return (
     <ol className="word-slots">
       {words.map((w) => {
-        const shown = revealed.has(w);
+        const shown = revealed.has(w) && !hidden?.has(w);
         return (
           <li
             key={w}
+            data-word={w}
             className={`word-slots__item${shown ? ' word-slots__item--shown' : ''}${
               w === latest ? ' word-slots__item--latest' : ''
             }`}

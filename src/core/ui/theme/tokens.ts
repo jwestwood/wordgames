@@ -13,6 +13,8 @@ export const colors = {
   green: '#2F5D50',
   greenDark: '#22463C',
   absent: '#6B6255',
+  yellow: '#E3B33B',
+  yellowDark: '#C99A22',
 } as const;
 
 /** Foreground/background pairs used by components; each must meet WCAG AA (4.5:1). */
@@ -29,4 +31,6 @@ export const contrastPairs: Array<[name: string, fg: string, bg: string]> = [
   ['tile absent', colors.paperLight, colors.absent],
   ['primary button', colors.paperLight, colors.green],
   ['danger button', colors.paperLight, colors.red],
+  ['warning button', colors.ink, colors.yellow],
+  ['warning button hover', colors.ink, colors.yellowDark],
 ];

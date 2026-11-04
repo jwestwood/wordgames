@@ -16,6 +16,8 @@
   --color-green: #2f5d50;
   --color-green-dark: #22463c;
   --color-absent: #6b6255;
+  --color-yellow: #e3b33b;
+  --color-yellow-dark: #c99a22;
 
   /* Semantic */
   --color-bg: var(--color-paper);

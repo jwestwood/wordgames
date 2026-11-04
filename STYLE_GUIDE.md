@@ -14,20 +14,21 @@ Live showcase: run `npm run dev` and open `#/style-guide`.
 
 ### Colour
 
-| Token                                  | Value                 | Use                                     |
-| -------------------------------------- | --------------------- | --------------------------------------- |
-| `--color-paper`                        | `#F4EBD9`             | page background                         |
-| `--color-paper-light`                  | `#FAF5EA`             | surfaces (panels, modals), inverse text |
-| `--color-paper-dark`                   | `#E9DCC2`             | hover on ghost elements                 |
-| `--color-tile`                         | `#E8D3A9`             | tile face, secondary button             |
-| `--color-tile-edge`                    | `#D4B984`             | tile/wood borders                       |
-| `--color-wood`                         | `#C89B5E`             | board, selected tile                    |
-| `--color-wood-dark`                    | `#8A6236`             | board frame                             |
-| `--color-ink`                          | `#2B2B2B`             | text                                    |
-| `--color-ink-muted`                    | `#5A5145`             | secondary text                          |
-| `--color-red` / `--color-red-dark`     | `#B23A2E` / `#8E2C22` | accent, links, danger, "present"        |
-| `--color-green` / `--color-green-dark` | `#2F5D50` / `#22463C` | primary action, success, "correct"      |
-| `--color-absent`                       | `#6B6255`             | "absent" tile                           |
+| Token                                    | Value                 | Use                                     |
+| ---------------------------------------- | --------------------- | --------------------------------------- |
+| `--color-paper`                          | `#F4EBD9`             | page background                         |
+| `--color-paper-light`                    | `#FAF5EA`             | surfaces (panels, modals), inverse text |
+| `--color-paper-dark`                     | `#E9DCC2`             | hover on ghost elements                 |
+| `--color-tile`                           | `#E8D3A9`             | tile face, secondary button             |
+| `--color-tile-edge`                      | `#D4B984`             | tile/wood borders                       |
+| `--color-wood`                           | `#C89B5E`             | board, selected tile                    |
+| `--color-wood-dark`                      | `#8A6236`             | board frame                             |
+| `--color-ink`                            | `#2B2B2B`             | text                                    |
+| `--color-ink-muted`                      | `#5A5145`             | secondary text                          |
+| `--color-red` / `--color-red-dark`       | `#B23A2E` / `#8E2C22` | accent, links, danger, "present"        |
+| `--color-green` / `--color-green-dark`   | `#2F5D50` / `#22463C` | primary action, success, "correct"      |
+| `--color-yellow` / `--color-yellow-dark` | `#E3B33B` / `#C99A22` | warning button (ink text), earned stars |
+| `--color-absent`                         | `#6B6255`             | "absent" tile                           |
 
 Semantic aliases: `--color-bg`, `--color-surface`, `--color-text`, `--color-text-muted`, `--color-text-inverse`, `--color-accent`, `--color-success`, `--color-border`, `--color-focus`, `--color-overlay`, and per-state `--tile-{state}-bg/fg`.
 
@@ -65,20 +66,25 @@ A JS mirror of the colours is in `theme/tokens.ts` (keep in sync).
 
 ## Components (`import { … } from '@core/ui'`)
 
-| Component      | Props / states                                                                                                                |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `Button`       | `variant`: primary · secondary · danger · ghost; `size`: sm · md · lg; disabled                                               |
-| `Tile`         | `letter`, `state`: default · selected · correct · present · absent; `value` (points), `size`, `static` (non-interactive span) |
-| `LetterTiles`  | rack of static tiles; optional `states[]`                                                                                     |
-| `Board`        | wooden grid, `cols`; arrow keys / Home / End move focus between tiles                                                         |
-| `Panel`        | paper card, `title`, `variant`: paper · wood                                                                                  |
-| `GameCard`     | game listing card; "Play" button or "Coming soon" stamp                                                                       |
-| `Header`       | site title, tagline, nav links                                                                                                |
-| `Modal`        | `open`, `onClose`, `title`, `footer`; focus trap, Esc/backdrop close, focus restore                                           |
-| `LetterWheel`  | segmented SVG circle: `centre`, `letters`, `used` indices, `onCentre`, `onLetter` (geometry in `wheel.ts`)                    |
-| `WordSlots`    | word list; unrevealed words as blank letter slots, `latest` highlighted                                                       |
-| `Confetti`     | seeded CSS paper-confetti burst; hidden under reduced motion                                                                  |
-| `ScoreDisplay` | `score`, `delta` (+/−), `best`; live region                                                                                   |
+| Component      | Props / states                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `Button`       | `variant`: primary · secondary · danger · warning (yellow) · ghost; `.btn--icon` for icon-only; `size`: sm · md · lg; disabled |
+| `Tile`         | `letter`, `state`: default · selected · correct · present · absent; `value` (points), `size`, `static` (non-interactive span)  |
+| `LetterTiles`  | rack of static tiles; optional `states[]`                                                                                      |
+| `Board`        | wooden grid, `cols`; arrow keys / Home / End move focus between tiles                                                          |
+| `Panel`        | paper card, `title`, `variant`: paper · wood                                                                                   |
+| `GameCard`     | game listing card; "Play" button or "Coming soon" stamp                                                                        |
+| `Header`       | site title, tagline, nav links                                                                                                 |
+| `Modal`        | `open`, `onClose`, `title`, `footer`; focus trap, Esc/backdrop close, focus restore                                            |
+| `LetterWheel`  | segmented SVG circle: `centre`, `letters`, `used` indices, `onCentre`, `onLetter` (geometry in `wheel.ts`)                     |
+| `WordSlots`    | word list (column-major: down then across); unrevealed words as blank letter slots, `latest` highlighted                                                        |
+| `Confetti`     | seeded CSS paper-confetti burst; hidden under reduced motion                                                                   |
+| `ScoreCard`    | wooden plaque: `found`, `total`, `percent`, `stars`, `maxStars`, `thresholds`; star slots carry `data-star-slot`               |
+| `SeedDisplay`  | seed as tiles + copy seed / copy link / randomise (`newPuzzle`)                                                                |
+| Icons          | `IconX`, `IconBackspace`, `IconShuffle`, `IconCopy`, `IconLink`, `IconDice`, `IconStar` (inline SVG, currentColor)             |
+| `ScoreDisplay` | `score`, `delta` (+/−), `best`; live region                                                                                    |
+
+Motion (`motion.ts`, `queue.ts`, `transient.ts`): `flyElement(fromRect, toRect, content, opts)` (FLIP fixed overlay, WAAPI), `flashElement`, `ensureInView`, `createAnimationQueue()` (sequential tasks), `useTransientMessage(ms)` / `createTransient`. All motion helpers resolve instantly under reduced motion.
 
 Pure helpers (tested in `ui.test.ts`): `evaluateGuess`, `tileLabel`, `formatScore`, `gridNavigate`, `trapFocusIndex`; `contrastRatio`/`meetsAA` in `theme/contrast.ts`.
 

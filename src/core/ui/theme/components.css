@@ -430,13 +430,15 @@ button.tile:active {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-  gap: var(--space-2) var(--space-4);
+  /* Column-major flow: alphabetical down each column, then across. */
+  columns: 8rem;
+  column-gap: var(--space-4);
 }
 .word-slots__item {
   display: flex;
   gap: 2px;
+  break-inside: avoid;
+  margin-bottom: var(--space-2);
 }
 .word-slots__cell {
   width: 1rem;
@@ -503,4 +505,228 @@ button.tile:active {
   .word-slots__item--latest .word-slots__cell {
     animation: none;
   }
+}
+
+/* ---------- Warning button ---------- */
+.btn--warning {
+  background: var(--color-yellow);
+  color: var(--color-ink);
+  border-color: var(--color-yellow-dark);
+}
+.btn--warning:hover {
+  background: var(--color-yellow-dark);
+  color: var(--color-ink);
+}
+.btn--icon {
+  padding-inline: var(--space-3);
+  min-width: 2.75rem;
+  min-height: 2.5rem;
+}
+
+/* ---------- Centre letter: unselected looks like a tile, with a green ring ---------- */
+.wheel__centre circle {
+  fill: var(--color-tile);
+  stroke: var(--color-green);
+  stroke-width: 3;
+}
+.wheel__centre:hover circle {
+  fill: var(--color-wood);
+  stroke: var(--color-green);
+}
+.wheel__centre text {
+  fill: var(--color-ink);
+  font-size: 30px;
+}
+.wheel__centre--selected circle,
+.wheel__centre--selected:hover circle {
+  fill: var(--color-green);
+  stroke: var(--color-green-dark);
+  stroke-width: 1.5;
+}
+.wheel__centre--selected text {
+  fill: var(--color-paper-light);
+}
+
+/* ---------- Score card ---------- */
+.score-card {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-wood);
+  background-image:
+    var(--texture-wood), linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 60%);
+  border: 2px solid var(--color-wood-dark);
+  box-shadow:
+    var(--shadow-raised),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -3px 0 rgba(90, 60, 25, 0.3);
+  color: var(--color-ink);
+}
+.score-card__count {
+  display: flex;
+  flex-direction: column;
+  line-height: var(--leading-tight);
+}
+.score-card__label {
+  font-family: var(--font-accent);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.score-card__value {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-2xl);
+}
+.score-card__total {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+.score-card__percent {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xl);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-light);
+  box-shadow: inset 0 1px 3px rgba(60, 40, 20, 0.3);
+}
+.score-card__pc {
+  font-size: var(--text-md);
+}
+.score-card__stars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.score-card__star {
+  width: 2.5rem;
+  height: 2.5rem;
+  position: relative;
+  color: var(--color-wood-dark);
+}
+.score-card__star--on {
+  color: var(--color-yellow);
+  filter: drop-shadow(0 1px 0 var(--color-wood-dark)) drop-shadow(0 2px 2px rgba(60, 40, 15, 0.35));
+  animation: star-fill var(--duration-slow) var(--ease-bounce);
+}
+.score-card__star--on svg {
+  stroke: var(--color-wood-dark);
+}
+.score-card__thr {
+  position: absolute;
+  left: 50%;
+  bottom: -1.05rem;
+  transform: translateX(-50%);
+  font-size: 0.625rem;
+  font-weight: var(--weight-medium);
+}
+@keyframes star-fill {
+  from {
+    transform: scale(1.5);
+  }
+}
+@media (max-width: 420px) {
+  .score-card {
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  .score-card__star {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+}
+
+/* ---------- Seed display ---------- */
+.seed {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+.seed__label {
+  font-family: var(--font-accent);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+}
+.seed__code {
+  display: inline-flex;
+  gap: 3px;
+}
+.seed__char {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-tile);
+  border: 1px solid var(--color-tile-edge);
+  box-shadow: var(--shadow-tile);
+  font-family: var(--font-accent);
+  font-size: var(--text-lg);
+  color: var(--color-ink);
+}
+.seed__buttons {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+.seed__msg {
+  min-width: 6rem;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-success);
+}
+.seed__dice--spin svg {
+  animation: dice-spin var(--duration-slow) var(--ease-out);
+}
+@keyframes dice-spin {
+  from {
+    transform: rotate(-180deg);
+  }
+}
+
+/* ---------- Fly overlays ---------- */
+.fly-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.fly-word .word-slots__cell {
+  background: var(--color-paper-light);
+  border-radius: 2px;
+  color: var(--color-green-dark);
+  border-bottom-color: var(--color-green);
+  box-shadow: 0 2px 4px rgba(60, 40, 15, 0.3);
+}
+.fly-star {
+  color: var(--color-yellow);
+  filter: drop-shadow(0 2px 3px rgba(60, 40, 15, 0.45));
+}
+.fly-star svg {
+  width: 100%;
+  height: 100%;
+  stroke: var(--color-wood-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-card__star--on,
+  .seed__dice--spin svg {
+    animation: none;
+  }
+}
+.score-card__star--on .score-card__thr {
+  color: var(--color-ink);
+}
+.score-card__thr {
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
 }

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Board } from './Board';
 import { Button } from './Button';
+import { IconBackspace, IconShuffle, IconX } from './Icons';
+import { ScoreCard } from './ScoreCard';
+import { SeedDisplay } from './SeedDisplay';
 import { LetterTiles } from './LetterTiles';
 import { Modal } from './Modal';
 import { Panel } from './Panel';
@@ -65,10 +68,34 @@ export function StyleGuide() {
           <Button>Primary</Button>
           <Button variant="secondary">Secondary</Button>
           <Button variant="danger">Danger</Button>
+          <Button variant="warning">Warning</Button>
+          <Button variant="danger" className="btn--icon" aria-label="Clear">
+            <IconX />
+          </Button>
+          <Button variant="secondary" className="btn--icon" aria-label="Delete">
+            <IconBackspace />
+          </Button>
+          <Button variant="warning" className="btn--icon" aria-label="Shuffle">
+            <IconShuffle />
+          </Button>
           <Button variant="ghost">Ghost</Button>
           <Button disabled>Disabled</Button>
           <Button size="sm">Small</Button>
           <Button size="lg">Large</Button>
+        </div>
+      </Panel>
+
+      <Panel title="SeedDisplay &amp; ScoreCard">
+        <SeedDisplay gameId="style-guide" seed="K7Q2MX" onRandomise={() => {}} />
+        <div style={{ marginTop: 'var(--space-4)', maxWidth: '28rem' }}>
+          <ScoreCard
+            found={17}
+            total={21}
+            percent={80}
+            stars={2}
+            maxStars={3}
+            thresholds={['60%', '80%', '90%']}
+          />
         </div>
       </Panel>
 

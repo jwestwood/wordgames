@@ -1,23 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  createRng,
-  ensureSeed,
-  getSeedFromHash,
-  newPuzzle,
-  shareLink,
-  shuffle,
-} from '@core/random';
+import { createRng, ensureSeed, getSeedFromHash, newPuzzle, shuffle } from '@core/random';
 import { progressFor, useSeedState } from '@core/game';
 import {
   Button,
+  centredRect,
   Confetti,
+  createAnimationQueue,
+  ensureInView,
+  flashElement,
+  flyElement,
+  IconBackspace,
+  IconShuffle,
+  IconX,
   LetterWheel,
   Modal,
   Panel,
-  ScoreDisplay,
+  ScoreCard,
+  SeedDisplay,
   Tile,
+  useTransientMessage,
   WordSlots,
 } from '@core/ui';
+import { DEFAULT_STAR_THRESHOLDS } from '@core/game';
 import {
   checkGuess,
   GAME_ID,
@@ -30,6 +34,7 @@ import {
 import './letter-wheel.css';
 
 const CENTRE = -1;
+const STAR_LABELS = DEFAULT_STAR_THRESHOLDS.map((t) => `${Math.round(t * 100)}%`);
 type Feedback = { tone: 'good' | 'bad' | 'info'; text: string } | null;
 
 const MESSAGES: Record<Exclude<GuessResult, { ok: true }>['reason'], string> = {
@@ -72,10 +77,22 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
   const [guess, setGuess] = useState<number[]>([]);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
   const shuffles = useRef(0);
-  const [feedback, setFeedback] = useState<Feedback>(null);
+  const [feedback, showFeedback] = useTransientMessage<NonNullable<Feedback>>(2800);
   const [latest, setLatest] = useState<string>();
   const [celebrate, setCelebrate] = useState(false);
-  const [copied, setCopied] = useState(false);
+  // Words/stars already counted but still mid-animation (not yet shown).
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const [shownStars, setShownStars] = useState(
+    () => progressFor(found.length, puzzle.pool.length).stars,
+  );
+  const queue = useRef(createAnimationQueue());
+  const wheelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const q = queue.current;
+    return () => q.clear();
+  }, []);
 
   const letterAt = useCallback(
     (i: number) => (i === CENTRE ? puzzle.required : puzzle.outer[i]),
@@ -107,23 +124,74 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
     setOrder((o) => shuffle(rng, o));
   }, [seed]);
 
+  const animateWord = useCallback(async (w: string) => {
+    const wheel = wheelRef.current;
+    const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
+    if (wheel && slot) {
+      void flashElement(wheel);
+      await ensureInView(slot);
+      const to = slot.getBoundingClientRect();
+      const wr = wheel.getBoundingClientRect();
+      const width = Math.min(wr.width * 0.75, to.width * 2.6);
+      const from = centredRect(wr, width, (width / to.width) * to.height);
+      const content = document.createElement('div');
+      content.className = 'word-slots__item word-slots__item--shown';
+      for (const c of w) {
+        const cell = document.createElement('span');
+        cell.className = 'word-slots__cell';
+        cell.textContent = c.toUpperCase();
+        content.appendChild(cell);
+      }
+      await flyElement(from, to, content, { className: 'fly-word', duration: 1100 });
+    }
+    setHidden((h) => {
+      const n = new Set(h);
+      n.delete(w);
+      return n;
+    });
+    setLatest(w);
+  }, []);
+
+  const animateStar = useCallback(async (i: number) => {
+    const wheel = wheelRef.current;
+    const slot = cardRef.current?.querySelector<HTMLElement>(`[data-star-slot="${i}"]`);
+    if (wheel && slot) {
+      await ensureInView(slot);
+      const to = slot.getBoundingClientRect();
+      const wr = wheel.getBoundingClientRect();
+      const from = centredRect(wr, wr.width * 0.4, wr.width * 0.4);
+      const holder = document.createElement('div');
+      holder.style.width = holder.style.height = '100%';
+      const svg = slot.querySelector('svg')?.cloneNode(true) as SVGElement | undefined;
+      svg?.querySelector('path')?.setAttribute('fill', 'currentColor');
+      if (svg) holder.appendChild(svg);
+      await flyElement(from, to, holder, { className: 'fly-star', duration: 1000 });
+    }
+    setShownStars((s) => Math.max(s, i + 1));
+  }, []);
+
   const submit = useCallback(() => {
     if (!word) return;
     const res = checkGuess(word, puzzle, found);
     if (res.ok) {
       const next = [...found, res.word];
+      const before = progressFor(found.length, puzzle.pool.length).stars;
+      const after = progressFor(next.length, puzzle.pool.length).stars;
       setFound(next);
-      setLatest(res.word);
-      setFeedback({ tone: 'good', text: `${res.word.toUpperCase()} — nice!` });
-      if (next.length === puzzle.pool.length) setCelebrate(true);
+      setHidden((h) => new Set(h).add(res.word));
+      showFeedback({ tone: 'good', text: `${res.word.toUpperCase()} — nice!` });
+      const q = queue.current;
+      q.enqueue(() => animateWord(res.word));
+      for (let i = before; i < after; i++) q.enqueue(() => animateStar(i));
+      if (next.length === puzzle.pool.length) q.enqueue(() => setCelebrate(true));
     } else {
-      setFeedback({
+      showFeedback({
         tone: res.reason === 'already-found' ? 'info' : 'bad',
         text: MESSAGES[res.reason],
       });
     }
     setGuess([]);
-  }, [word, puzzle, found, setFound]);
+  }, [word, puzzle, found, setFound, showFeedback, animateWord, animateStar]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -146,17 +214,6 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [typeLetter, backspace, submit, clear]);
 
-  const share = async () => {
-    const url = shareLink(GAME_ID, seed);
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      window.prompt('Copy this link:', url);
-    }
-  };
-
   return (
     <div className="lw">
       <div className="lw__head">
@@ -167,26 +224,67 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
             once.
           </p>
         </div>
-        <div className="lw__actions">
-          <Button variant="secondary" size="sm" onClick={share}>
-            {copied ? 'Link copied!' : 'Share link'}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => newPuzzle(GAME_ID)}>
-            New puzzle
-          </Button>
-        </div>
+        <SeedDisplay gameId={GAME_ID} seed={seed} />
       </div>
 
       <div className="lw__layout">
         <Panel variant="wood" className="lw__play">
-          <LetterWheel
-            centre={puzzle.required}
-            letters={order.map((i) => puzzle.outer[i])}
-            used={used}
-            onCentre={() => add(CENTRE)}
-            onLetter={(pos) => add(order[pos])}
-            label="Letters: tap to add to your guess"
-          />
+          <div ref={wheelRef} className="lw__wheel">
+            <LetterWheel
+              centre={puzzle.required}
+              letters={order.map((i) => puzzle.outer[i])}
+              used={used}
+              centreSelected={guess.includes(CENTRE)}
+              onCentre={() => add(CENTRE)}
+              onLetter={(pos) => add(order[pos])}
+              label="Letters: tap to add to your guess"
+            />
+          </div>
+          <p
+            className={`lw__feedback lw__feedback--${feedback?.tone ?? 'info'}${feedback ? '' : ' lw__feedback--hidden'}`}
+            role="status"
+          >
+            {feedback
+              ? `${feedback.tone === 'good' ? '✓' : feedback.tone === 'bad' ? '✗' : '•'} ${feedback.text}`
+              : '\u00a0'}
+          </p>
+          <div className="lw__controls">
+            <Button
+              variant="danger"
+              size="sm"
+              className="btn--icon"
+              onClick={clear}
+              disabled={!guess.length}
+              aria-label="Clear guess"
+              title="Clear"
+            >
+              <IconX />
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="btn--icon"
+              onClick={backspace}
+              disabled={!guess.length}
+              aria-label="Delete last letter"
+              title="Delete"
+            >
+              <IconBackspace />
+            </Button>
+            <Button
+              variant="warning"
+              size="sm"
+              className="btn--icon"
+              onClick={doShuffle}
+              aria-label="Shuffle letters"
+              title="Shuffle"
+            >
+              <IconShuffle />
+            </Button>
+            <Button onClick={submit} disabled={!guess.length}>
+              Guess
+            </Button>
+          </div>
           <div className="lw__guess" aria-live="polite" aria-label={`Guess: ${word || 'empty'}`}>
             {guess.length === 0 ? (
               <span className="lw__placeholder">Tap or type letters</span>
@@ -202,53 +300,25 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
               ))
             )}
           </div>
-          <p className={`lw__feedback lw__feedback--${feedback?.tone ?? 'info'}`} role="status">
-            {feedback
-              ? `${feedback.tone === 'good' ? '✓' : feedback.tone === 'bad' ? '✗' : '•'} ${feedback.text}`
-              : '\u00a0'}
-          </p>
-          <div className="lw__controls">
-            <Button variant="secondary" size="sm" onClick={backspace} disabled={!guess.length}>
-              Delete
-            </Button>
-            <Button variant="ghost" size="sm" onClick={clear} disabled={!guess.length}>
-              Clear
-            </Button>
-            <Button variant="secondary" size="sm" onClick={doShuffle}>
-              Shuffle
-            </Button>
-            <Button onClick={submit} disabled={!guess.length}>
-              Guess
-            </Button>
-          </div>
         </Panel>
 
-        <Panel
-          className="lw__words"
-          title={
-            <span className="lw__progress">
-              <ScoreDisplay label="Found" score={progress.found} />
-              <span className="lw__of">
-                of {progress.total} · {progress.percent}%
-              </span>
-              <span
-                className="lw__stars"
-                role="img"
-                aria-label={`${progress.stars} of ${progress.maxStars} stars${progress.perfect ? ', perfect' : ''}`}
-              >
-                {Array.from({ length: progress.maxStars }, (_, i) => (
-                  <span key={i} className={i < progress.stars ? 'lw__star--on' : 'lw__star--off'}>
-                    {i < progress.stars ? '★' : '☆'}
-                  </span>
-                ))}
-                {progress.perfect && <span className="stamp lw__perfect">Perfect</span>}
-              </span>
-            </span>
-          }
-        >
-          <p className="lw__thresholds">★ 60% · ★★ 80% · ★★★ 90% · Perfect 100%</p>
-          <WordSlots words={puzzle.pool} revealed={revealed} latest={latest} />
-        </Panel>
+        <div className="lw__side">
+          <div ref={cardRef}>
+            <ScoreCard
+              found={progress.found - hidden.size}
+              total={progress.total}
+              percent={progressFor(progress.found - hidden.size, progress.total).percent}
+              stars={Math.min(shownStars, progress.stars)}
+              maxStars={progress.maxStars}
+              thresholds={STAR_LABELS}
+            />
+          </div>
+          <Panel className="lw__words">
+            <div ref={listRef}>
+              <WordSlots words={puzzle.pool} revealed={revealed} latest={latest} hidden={hidden} />
+            </div>
+          </Panel>
+        </div>
       </div>
 
       {celebrate && <Confetti seed={seed} />}

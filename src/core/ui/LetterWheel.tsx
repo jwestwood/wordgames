@@ -9,6 +9,8 @@ export interface LetterWheelProps {
   onCentre?: () => void;
   onLetter?: (index: number) => void;
   label?: string;
+  /** Centre letter is in the current guess (shown in the bold selected style). */
+  centreSelected?: boolean;
 }
 
 /** Segmented circle of letter buttons with a highlighted centre letter. */
@@ -19,6 +21,7 @@ export function LetterWheel({
   onCentre,
   onLetter,
   label,
+  centreSelected = false,
 }: LetterWheelProps) {
   const segs = useMemo(() => wheelSegments(letters.length), [letters.length]);
   return (
@@ -51,10 +54,10 @@ export function LetterWheel({
         );
       })}
       <g
-        className="wheel__seg wheel__centre"
+        className={`wheel__seg wheel__centre${centreSelected ? ' wheel__centre--selected' : ''}`}
         role="button"
         tabIndex={0}
-        aria-label={`${centre.toUpperCase()}, required letter`}
+        aria-label={`${centre.toUpperCase()}, required letter${centreSelected ? ', used' : ''}`}
         onClick={() => onCentre?.()}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
