@@ -28,6 +28,7 @@ import {
   isInView,
   popElement,
   IconBackspace,
+  IconHint,
   IconShuffle,
   IconX,
   LetterWheel,
@@ -48,6 +49,15 @@ import {
   type LoadedRules,
 } from './versions';
 import { letterWheelBrand } from './brand';
+import {
+  applyClue,
+  clueLetters,
+  clueLevel,
+  EMPTY_PROGRESS,
+  parseProgress,
+  pruneClues,
+  type PuzzleProgress,
+} from './clues';
 import { LetterWheelLogo } from './brand/Logo';
 import './letter-wheel.css';
 
@@ -124,7 +134,25 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     [thresholds],
   );
   const puzzle = useMemo(() => rules.generate(seed, dict), [seed, rules, dict]);
-  const [found, setFound] = useSeedState<string[]>(saveNamespace(GAME_ID, version), seed, []);
+  const [progressState, setProgressState] = useSeedState<PuzzleProgress>(
+    saveNamespace(GAME_ID, version),
+    seed,
+    EMPTY_PROGRESS,
+  );
+  // One-shot migration of legacy bare found arrays stored before clues existed.
+  const progress = useMemo(() => parseProgress(progressState), [progressState]);
+  const found = progress.found;
+  const clues = progress.clues;
+  const setFound = useCallback(
+    (next: string[] | ((prev: string[]) => string[])) =>
+      setProgressState((p) => {
+        const cur = parseProgress(p);
+        const found = typeof next === 'function' ? next(cur.found) : next;
+        return { found, clues: pruneClues(cur.clues, new Set(found)) };
+      }),
+    [setProgressState],
+  );
+  const [clueMode, setClueMode] = useState(false);
   const [guess, setGuess] = useState<number[]>([]);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
   const shuffles = useRef(0);
@@ -154,21 +182,31 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     [puzzle],
   );
   const word = guess.map(letterAt).join('');
-  const progress = progressFor(found.length, puzzle.pool.length);
+  const score = progressFor(found.length, puzzle.pool.length);
   // History: created on the first submitted guess (right or wrong), or immediately for a seed
   // that already has saved words; merely opening/randomising a puzzle does not add clutter.
   const [guessed, setGuessed] = useState(false);
   useHistoryEntry(GAME_ID, seed, {
     preview: { ...toWheelPreview(puzzle) },
-    found: progress.found,
-    total: progress.total,
-    stars: progress.stars,
-    maxStars: progress.maxStars,
-    completed: progress.perfect,
+    found: score.found,
+    total: score.total,
+    stars: score.stars,
+    maxStars: score.maxStars,
+    completed: score.perfect,
     version: vid,
-    started: guessed || found.length > 0,
+    started: guessed || found.length > 0 || Object.keys(clues).length > 0,
   });
   const revealed = useMemo(() => new Set(found), [found]);
+  const known = useMemo(() => {
+    const m = new Map<string, readonly (string | null)[]>();
+    for (const [w, n] of Object.entries(clues)) m.set(w, clueLetters(w, n));
+    return m;
+  }, [clues]);
+  const pickable = useMemo(() => {
+    const next = new Set<string>();
+    for (const w of puzzle.pool) if (!revealed.has(w) && clueLevel(clues, w) < 2) next.add(w);
+    return next;
+  }, [puzzle.pool, revealed, clues]);
   const used = useMemo(
     () => new Set(order.flatMap((orig, pos) => (guess.includes(orig) ? [pos] : []))),
     [order, guess],
@@ -277,6 +315,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     setGuessed(true);
     const res = rules.checkGuess(word, puzzle, found);
     if (res.ok) {
+      setClueMode(false);
       const next = [...found, res.word];
       const before = progressFor(found.length, puzzle.pool.length).stars;
       const after = progressFor(next.length, puzzle.pool.length).stars;
@@ -336,12 +375,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         e.preventDefault(); // otherwise Enter "clicks" the modal button focused mid-event
         submit();
       } else if (e.key === 'Escape') {
-        clear();
+        if (clueMode) setClueMode(false);
+        else clear();
       } else return;
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [typeLetter, backspace, submit, clear]);
+  }, [typeLetter, backspace, submit, clear, clueMode]);
 
   return (
     <div className="lw">
@@ -459,17 +499,59 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         <div className="lw__side">
           <div ref={cardRef}>
             <ScoreCard
-              found={progress.found - hidden.size}
-              total={progress.total}
-              percent={progressFor(progress.found - hidden.size, progress.total).percent}
-              stars={Math.min(shownStars, progress.stars)}
-              maxStars={progress.maxStars}
+              found={score.found - hidden.size}
+              total={score.total}
+              percent={progressFor(score.found - hidden.size, score.total).percent}
+              stars={Math.min(shownStars, score.stars)}
+              maxStars={score.maxStars}
               thresholds={STAR_LABELS}
             />
           </div>
           <Panel className="lw__words">
             <div ref={listRef}>
-              <WordSlots words={puzzle.pool} revealed={revealed} latest={latest} hidden={hidden} />
+              <div className="lw__words-head">
+                {clueMode && (
+                  <span className="lw__clue-hint" role="status">
+                    Tap a blank for a clue
+                  </span>
+                )}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={`btn--icon lw__clue${clueMode ? ' lw__clue--on' : ''}`}
+                  aria-pressed={clueMode}
+                  aria-label={clueMode ? 'Cancel clue' : 'Clue'}
+                  title={
+                    clueMode
+                      ? 'Cancel clue'
+                      : 'Reveal a letter: last first, then first. Click a blank word.'
+                  }
+                  onClick={() => setClueMode((on) => !on)}
+                >
+                  <IconHint />
+                </Button>
+              </div>
+              <WordSlots
+                words={puzzle.pool}
+                revealed={revealed}
+                latest={latest}
+                hidden={hidden}
+                known={known}
+                picking={clueMode}
+                pickable={pickable}
+                onPick={(w) => {
+                  setProgressState((p) => {
+                    const cur = parseProgress(p);
+                    return {
+                      found: cur.found,
+                      clues: applyClue(cur.clues, w, new Set(cur.found)),
+                    };
+                  });
+                  play('copy');
+                  setClueMode(false);
+                  setGuessed(true);
+                }}
+              />
             </div>
           </Panel>
         </div>

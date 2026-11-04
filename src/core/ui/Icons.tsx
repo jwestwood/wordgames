@@ -112,3 +112,10 @@ export const IconCog = (p: IconProps) => (
     <circle cx="12" cy="12" r="6.5" />
   </Icon>
 );
+export const IconHint = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9 21h6" />
+    <path d="M10 17h4" />
+    <path d="M12 3a5 5 0 0 0-3 9c.4.4.7 1 .8 1.5h4.4c.1-.5.4-1.1.8-1.5a5 5 0 0 0-3-9z" />
+  </Icon>
+);

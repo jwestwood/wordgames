@@ -483,6 +483,26 @@ button.tile:active {
 .word-slots__item--shown .word-slots__cell {
   border-bottom-color: var(--color-green);
 }
+.word-slots__cell--clue {
+  color: var(--color-green-dark);
+  border-bottom-color: var(--color-green);
+}
+.word-slots--picking .word-slots__item--pickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  outline: 1.5px dashed var(--color-wood-dark);
+  outline-offset: 2px;
+  padding: 1px 2px;
+  margin-left: -2px;
+  /* Larger tap target on touch without shifting layout much */
+  min-height: 2rem;
+  align-items: center;
+}
+.word-slots--picking .word-slots__item--pickable:hover,
+.word-slots--picking .word-slots__item--pickable:focus-visible {
+  outline-style: solid;
+  background: var(--color-paper-light);
+}
 .word-slots__item--latest .word-slots__cell {
   color: var(--color-green-dark);
   animation: slot-pop var(--duration-slow) var(--ease-bounce);

@@ -1,3 +1,8 @@
+/**
+ * Word list of blank letter slots. Optional per-word clue letters and a "picking" mode for
+ * clue selection (tap a blank to request a clue). Games supply the clue letters; this component
+ * stays display + pick UI only.
+ */
 export interface WordSlotsProps {
   /** All words, in display order. */
   words: readonly string[];
@@ -6,28 +11,83 @@ export interface WordSlotsProps {
   latest?: string;
   /** Words treated as not yet shown (e.g. while an animation flies them in). */
   hidden?: ReadonlySet<string>;
+  /**
+   * Optional known letters for unrevealed words (same length as the word; `null`/empty = blank).
+   * Used for clues: e.g. `[null,null,null,'t']` then `['p',null,null,'t']`.
+   */
+  known?: ReadonlyMap<string, readonly (string | null)[]>;
+  /** When true, unrevealed words that still accept a pick become large tap targets. */
+  picking?: boolean;
+  /** Words that can be picked while `picking` (defaults to every unrevealed word). */
+  pickable?: ReadonlySet<string>;
+  onPick?: (word: string) => void;
 }
 
 /** A list of words where unrevealed ones show as blank letter slots (length visible). */
-export function WordSlots({ words, revealed, latest, hidden }: WordSlotsProps) {
+export function WordSlots({
+  words,
+  revealed,
+  latest,
+  hidden,
+  known,
+  picking = false,
+  pickable,
+  onPick,
+}: WordSlotsProps) {
   return (
-    <ol className="word-slots">
+    <ol className={`word-slots${picking ? ' word-slots--picking' : ''}`}>
       {words.map((w) => {
         const shown = revealed.has(w) && !hidden?.has(w);
+        const letters = known?.get(w);
+        const canPick = picking && !shown && (pickable ? pickable.has(w) : true) && !!onPick;
+        const knownCount = letters?.filter(Boolean).length ?? 0;
+        const label = shown
+          ? w
+          : knownCount
+            ? `${w.length} letter word, ${letters!
+                .map((c, i) =>
+                  c ? c.toUpperCase() : i === 0 || i === w.length - 1 ? 'blank' : '…',
+                )
+                .filter((x, i, a) => x !== '…' || a[i - 1] !== '…')
+                .join(' ')}`
+            : `${w.length} letter word, not found`;
         return (
           <li
             key={w}
             data-word={w}
             className={`word-slots__item${shown ? ' word-slots__item--shown' : ''}${
               w === latest ? ' word-slots__item--latest' : ''
+            }${canPick ? ' word-slots__item--pickable' : ''}${
+              knownCount && !shown ? ' word-slots__item--clued' : ''
             }`}
-            aria-label={shown ? w : `${w.length} letter word, not found`}
+            role={canPick ? 'button' : undefined}
+            tabIndex={canPick ? 0 : undefined}
+            aria-label={canPick ? `Clue for ${label}` : label}
+            onClick={canPick ? () => onPick!(w) : undefined}
+            onKeyDown={
+              canPick
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onPick!(w);
+                    }
+                  }
+                : undefined
+            }
           >
-            {[...w].map((c, i) => (
-              <span key={i} className="word-slots__cell" aria-hidden="true">
-                {shown ? c.toUpperCase() : ''}
-              </span>
-            ))}
+            {[...w].map((c, i) => {
+              const k = letters?.[i];
+              const ch = shown ? c.toUpperCase() : k ? k.toUpperCase() : '';
+              return (
+                <span
+                  key={i}
+                  className={`word-slots__cell${k && !shown ? ' word-slots__cell--clue' : ''}`}
+                  aria-hidden="true"
+                >
+                  {ch}
+                </span>
+              );
+            })}
           </li>
         );
       })}
