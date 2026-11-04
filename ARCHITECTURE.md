@@ -5,6 +5,8 @@ src/
   core/            shared, game-agnostic code (import via `@core/...`)
     words/         normalise, letterCounts, canSpell, isAnagram, shuffleLetters, scramble,
                    parseWordList / loadWordList / isValidWord, pickRandom
+    random/        seeded PRNG (createRng, int, pick, shuffle, sample, weighted),
+                   seed codes (generateSeed, dailySeed), URL helpers (gameHash, shareLink, newPuzzle, ensureSeed)
     game/          scoring helpers, localStorage persistence, hooks
                    (useGameState, useCountdown, usePersistentState)
     ui/            shared components (GameCard, Button, LetterTiles)
@@ -25,6 +27,18 @@ src/
 - Core must never import from `src/games`.
 - Pure logic first (easy to test); React hooks/components wrap it.
 
+## Static site & seeds
+
+The app is a **static site with no backend**. All game data (e.g. word lists in `src/core/words/data/`,
+lazy-loaded via `loadWords()` as separate chunks) is bundled.
+
+**The seed rule:** every puzzle's configuration is derived from a shareable seed using the core RNG
+(`createRng(seed, gameId)` from `@core/random`). Games must **never** call `Math.random` (or `Date`,
+etc.) to build a puzzle. The seed lives in the URL: `#/games/<id>?seed=K7Q2MX`. Use `ensureSeed(id)` on
+load, `newPuzzle(id)` for "play again", and `shareLink(id, seed)` to share. The same seed + same app version
+must always yield the same puzzle, so keep word lists sorted and avoid iterating unordered collections when
+drawing from the RNG. Changing a word list changes puzzles for existing seeds; accept that knowingly.
+
 ## Adding a game
 
 1. Create `src/games/<id>/index.ts(x)` exporting a `GameDefinition` (set `component` and `status: 'playable'` when ready).
@@ -33,4 +47,5 @@ src/
 
 ## Deployment
 
-Render static site (`render.yaml`): build `npm ci && npm run build`, publish `dist/`, all paths rewritten to `/index.html`. Vite `base` is `/`.
+Render static site (`render.yaml`): build `npm ci && npm run build`, publish `dist/`, all paths rewritten to `/index.html`. Vite `base` is `/`. Node is pinned to 22 LTS (`.nvmrc`, `engines`, `NODE_VERSION` in render.yaml).
+CI: `.github/workflows/ci.yml` runs lint, test and build on pushes/PRs to master.
