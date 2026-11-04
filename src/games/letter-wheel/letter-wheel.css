@@ -168,7 +168,11 @@
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
-.btn--icon.lw__clue--on {
+.lw__clue {
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+.lw__clue--on {
   background: var(--color-green);
   color: var(--color-text-inverse);
   border-color: var(--color-green-dark);

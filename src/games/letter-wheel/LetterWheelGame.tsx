@@ -525,9 +525,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className={`btn--icon lw__clue${clueMode ? ' lw__clue--on' : ''}`}
+                  className={`lw__clue${clueMode ? ' lw__clue--on' : ''}`}
                   aria-pressed={clueMode}
-                  aria-label={clueMode ? 'Cancel clue' : 'Clue'}
                   title={
                     clueMode
                       ? 'Cancel clue'
@@ -536,6 +535,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                   onClick={() => setClueMode((on) => !on)}
                 >
                   <IconHint />
+                  Clue
                 </Button>
               </div>
               <WordSlots
