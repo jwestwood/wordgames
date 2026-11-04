@@ -80,6 +80,6 @@ describe('beta rules', () => {
   it('letterShortfall counts missing usages per distinct letter', () => {
     expect(letterShortfall('exam', ['exam', 'maxe', 'amex', 'mame'])).toBe(0);
     expect(letterShortfall('exam', ['exam', 'mame', 'meam'])).toBe(2); // x appears once
-    expect(letterShortfall('aab', ['aab', 'aa', 'ba'])).toBe(0);
+    expect(letterShortfall('aab', ['aab', 'aa', 'ba'])).toBe(1); // b in 2 words
   });
 });
