@@ -12,7 +12,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'src/core/words/data')
 MIN_LEN, MAX_LEN = 3, 12
 # tier: (max SCOWL size, min Zipf frequency)
-TIERS = {'common': (35, 3.3), 'extended': (50, 2.5)}
+# v1 used common (35, 3.3); loosened to 2.6 so everyday words like pant, veal, antler count.
+TIERS = {'common': (35, 2.6), 'extended': (50, 2.5)}
 # Spelling-neutral + British-specific lists only (American-only spellings excluded).
 FAMILIES = ['english-words', 'british-words']
 SIZES = [10, 20, 35, 40, 50]
@@ -36,13 +37,19 @@ here = os.path.dirname(os.path.abspath(__file__))
 bad = {w.lower() for w in read(os.path.join(here, 'wordlist-sources/ldnoobw-en.txt')) if w}
 bad |= {w for w in read(os.path.join(here, 'wordlist-sources/extra-blocklist.txt')) if w and not w.startswith('#')}
 
+# Hand-picked everyday words the frequency data under-rates (e.g. regular agent nouns: leaper).
+allow = {w for w in read(os.path.join(here, 'wordlist-sources/extra-allowlist.txt')) if w and not w.startswith('#')}
+for w in allow:
+    if VALID.match(w):
+        size_of[w] = min(size_of.get(w, 99), 10)
+
 tiers = {t: [] for t in TIERS}
 for w, s in sorted(size_of.items()):
     if not (MIN_LEN <= len(w) <= MAX_LEN) or w in bad:
         continue
     if not re.search(r'[aeiouy]', w):  # vowel-less strings are abbreviations (e.g. "nth", "tbsp")
         continue
-    z = zipf_frequency(w, 'en')
+    z = 99 if w in allow else zipf_frequency(w, 'en')
     for t, (maxsize, minz) in TIERS.items():
         if s <= maxsize and z >= minz:
             tiers[t].append(w)

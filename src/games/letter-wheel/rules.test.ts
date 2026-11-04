@@ -40,3 +40,11 @@ describe.each(ALL_VERSIONS.map((v) => [versionId(v), v] as const))('rules %s', (
     expect(rules.stars(10, 10)).toBe(rules.STAR_THRESHOLDS.length);
   });
 });
+
+describe.each(ALL_VERSIONS.filter((v) => v === 'beta' || v >= 2))('rules %s word coverage', (v) => {
+  it('everyday words like pant, veal, antler and leaper are answers', () => {
+    const rules = rulesFor(v);
+    const dict = rules.prepare(wordsFor(v));
+    for (const w of ['pant', 'veal', 'antler', 'leaper']) expect(dict.common.words).toContain(w);
+  });
+});

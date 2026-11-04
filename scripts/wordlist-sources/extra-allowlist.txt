@@ -1,0 +1,3 @@
+# Everyday words forced into the common tier (frequency data under-rates them).
+# One per line, lowercase. Keep this short and uncontroversial; blocklists still apply.
+leaper
