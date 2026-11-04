@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { wheelSegments } from './wheel';
+import { createPressGuard, pressProps } from './tap';
 
 export interface LetterWheelProps {
   centre: string;
@@ -27,6 +28,7 @@ export function LetterWheel({
   static: isStatic = false,
 }: LetterWheelProps) {
   const segs = useMemo(() => wheelSegments(letters.length), [letters.length]);
+  const guard = useMemo(() => createPressGuard(), []);
   if (isStatic) {
     return (
       <svg
@@ -55,7 +57,12 @@ export function LetterWheel({
     );
   }
   return (
-    <svg className="wheel" viewBox="0 0 200 200" role="group" aria-label={label ?? 'Letter wheel'}>
+    <svg
+      className="wheel no-touch-gestures"
+      viewBox="0 0 200 200"
+      role="group"
+      aria-label={label ?? 'Letter wheel'}
+    >
       {segs.map((s) => {
         const isUsed = used?.has(s.index) ?? false;
         const letter = letters[s.index];
@@ -67,7 +74,7 @@ export function LetterWheel({
             tabIndex={isUsed ? -1 : 0}
             aria-label={`${letter.toUpperCase()}${isUsed ? ', used' : ''}`}
             aria-disabled={isUsed}
-            onClick={() => !isUsed && onLetter?.(s.index)}
+            {...pressProps(guard, () => !isUsed && onLetter?.(s.index))}
             onKeyDown={(e) => {
               if ((e.key === 'Enter' || e.key === ' ') && !isUsed) {
                 e.preventDefault();
@@ -88,7 +95,7 @@ export function LetterWheel({
         role="button"
         tabIndex={0}
         aria-label={`${centre.toUpperCase()}, required letter${centreSelected ? ', used' : ''}`}
-        onClick={() => onCentre?.()}
+        {...pressProps(guard, () => onCentre?.())}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();

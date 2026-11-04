@@ -48,10 +48,26 @@ describe.each(ALL_VERSIONS.filter((v) => v === 'beta' || v >= 2))('rules %s word
     for (const w of ['pant', 'veal', 'antler', 'leaper']) expect(dict.common.words).toContain(w);
   });
 
-  it('keeps the v1 wheel for GSP0MH (prevalent / a) and accepts the new words', () => {
-    const rules = rulesFor(v);
-    const p = rules.generate('GSP0MH', rules.prepare(wordsFor(v)));
-    expect([p.target, p.required]).toEqual(['prevalent', 'a']);
-    expect(p.pool).toEqual(expect.arrayContaining(['pant', 'veal', 'antler', 'leaper']));
+  it.skipIf(v === 'beta')(
+    'keeps the v1 wheel for GSP0MH (prevalent / a) and accepts the new words',
+    () => {
+      const rules = rulesFor(v);
+      const p = rules.generate('GSP0MH', rules.prepare(wordsFor(v)));
+      expect([p.target, p.required]).toEqual(['prevalent', 'a']);
+      expect(p.pool).toEqual(expect.arrayContaining(['pant', 'veal', 'antler', 'leaper']));
+    },
+  );
+});
+
+describe('beta rules', () => {
+  it('answer pools are 20-40 words', () => {
+    const rules = rulesFor('beta');
+    const dict = rules.prepare(wordsFor('beta'));
+    for (let i = 0; i < 40; i++) {
+      const p = rules.generate(`B${i}`, dict);
+      expect(p.passed).toBe(true);
+      expect(p.pool.length).toBeGreaterThanOrEqual(20);
+      expect(p.pool.length).toBeLessThanOrEqual(40);
+    }
   });
 });

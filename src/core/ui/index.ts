@@ -25,3 +25,4 @@ export * from './queue';
 export * from './transient';
 export * from './motion';
 export * from './SettingsPanel';
+export { createPressGuard, pressProps, type PressGuard } from './tap';

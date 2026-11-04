@@ -131,6 +131,14 @@ so _pant, veal, antler, leaper_ count), while the wheel is still drawn and sized
 strict `targets` list (= v1 common), with the full answer pool capped at 100. ~97% of seeds keep their v1
 wheel and just accept more words. Stats: `npx vite-node scripts/letter-wheel-stats.ts 300 <1|2|beta>`.
 
+Beta (unreleased): v2's lists, but the answer pool itself must be 20–40 words (shorter games); the
+wheel word is still drawn from `targets`.
+
+**Touch input:** interactive wheels act on press via `pressProps`/`createPressGuard` (`src/core/ui/tap.ts`):
+fire on pointerdown, swallow the follow-up click, keyboard clicks still work. Pair with the
+`.no-touch-gestures` class (`touch-action: none`, no tap highlight / callout / selection) so iOS taps
+are never lost to scroll detection. Hover styles are behind `@media (hover: hover)`.
+
 **Migration:** `GameDefinition.migrate` runs once at startup. Letter Wheel moves legacy history
 entries stamped `lw1-92d0b432` (the v1 lists) to version `1` and copies their saves from
 `letter-wheel:seed:<seed>` to `letter-wheel:v1:seed:<seed>`; other legacy stamps keep an "Older word

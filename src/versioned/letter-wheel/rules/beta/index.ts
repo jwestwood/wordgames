@@ -17,12 +17,10 @@ export const GAME_ID = 'letter-wheel';
 export const MIN_WORD = 4;
 export const TARGET_LENGTH = { min: 8, max: 10 } as const;
 /**
- * Puzzle selection is judged on the *core* pool (words from the stricter targets list), exactly as
- * in v1, so most seeds keep their v1 wheel; the answers are the looser common list on top.
+ * Answer-pool size (the total players must find, from the looser common list). Shorter games:
+ * 20-40 words. The wheel word is still drawn from the stricter targets list.
  */
-export const POOL_SIZE = { min: 40, max: 80 } as const;
-/** Cap on the full answer pool so loosened lists don't make marathon puzzles. */
-export const MAX_ANSWERS = 100;
+export const POOL_SIZE = { min: 20, max: 40 } as const;
 export const MAX_ATTEMPTS = 2000;
 
 export interface Dictionaries {
@@ -30,8 +28,6 @@ export interface Dictionaries {
   common: WordIndex;
   /** common + extended: used for the unique-anagram check */
   all: WordIndex;
-  /** targets list: the core pool used to judge puzzle size */
-  core: WordIndex;
   /** candidate targets (targets list, 8-10 letters), alphabetical */
   targets: readonly string[];
 }
@@ -40,8 +36,6 @@ export interface Candidate {
   target: string;
   required: string;
   pool: string[];
-  /** Size of the core pool (targets-list words only). */
-  coreSize: number;
 }
 
 export interface Puzzle extends Candidate {
@@ -68,7 +62,6 @@ export function prepare(words: WordLists): Dictionaries {
   return {
     common: createWordIndex(common),
     all: createWordIndex(all),
-    core: createWordIndex(words.targets),
     targets: words.targets.filter(
       (w) => w.length >= TARGET_LENGTH.min && w.length <= TARGET_LENGTH.max,
     ),
@@ -92,12 +85,7 @@ function candidateStream(dict: Dictionaries) {
       queue = shuffle(rng, [...new Set(target)].sort());
     }
     const required = queue.shift()!;
-    return {
-      target,
-      required,
-      pool: buildPool(target, required, dict),
-      coreSize: findSubwords(target, dict.core, { minLength: MIN_WORD, required }).length,
-    };
+    return { target, required, pool: buildPool(target, required, dict) };
   };
 }
 
@@ -106,9 +94,8 @@ export function criteria(dict: Dictionaries): Criterion<Candidate>[] {
     { name: 'uniqueAnagram', test: (c) => findAnagrams(c.target, dict.all).length === 0 },
     {
       name: 'poolSize',
-      test: (c) => c.coreSize >= POOL_SIZE.min && c.coreSize <= POOL_SIZE.max,
+      test: (c) => c.pool.length >= POOL_SIZE.min && c.pool.length <= POOL_SIZE.max,
     },
-    { name: 'maxAnswers', test: (c) => c.pool.length <= MAX_ANSWERS },
   ];
 }
 
@@ -120,10 +107,7 @@ function fallback(dict: Dictionaries) {
     let best = cands[0];
     let bestScore = Infinity;
     for (const c of cands) {
-      const s =
-        (findAnagrams(c.target, dict.all).length ? 1000 : 0) +
-        dist(c.coreSize) +
-        Math.max(0, c.pool.length - MAX_ANSWERS);
+      const s = (findAnagrams(c.target, dict.all).length ? 1000 : 0) + dist(c.pool.length);
       if (s < bestScore) [best, bestScore] = [c, s];
     }
     return best;
@@ -136,7 +120,7 @@ export function generate(seed: string, dict: Dictionaries): Puzzle {
     maxAttempts: MAX_ATTEMPTS,
     fallback: fallback(dict),
   });
-  const { target, required, pool, coreSize } = res.value;
+  const { target, required, pool } = res.value;
   const letters = [...target];
   letters.splice(letters.indexOf(required), 1);
   return {
@@ -144,7 +128,6 @@ export function generate(seed: string, dict: Dictionaries): Puzzle {
     target,
     required,
     pool,
-    coreSize,
     outer: shuffle(rng, letters),
     attempts: res.attempts,
     passed: res.passed,

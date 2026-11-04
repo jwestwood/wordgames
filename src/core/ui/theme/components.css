@@ -370,6 +370,16 @@ button.tile:active {
   font-size: var(--text-sm);
 }
 
+/* ---------- Touch: controls that act on press (pair with core/ui/tap pressProps) ---------- */
+.no-touch-gestures,
+.no-touch-gestures * {
+  touch-action: none; /* touches never start a page scroll/zoom */
+  -webkit-tap-highlight-color: transparent; /* no grey flash on iOS */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* ---------- Letter wheel ---------- */
 .wheel {
   width: 100%;
@@ -396,8 +406,14 @@ button.tile:active {
   fill: var(--color-ink);
   pointer-events: none;
 }
-.wheel__seg:hover path,
-.wheel__seg:hover circle {
+@media (hover: hover) {
+  /* real hover only: on touch, :hover sticks after a tap */
+  .wheel__seg:hover path,
+  .wheel__seg:hover circle {
+    fill: var(--color-wood);
+  }
+}
+.wheel__seg[role='button']:not(.wheel__seg--used):not(.wheel__centre):active path {
   fill: var(--color-wood);
 }
 .wheel__seg:focus-visible path,
