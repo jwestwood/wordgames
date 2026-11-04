@@ -15,10 +15,16 @@ import type * as RulesV1 from '../../versioned/letter-wheel/rules/v1';
  * The interface the Letter Wheel UI uses to talk to a rule set (every `rules/<id>/index.ts`
  * must satisfy it). Everything seed -> puzzle and save-relevant lives behind it.
  */
-export type LetterWheelRules = Pick<
-  typeof RulesV1,
-  'prepare' | 'generate' | 'checkGuess' | 'stars' | 'STAR_THRESHOLDS' | 'MIN_WORD'
->;
+export interface LetterWheelRules {
+  /** Build indexes from the version's named word lists (names come from the manifest). */
+  prepare(words: WordLists): Dictionaries;
+  generate(seed: string, dict: Dictionaries): Puzzle;
+  checkGuess(guess: string, puzzle: Puzzle, found: readonly string[]): GuessResult;
+  stars(found: number, total: number): number;
+  STAR_THRESHOLDS: readonly number[];
+  MIN_WORD: number;
+}
+export type WordLists = Readonly<Record<string, readonly string[]>>;
 export type Puzzle = RulesV1.Puzzle;
 export type GuessResult = RulesV1.GuessResult;
 export type Dictionaries = RulesV1.Dictionaries;
@@ -30,7 +36,11 @@ const loader = createVersionedLoader<LetterWheelRules>({
   manifest,
   rules: import.meta.glob('../../versioned/letter-wheel/rules/*/index.ts'),
   words: import.meta.glob('../../versioned/words/*.txt', { query: '?raw', import: 'default' }),
-  betaWords: { common: () => loadTier('common'), extended: () => loadTier('extended') },
+  betaWords: {
+    common: () => loadTier('common'),
+    extended: () => loadTier('extended'),
+    targets: () => loadTier('targets'),
+  },
 });
 
 export interface LoadedRules {
@@ -47,7 +57,7 @@ export function loadVersion(version: PuzzleVersion): Promise<LoadedRules> {
     p = loader.load(version).then(({ rules, words }) => ({
       version,
       rules,
-      dict: rules.prepare(words as unknown as RulesV1.WordLists),
+      dict: rules.prepare(words),
     }));
     prepared.set(version, p);
   }

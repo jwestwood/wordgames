@@ -55,6 +55,12 @@ for w, s in sorted(size_of.items()):
             tiers[t].append(w)
             break
 
+# Letter Wheel targets (the full-wheel word): stricter than common so the pangram is always familiar.
+# SCOWL <= 35 and Zipf >= 3.3 -- identical to the v1 common tier (allowlist words excluded).
+TARGETS = (35, 3.3)
+tiers['targets'] = [w for w in tiers['common']
+                    if w not in allow and size_of[w] <= TARGETS[0] and zipf_frequency(w, 'en') >= TARGETS[1]]
+
 os.makedirs(OUT, exist_ok=True)
 for t, words in tiers.items():
     with open(os.path.join(OUT, f'{t}.txt'), 'w') as f:

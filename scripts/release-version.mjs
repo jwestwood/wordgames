@@ -115,6 +115,8 @@ run(
 const goldenTest = `src/games/${game}/golden.test.ts`;
 if (existsSync(join(ROOT, goldenTest))) run(`npx vitest run ${goldenTest}`, { GOLDEN_WRITE: '1' });
 else console.warn(`  (no ${goldenTest}; add one to pin seeds for v${n})`);
+const golden = join(gameDir, 'golden', `v${n}.json`);
+if (existsSync(golden)) run('npx prettier --log-level warn --write ' + JSON.stringify(golden));
 run('npx vitest run src/versioning.test.ts');
 console.log(`\nDone: ${game} v${n} is now the public default. Review and commit:`);
 console.log(`  git add src/versioned && git commit -m "${game}: release puzzle version ${n}"`);

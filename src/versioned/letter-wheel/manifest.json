@@ -4,7 +4,8 @@
     "rules": "beta",
     "words": {
       "common": "src/core/words/data/common.txt",
-      "extended": "src/core/words/data/extended.txt"
+      "extended": "src/core/words/data/extended.txt",
+      "targets": "src/core/words/data/targets.txt"
     }
   },
   "versions": [

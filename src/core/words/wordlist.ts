@@ -4,12 +4,15 @@
  *
  * - `common`: everyday words (SCOWL size <= 35, Zipf >= 2.6, plus a small allowlist).
  * - `extended`: less common but still familiar words (SCOWL <= 50). Does NOT include `common`.
+ * - `targets`: a stricter subset of `common` (SCOWL <= 35, Zipf >= 3.3) for "headline" words such
+ *   as Letter Wheel's full-wheel target. Not part of `loadWords`.
  */
-export type WordTier = 'common' | 'extended';
+export type WordTier = 'common' | 'extended' | 'targets';
 
 const loaders: Record<WordTier, () => Promise<string>> = {
   common: () => import('./data/common.txt?raw').then((m) => m.default),
   extended: () => import('./data/extended.txt?raw').then((m) => m.default),
+  targets: () => import('./data/targets.txt?raw').then((m) => m.default),
 };
 
 const cache = new Map<WordTier, Promise<readonly string[]>>();

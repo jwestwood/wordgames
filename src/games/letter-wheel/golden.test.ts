@@ -8,7 +8,8 @@ import { describe, expect, it } from 'vitest';
 import { manifest } from './versions';
 import { rulesFor, wordsFor } from './versions.node';
 
-const SEEDS = ['GSPOMH', 'K7Q2MX', '000000', 'ZZZZZZ', 'A1B2C3', 'M4N5P6', 'HX3T9W', '2026-11-04'];
+// Seeds as the app uses them (normalised: the typed code GSPOMH becomes GSP0MH).
+const SEEDS = ['GSP0MH', 'K7Q2MX', '000000', 'ZZZZZZ', 'A1B2C3', 'M4N5P6', 'HX3T9W', '2026-11-04'];
 const DIR = join(import.meta.dirname, '../../versioned/letter-wheel/golden');
 
 function snapshot(v: number) {

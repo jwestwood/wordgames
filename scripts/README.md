@@ -26,6 +26,8 @@ Method:
      words such as _pant, veal, antler_ count), plus `wordlist-sources/extra-allowlist.txt` (a short,
      hand-picked list of everyday words the frequency data under-rates, e.g. _leaper_)
    - **extended**: SCOWL size ≤ 50 and Zipf ≥ 2.5 (excludes words already in common)
+   - **targets**: SCOWL size ≤ 35 and Zipf ≥ 3.3 (subset of common, allowlist excluded) — the stricter
+     list Letter Wheel draws its full-wheel word from and sizes puzzles by; identical to the v1 common list
 3. Offensive words removed using `wordlist-sources/ldnoobw-en.txt` plus `wordlist-sources/extra-blocklist.txt`.
 
 ## Sources & licences

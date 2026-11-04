@@ -47,4 +47,11 @@ describe.each(ALL_VERSIONS.filter((v) => v === 'beta' || v >= 2))('rules %s word
     const dict = rules.prepare(wordsFor(v));
     for (const w of ['pant', 'veal', 'antler', 'leaper']) expect(dict.common.words).toContain(w);
   });
+
+  it('keeps the v1 wheel for GSP0MH (prevalent / a) and accepts the new words', () => {
+    const rules = rulesFor(v);
+    const p = rules.generate('GSP0MH', rules.prepare(wordsFor(v)));
+    expect([p.target, p.required]).toEqual(['prevalent', 'a']);
+    expect(p.pool).toEqual(expect.arrayContaining(['pant', 'veal', 'antler', 'leaper']));
+  });
 });
