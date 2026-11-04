@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRng, ensureSeed, getSeedFromHash, newPuzzle, shuffle } from '@core/random';
 import { progressFor, useSeedState } from '@core/game';
+import { useHistoryEntry } from '@core/history';
+import { PUZZLE_VERSION } from './version';
 import {
   Button,
   centredRect,
@@ -100,6 +102,19 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
   );
   const word = guess.map(letterAt).join('');
   const progress = progressFor(found.length, puzzle.pool.length);
+  // History: created on the first submitted guess (right or wrong), or immediately for a seed
+  // that already has saved words; merely opening/randomising a puzzle does not add clutter.
+  const [guessed, setGuessed] = useState(false);
+  useHistoryEntry(GAME_ID, seed, {
+    summary: `${puzzle.target.length} letters · centre ${puzzle.required.toUpperCase()}`,
+    found: progress.found,
+    total: progress.total,
+    stars: progress.stars,
+    maxStars: progress.maxStars,
+    completed: progress.perfect,
+    version: PUZZLE_VERSION,
+    started: guessed || found.length > 0,
+  });
   const revealed = useMemo(() => new Set(found), [found]);
   const used = useMemo(
     () => new Set(order.flatMap((orig, pos) => (guess.includes(orig) ? [pos] : []))),
@@ -172,6 +187,7 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
 
   const submit = useCallback(() => {
     if (!word) return;
+    setGuessed(true);
     const res = checkGuess(word, puzzle, found);
     if (res.ok) {
       const next = [...found, res.word];

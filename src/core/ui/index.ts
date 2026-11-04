@@ -20,6 +20,7 @@ export * from './WordSlots';
 export * from './Icons';
 export * from './ScoreCard';
 export * from './SeedDisplay';
+export * from './HistoryPanel';
 export * from './queue';
 export * from './transient';
 export * from './motion';

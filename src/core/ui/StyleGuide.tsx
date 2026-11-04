@@ -6,6 +6,8 @@ import { ScoreCard } from './ScoreCard';
 import { SeedDisplay } from './SeedDisplay';
 import { LetterTiles } from './LetterTiles';
 import { Modal } from './Modal';
+import { HistoryPanel } from './HistoryPanel';
+import { IconClock } from './Icons';
 import { Panel } from './Panel';
 import { ScoreDisplay } from './ScoreDisplay';
 import { Tile } from './Tile';
@@ -19,6 +21,7 @@ const STATES: TileState[] = ['default', 'selected', 'correct', 'present', 'absen
 /** Living showcase of the shared design system (route: #/style-guide). */
 export function StyleGuide() {
   const [open, setOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [score, setScore] = useState(120);
   const letters = 'TABLETOPS';
@@ -159,6 +162,23 @@ export function StyleGuide() {
             }}
           />
         </div>
+      </Panel>
+
+      <Panel title="HistoryPanel">
+        <p>
+          Shared puzzle history (opened from the clock in the header). Game filter, In progress /
+          Completed tabs, seed tiles, spoiler-free summary, progress bar, stars, relative time,
+          remove-with-confirm and an &ldquo;Older word list&rdquo; stamp for stale entries. Shows
+          your real history.
+        </p>
+        <Button variant="secondary" onClick={() => setHistoryOpen(true)}>
+          <IconClock /> Open history
+        </Button>
+        <HistoryPanel
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          games={[{ id: 'letter-wheel', title: 'Letter Wheel' }]}
+        />
       </Panel>
 
       <Panel title="Modal">

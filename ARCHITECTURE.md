@@ -11,6 +11,8 @@ src/
                    selectWithCriteria (seeded retry-until-criteria-pass with deterministic fallback)
     game/          scoring helpers, progressFor (stars/perfect), localStorage persistence,
                    per-seed state, hooks (useGameState, useCountdown, usePersistentState, useSeedState)
+    history/       shared puzzle history: versioned localStorage store (upsert/list/remove/clear,
+                   200-entry cap), WORDLIST_VERSION (build-time hash of word lists), useHistoryEntry hook
     ui/            shared components (GameCard, Button, LetterTiles, LetterWheel, WordSlots, Confetti, ...)
     registry.ts    GameDefinition type
     router.ts      tiny hash router (#/games/<id>) – works on any static host
@@ -46,6 +48,17 @@ drawing from the RNG. Changing a word list changes puzzles for existing seeds; a
 1. Create `src/games/<id>/index.ts(x)` exporting a `GameDefinition` (set `component` and `status: 'playable'` when ready).
 2. Add it to the array in `src/games/index.ts`.
 3. It is reachable at `#/games/<id>`.
+
+## Puzzle history
+
+Games report progress with `useHistoryEntry(gameId, seed, { summary, found, total, stars, maxStars,
+completed, version, started })`. One entry per (gameId, seed) lives in `wordgames:history`
+(`{ schema: 1, entries }`; unknown/corrupt data is dropped, a legacy bare array is migrated). The summary
+must never spoil the answer (e.g. "9 letters · centre R"). Entries are only created once `started` is true;
+Letter Wheel sets it on the **first submitted guess** (right or wrong) or when the seed already has saved
+words, so opening/randomising puzzles does not clutter history. Cap: 200 entries, evicting the oldest
+completed first, then the oldest. Set `puzzleVersion` on the `GameDefinition` (e.g. `lw1-${WORDLIST_VERSION}`);
+entries recorded with another version are stamped "Older word list" in the panel.
 
 ## Deployment
 

@@ -8,12 +8,14 @@ export interface ModalProps {
   title: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  /** Extra class on the dialog (e.g. a wider/scrolling variant). */
+  className?: string;
 }
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Accessible dialog: focus trap, Escape to close, restores focus on close. */
-export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, className }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -47,7 +49,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
     <div className="modal-backdrop" onClick={onClose}>
       <div
         ref={ref}
-        className="modal"
+        className={className ? `modal ${className}` : 'modal'}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

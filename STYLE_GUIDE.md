@@ -66,23 +66,24 @@ A JS mirror of the colours is in `theme/tokens.ts` (keep in sync).
 
 ## Components (`import { … } from '@core/ui'`)
 
-| Component      | Props / states                                                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `Button`       | `variant`: primary · secondary · danger · warning (yellow) · ghost; `.btn--icon` for icon-only; `size`: sm · md · lg; disabled |
-| `Tile`         | `letter`, `state`: default · selected · correct · present · absent; `value` (points), `size`, `static` (non-interactive span)  |
-| `LetterTiles`  | rack of static tiles; optional `states[]`                                                                                      |
-| `Board`        | wooden grid, `cols`; arrow keys / Home / End move focus between tiles                                                          |
-| `Panel`        | paper card, `title`, `variant`: paper · wood                                                                                   |
-| `GameCard`     | game listing card; "Play" button or "Coming soon" stamp                                                                        |
-| `Header`       | site title, tagline, nav links                                                                                                 |
-| `Modal`        | `open`, `onClose`, `title`, `footer`; focus trap, Esc/backdrop close, focus restore                                            |
-| `LetterWheel`  | segmented SVG circle: `centre`, `letters`, `used` indices, `onCentre`, `onLetter` (geometry in `wheel.ts`)                     |
-| `WordSlots`    | word list (column-major: down then across); unrevealed words as blank letter slots, `latest` highlighted                                                        |
-| `Confetti`     | seeded CSS paper-confetti burst; hidden under reduced motion                                                                   |
-| `ScoreCard`    | wooden plaque: `found`, `total`, `percent`, `stars`, `maxStars`, `thresholds`; star slots carry `data-star-slot`               |
-| `SeedDisplay`  | seed as tiles + copy seed / copy link / randomise (`newPuzzle`)                                                                |
-| Icons          | `IconX`, `IconBackspace`, `IconShuffle`, `IconCopy`, `IconLink`, `IconDice`, `IconStar` (inline SVG, currentColor)             |
-| `ScoreDisplay` | `score`, `delta` (+/−), `best`; live region                                                                                    |
+| Component      | Props / states                                                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button`       | `variant`: primary · secondary · danger · warning (yellow) · ghost; `.btn--icon` for icon-only; `size`: sm · md · lg; disabled               |
+| `Tile`         | `letter`, `state`: default · selected · correct · present · absent; `value` (points), `size`, `static` (non-interactive span)                |
+| `LetterTiles`  | rack of static tiles; optional `states[]`                                                                                                    |
+| `Board`        | wooden grid, `cols`; arrow keys / Home / End move focus between tiles                                                                        |
+| `Panel`        | paper card, `title`, `variant`: paper · wood                                                                                                 |
+| `GameCard`     | game listing card; "Play" button or "Coming soon" stamp                                                                                      |
+| `Header`       | site title, tagline, nav links, `onHistory` (clock button)                                                                                   |
+| `HistoryPanel` | `open`, `onClose`, `games` (registry); game filter, In progress/Completed tabs, items link to `#/games/<id>?seed=`                           |
+| `Modal`        | `open`, `onClose`, `title`, `footer`, `className`; focus trap, Esc/backdrop close, focus restore                                             |
+| `LetterWheel`  | segmented SVG circle: `centre`, `letters`, `used` indices, `onCentre`, `onLetter` (geometry in `wheel.ts`)                                   |
+| `WordSlots`    | word list (column-major: down then across); unrevealed words as blank letter slots, `latest` highlighted                                     |
+| `Confetti`     | seeded CSS paper-confetti burst; hidden under reduced motion                                                                                 |
+| `ScoreCard`    | wooden plaque: `found`, `total`, `percent`, `stars`, `maxStars`, `thresholds`; star slots carry `data-star-slot`                             |
+| `SeedDisplay`  | seed as tiles + copy seed / copy link / randomise (`newPuzzle`)                                                                              |
+| Icons          | `IconX`, `IconBackspace`, `IconShuffle`, `IconCopy`, `IconLink`, `IconDice`, `IconStar`, `IconClock`, `IconTrash` (inline SVG, currentColor) |
+| `ScoreDisplay` | `score`, `delta` (+/−), `best`; live region                                                                                                  |
 
 Motion (`motion.ts`, `queue.ts`, `transient.ts`): `flyElement(fromRect, toRect, content, opts)` (FLIP fixed overlay, WAAPI), `flashElement`, `ensureInView`, `createAnimationQueue()` (sequential tasks), `useTransientMessage(ms)` / `createTransient`. All motion helpers resolve instantly under reduced motion.
 
