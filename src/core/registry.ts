@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { HistoryEntry } from './history';
 import type { GameBrand } from './brand';
+import type { SettingDefinition } from './settings/schema';
 
 export type { GameBrand, BrandMarkProps } from './brand';
 
@@ -20,6 +21,11 @@ export interface GameDefinition {
    * different version are flagged as stale (the same seed may now give a different puzzle).
    */
   puzzleVersion?: string;
+  /**
+   * Optional player settings (src/core/settings). Values persist in `wordgames:settings:<id>`;
+   * the game reads them with `useGameSettings(id, settings)` and shows `GameSettingsButton`.
+   */
+  settings?: readonly SettingDefinition[];
   /** Lazy component for the game screen. */
   component?: ComponentType;
   /**

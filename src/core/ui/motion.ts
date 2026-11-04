@@ -109,3 +109,52 @@ export function ensureInView(el: Element): Promise<void> {
   el.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   return new Promise((res) => setTimeout(res, prefersReducedMotion() ? 0 : 350));
 }
+
+/** Is the rect fully inside a viewport of height `vh` (and width `vw`, if given)? */
+export function isRectInView(r: RectLike, vh: number, vw = Infinity): boolean {
+  return r.top >= 0 && r.left >= 0 && r.top + r.height <= vh && r.left + r.width <= vw;
+}
+
+/** Is `el` fully visible in the window right now? */
+export function isInView(el: Element): boolean {
+  return isRectInView(el.getBoundingClientRect(), window.innerHeight, window.innerWidth);
+}
+
+/**
+ * Show `content` at `rect` in a fixed overlay: pop in, hold, then fade out in place (used when the
+ * destination is off-screen and we must not scroll). Resolves immediately under reduced motion.
+ */
+export function popElement(
+  rect: RectLike,
+  content: HTMLElement,
+  opts: { duration?: number; className?: string } = {},
+): Promise<void> {
+  if (prefersReducedMotion() || typeof document === 'undefined') return Promise.resolve();
+  const el = document.createElement('div');
+  el.className = `fly-overlay ${opts.className ?? ''}`.trim();
+  el.setAttribute('aria-hidden', 'true');
+  Object.assign(el.style, {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    top: `${rect.top}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    pointerEvents: 'none',
+    zIndex: '300',
+  });
+  el.appendChild(content);
+  document.body.appendChild(el);
+  const anim = el.animate(
+    [
+      { transform: 'scale(0.6)', opacity: 0, offset: 0 },
+      { transform: 'scale(1)', opacity: 1, offset: 0.2, easing: 'ease-out' },
+      { transform: 'scale(1)', opacity: 1, offset: 0.65 },
+      { transform: 'scale(1.08) translateY(-8px)', opacity: 0, offset: 1 },
+    ],
+    { duration: opts.duration ?? 1000, fill: 'forwards' },
+  );
+  return anim.finished.then(
+    () => el.remove(),
+    () => el.remove(),
+  );
+}

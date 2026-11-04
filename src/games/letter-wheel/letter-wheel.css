@@ -131,3 +131,8 @@
   font-family: var(--font-accent);
   color: var(--color-red);
 }
+.lw__tools {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}

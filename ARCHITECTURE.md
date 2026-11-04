@@ -13,6 +13,7 @@ src/
                    per-seed state, hooks (useGameState, useCountdown, usePersistentState, useSeedState)
     history/       shared puzzle history: versioned localStorage store (upsert/list/remove/clear,
                    200-entry cap), WORDLIST_VERSION (build-time hash of word lists), useHistoryEntry hook
+    settings/      per-game settings schema (toggle/select/range), tolerant load/save, useGameSettings
     brand/         GameBrand type (Icon, Logo, tagline, accent, favicon), documentTitle, useDocumentBrand
     audio/         Web Audio sound manager (lazy unlock on first gesture, preload/decode, deterministic
                    pitch variation, persisted mute, pauses when hidden), shared SOUNDS registry, useSound/useMuted
@@ -76,6 +77,26 @@ Letter Wheel sets it on the **first submitted guess** (right or wrong) or when t
 words, so opening/randomising puzzles does not clutter history. Cap: 200 entries, evicting the oldest
 completed first, then the oldest. Set `puzzleVersion` on the `GameDefinition` (e.g. `lw1-${WORDLIST_VERSION}`);
 entries recorded with another version are stamped "Older word list" in the panel.
+
+## Settings
+
+A game declares player settings with `defineSettings([...] as const)` (`src/core/settings`) and sets
+`GameDefinition.settings` to that array. Each definition is `{ key, label, description?, type:
+'toggle' | 'select' | 'range', default }` plus `options` (select) or `min`/`max`/`step`/`format` (range).
+Values live in `localStorage` at `wordgames:settings:<gameId>`; storage is versionless but tolerant —
+unknown keys are ignored, invalid/missing values fall back to the default, and only non-default values
+are written. In the game:
+
+```tsx
+const { values } = useGameSettings(GAME_ID, MY_SETTINGS); // typed: values.autoScroll is boolean
+<GameSettingsButton gameId={GAME_ID} definitions={MY_SETTINGS} />; // cog next to the seed field
+```
+
+`GameSettingsButton` renders nothing when there are no settings and opens the core `SettingsPanel`
+(Modal, auto-rendered from the schema, Reset to defaults). Mute is **not** a setting: it stays the
+global header button. Letter Wheel: `autoScroll` (default on) — when off, the found-word animation never
+scrolls; an off-screen word pops and fades over the wheel (`popElement`), and stars only fly if the
+score card is visible (`isInView`), otherwise they just fill.
 
 ## Deployment
 

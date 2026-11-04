@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import type { GameDefinition } from '@core/registry';
 import { PUZZLE_VERSION } from './version';
 import { letterWheelBrand } from './brand';
+import { LETTER_WHEEL_SETTINGS } from './settings';
 
 export const letterWheel: GameDefinition = {
   id: 'letter-wheel',
@@ -10,6 +11,7 @@ export const letterWheel: GameDefinition = {
   status: 'playable',
   brand: letterWheelBrand,
   puzzleVersion: PUZZLE_VERSION,
+  settings: LETTER_WHEEL_SETTINGS,
   HistoryPreview: lazy(() =>
     import('./HistoryPreview').then((m) => ({ default: m.LetterWheelHistoryPreview })),
   ),

@@ -6,6 +6,10 @@ import { ScoreCard } from './ScoreCard';
 import { SeedDisplay } from './SeedDisplay';
 import { LetterTiles } from './LetterTiles';
 import { Modal } from './Modal';
+import { SettingsPanel } from './SettingsPanel';
+import { IconCog } from './Icons';
+import type { SettingDefinition, SettingValue } from '../settings/schema';
+import { defaultsFor } from '../settings/schema';
 import { HistoryPanel } from './HistoryPanel';
 import { IconClock } from './Icons';
 import { Panel } from './Panel';
@@ -17,12 +21,46 @@ import { evaluateGuess, type TileState } from './logic';
 import { colors, contrastPairs } from './theme/tokens';
 import { contrastRatio } from './theme/contrast';
 
+const DEMO_SETTINGS: readonly SettingDefinition[] = [
+  {
+    key: 'autoScroll',
+    label: 'Scroll to word list when you find a word',
+    description: 'Toggle (role="switch").',
+    type: 'toggle',
+    default: true,
+  },
+  {
+    key: 'tiles',
+    label: 'Tile style',
+    type: 'select',
+    options: [
+      { value: 'wood', label: 'Wood' },
+      { value: 'paper', label: 'Paper' },
+    ],
+    default: 'wood',
+  },
+  {
+    key: 'speed',
+    label: 'Animation speed',
+    type: 'range',
+    min: 0.5,
+    max: 2,
+    step: 0.25,
+    default: 1,
+    format: (v) => `${v}×`,
+  },
+];
+
 const STATES: TileState[] = ['default', 'selected', 'correct', 'present', 'absent'];
 
 /** Living showcase of the shared design system (route: #/style-guide). */
 export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }) {
   const [open, setOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [demo, setDemo] = useState<Record<string, SettingValue>>(
+    () => defaultsFor(DEMO_SETTINGS) as Record<string, SettingValue>,
+  );
   const [selected, setSelected] = useState<number[]>([]);
   const [score, setScore] = useState(120);
   const letters = 'TABLETOPS';
@@ -217,6 +255,26 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
           open={historyOpen}
           onClose={() => setHistoryOpen(false)}
           games={[{ id: 'letter-wheel', title: 'Letter Wheel' }]}
+        />
+      </Panel>
+
+      <Panel title="SettingsPanel">
+        <p>
+          Auto-rendered from a game&rsquo;s <code>settings</code> schema: toggles, selects and
+          ranges, plus Reset to defaults. Games show it via the cog (<code>GameSettingsButton</code>
+          ). This demo is not persisted.
+        </p>
+        <Button variant="secondary" onClick={() => setSettingsOpen(true)}>
+          <IconCog /> Open settings
+        </Button>
+        <SettingsPanel
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          title="Demo settings"
+          definitions={DEMO_SETTINGS}
+          values={demo}
+          onChange={(k, v) => setDemo((d) => ({ ...d, [k]: v }))}
+          onReset={() => setDemo(defaultsFor(DEMO_SETTINGS) as Record<string, SettingValue>)}
         />
       </Panel>
 

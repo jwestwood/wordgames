@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createAnimationQueue } from './queue';
 import { createTransient, type Timers } from './transient';
-import { centredRect, invertTransform } from './motion';
+import { centredRect, invertTransform, isRectInView } from './motion';
 
 describe('createAnimationQueue', () => {
   it('runs tasks sequentially in order', async () => {
@@ -90,5 +90,14 @@ describe('motion geometry', () => {
       width: 20,
       height: 10,
     });
+  });
+});
+
+describe('isRectInView', () => {
+  it('detects fully visible vs clipped rects', () => {
+    expect(isRectInView({ left: 0, top: 10, width: 50, height: 20 }, 100)).toBe(true);
+    expect(isRectInView({ left: 0, top: 90, width: 50, height: 20 }, 100)).toBe(false);
+    expect(isRectInView({ left: 0, top: -5, width: 50, height: 20 }, 100)).toBe(false);
+    expect(isRectInView({ left: 80, top: 0, width: 50, height: 20 }, 100, 100)).toBe(false);
   });
 });

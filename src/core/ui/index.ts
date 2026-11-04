@@ -24,3 +24,4 @@ export * from './HistoryPanel';
 export * from './queue';
 export * from './transient';
 export * from './motion';
+export * from './SettingsPanel';

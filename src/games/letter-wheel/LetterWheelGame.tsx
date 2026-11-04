@@ -4,6 +4,8 @@ import { progressFor, useSeedState } from '@core/game';
 import { useHistoryEntry } from '@core/history';
 import { pickTier, useSound } from '@core/audio';
 import { PUZZLE_VERSION } from './version';
+import { useGameSettings } from '@core/settings';
+import { LETTER_WHEEL_SETTINGS } from './settings';
 import { toWheelPreview } from './preview';
 import {
   Button,
@@ -13,6 +15,9 @@ import {
   ensureInView,
   flashElement,
   flyElement,
+  GameSettingsButton,
+  isInView,
+  popElement,
   IconBackspace,
   IconShuffle,
   IconX,
@@ -92,6 +97,9 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
     () => progressFor(found.length, puzzle.pool.length).stars,
   );
   const play = useSound();
+  const { values: settings } = useGameSettings(GAME_ID, LETTER_WHEEL_SETTINGS);
+  const autoScroll = useRef(settings.autoScroll);
+  autoScroll.current = settings.autoScroll;
   const queue = useRef(createAnimationQueue());
   const wheelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -165,7 +173,8 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
       const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
       if (wheel && slot) {
         void flashElement(wheel);
-        await ensureInView(slot);
+        const scroll = autoScroll.current;
+        if (scroll) await ensureInView(slot);
         const to = slot.getBoundingClientRect();
         const wr = wheel.getBoundingClientRect();
         const width = Math.min(wr.width * 0.75, to.width * 2.6);
@@ -178,7 +187,17 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
           cell.textContent = c.toUpperCase();
           content.appendChild(cell);
         }
-        await flyElement(from, to, content, { className: 'fly-word', duration: 1100 });
+        if (scroll || isInView(slot))
+          await flyElement(from, to, content, { className: 'fly-word', duration: 1100 });
+        else {
+          // Target off-screen and scrolling is off: show the word over the wheel, fade it there.
+          content.style.transform = `scale(${from.width / to.width})`;
+          content.style.transformOrigin = 'center';
+          await popElement(centredRect(wr, to.width, to.height), content, {
+            className: 'fly-word',
+            duration: 1100,
+          });
+        }
         play('word-land');
       }
       setHidden((h) => {
@@ -195,8 +214,8 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
     async (i: number) => {
       const wheel = wheelRef.current;
       const slot = cardRef.current?.querySelector<HTMLElement>(`[data-star-slot="${i}"]`);
-      if (wheel && slot) {
-        await ensureInView(slot);
+      if (wheel && slot && (autoScroll.current || isInView(slot))) {
+        if (autoScroll.current) await ensureInView(slot);
         const to = slot.getBoundingClientRect();
         const wr = wheel.getBoundingClientRect();
         const from = centredRect(wr, wr.width * 0.4, wr.width * 0.4);
@@ -285,7 +304,14 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
             once.
           </p>
         </div>
-        <SeedDisplay gameId={GAME_ID} seed={seed} />
+        <div className="lw__tools">
+          <SeedDisplay gameId={GAME_ID} seed={seed} />
+          <GameSettingsButton
+            gameId={GAME_ID}
+            definitions={LETTER_WHEEL_SETTINGS}
+            title="Letter Wheel settings"
+          />
+        </div>
       </div>
 
       <div className="lw__layout">
