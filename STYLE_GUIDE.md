@@ -1,6 +1,6 @@
 # Style Guide — Paper & Tabletop
 
-Live showcase: run `npm run dev` and open `#/style-guide`.
+Live showcase: run `npm run dev` and open `#/style-guide` (linked from the site footer).
 
 ## Principles
 

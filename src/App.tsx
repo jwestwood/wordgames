@@ -1,5 +1,5 @@
 import { Suspense, useState } from 'react';
-import { GameCard, Header, HistoryPanel, IconPalette, IconPawn, MoreGamesCard } from '@core/ui';
+import { Footer, GameCard, Header, HistoryPanel, IconPawn, MoreGamesCard } from '@core/ui';
 import { StyleGuide } from '@core/ui/StyleGuide';
 import { useHashRoute } from '@core/router';
 import { useDocumentBrand } from '@core/brand';
@@ -17,10 +17,7 @@ export default function App() {
       <Header
         title="Word Games"
         tagline="Words to the wise"
-        nav={[
-          { href: '#/', label: 'Games', icon: <IconPawn /> },
-          { href: '#/style-guide', label: 'Style guide', icon: <IconPalette /> },
-        ]}
+        nav={[{ href: '#/', label: 'Games', icon: <IconPawn /> }]}
         onHistory={() => setHistoryOpen(true)}
       />
       <HistoryPanel
@@ -45,6 +42,9 @@ export default function App() {
           </section>
         </>
       )}
+      <Footer links={[{ href: '#/style-guide', label: 'Style guide' }]}>
+        <span>Word Games · a seed for every puzzle</span>
+      </Footer>
     </main>
   );
 }
