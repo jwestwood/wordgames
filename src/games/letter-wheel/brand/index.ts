@@ -21,7 +21,7 @@ export const TAGLINES = [
 export const letterWheelBrand: GameBrand = {
   Icon: LetterWheelIcon,
   Logo: LetterWheelLogo,
-  tagline: TAGLINES[0],
+  tagline: TAGLINES[1],
   accent: 'var(--color-red)',
   favicon,
 };

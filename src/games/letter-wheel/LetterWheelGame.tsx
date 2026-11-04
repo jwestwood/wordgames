@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRng, ensureSeed, getSeedFromHash, newPuzzle, shuffle } from '@core/random';
 import { progressFor, useSeedState } from '@core/game';
 import { useHistoryEntry } from '@core/history';
-import { useSound } from '@core/audio';
+import { pickTier, useSound } from '@core/audio';
 import { PUZZLE_VERSION } from './version';
 import { toWheelPreview } from './preview';
 import {
@@ -223,7 +223,15 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
       const after = progressFor(next.length, puzzle.pool.length).stars;
       setFound(next);
       setHidden((h) => new Set(h).add(res.word));
-      play('success');
+      play(
+        res.word.length >= puzzle.target.length
+          ? 'success-epic'
+          : pickTier(
+              res.word.length,
+              [{ min: 6, value: 'success-big' as const }],
+              'success' as const,
+            ),
+      );
       showFeedback({ tone: 'good', text: `${res.word.toUpperCase()} — nice!` });
       const q = queue.current;
       q.enqueue(() => animateWord(res.word));

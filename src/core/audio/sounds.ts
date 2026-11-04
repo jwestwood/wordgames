@@ -6,6 +6,8 @@ export type SoundName =
   | 'button'
   | 'error'
   | 'success'
+  | 'success-big'
+  | 'success-epic'
   | 'star'
   | 'perfect'
   | 'shuffle'
@@ -31,6 +33,8 @@ export const SOUNDS: SoundRegistry<SoundName> = {
   button: s('button', 0.4, 0.05),
   error: s('error', 0.45),
   success: s('success', 0.55),
+  'success-big': s('success-big', 0.6),
+  'success-epic': s('success-epic', 0.7),
   star: s('star', 0.7),
   perfect: s('perfect', 0.75),
   shuffle: s('shuffle', 0.5, 0.05),

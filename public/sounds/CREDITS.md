@@ -14,6 +14,8 @@ Ogg Vorbis (q2) + MP3 48 kbps fallback. Relative loudness is balanced via per-so
 | `button`        | [UI Audio](https://kenney.nl/assets/ui-audio)                 | `click1.ogg`           |
 | `error`         | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | `error_006.ogg`        |
 | `success`       | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | `confirmation_001.ogg` |
+| `success-big`   | [Music Jingles](https://kenney.nl/assets/music-jingles)       | `jingles_STEEL09.ogg`  |
+| `success-epic`  | [Music Jingles](https://kenney.nl/assets/music-jingles)       | `jingles_HIT15.ogg`    |
 | `star`          | [Music Jingles](https://kenney.nl/assets/music-jingles)       | `jingles_PIZZI00.ogg`  |
 | `perfect`       | [Music Jingles](https://kenney.nl/assets/music-jingles)       | `jingles_PIZZI07.ogg`  |
 | `shuffle`       | [Casino Audio](https://kenney.nl/assets/casino-audio)         | `card-fan-1.ogg`       |
