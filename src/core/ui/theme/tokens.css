@@ -30,6 +30,9 @@
   --color-success: var(--color-green);
   --color-border: rgba(43, 43, 43, 0.18);
   --color-focus: var(--color-red);
+  /* Text selection highlight: deep red with paper text, clearly distinct from tan paper. */
+  --color-selection-bg: var(--color-red-dark);
+  --color-selection-fg: var(--color-paper-light);
   --color-overlay: rgba(43, 32, 20, 0.55);
 
   /* Tile states */

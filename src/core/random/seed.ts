@@ -21,3 +21,21 @@ export function dailySeed(date = new Date()): string {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
 }
+
+/** Pattern for a canonical seed: exactly SEED_LENGTH chars from the seed alphabet. */
+export const SEED_PATTERN = new RegExp(`^[${ALPHABET}]{${SEED_LENGTH}}$`);
+
+/** True if `seed` (after normalisation) is a valid canonical seed code. */
+export function isValidSeed(seed: string): boolean {
+  return SEED_PATTERN.test(normaliseSeed(seed));
+}
+
+/** Normalise as the user types: uppercase, map look-alikes, drop spaces/symbols, cap length. */
+export function normaliseSeedInput(raw: string, length = SEED_LENGTH): string {
+  return raw
+    .toUpperCase()
+    .replace(/O/g, '0')
+    .replace(/[IL]/g, '1')
+    .replace(/[^0-9A-Z]/g, '')
+    .slice(0, length);
+}

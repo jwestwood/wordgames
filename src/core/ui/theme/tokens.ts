@@ -21,6 +21,9 @@ export const colors = {
 /** Foreground/background pairs used by components; each must meet WCAG AA (4.5:1). */
 export const contrastPairs: Array<[name: string, fg: string, bg: string]> = [
   ['body text', colors.ink, colors.paper],
+  ['selection text', colors.paperLight, colors.redDark],
+  ['selection vs page', colors.redDark, colors.paper],
+  ['selection vs surface', colors.redDark, colors.paperLight],
   ['muted text', colors.inkMuted, colors.paper],
   ['text on surface', colors.ink, colors.paperLight],
   ['accent link', colors.red, colors.paper],

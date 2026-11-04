@@ -40,7 +40,7 @@ export function Header({
                 <li key={n.href}>
                   {n.icon ? (
                     <a
-                      className="btn btn--ghost btn--sm btn--icon"
+                      className="btn btn--secondary btn--sm btn--icon site-header__btn"
                       href={n.href}
                       aria-label={n.label}
                       title={n.label}
@@ -59,7 +59,7 @@ export function Header({
           <Button
             variant="secondary"
             size="sm"
-            className="site-header__history"
+            className="site-header__btn site-header__history"
             onClick={onHistory}
             title="Your past games"
           >
@@ -71,7 +71,7 @@ export function Header({
           <Button
             variant="secondary"
             size="sm"
-            className="btn--icon site-header__sound"
+            className="btn--icon site-header__btn site-header__sound"
             onClick={toggleMuted}
             aria-pressed={!muted}
             aria-label="Sound"

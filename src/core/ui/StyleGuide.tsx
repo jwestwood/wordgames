@@ -89,7 +89,16 @@ export function StyleGuide() {
       </Panel>
 
       <Panel title="SeedDisplay &amp; ScoreCard">
-        <SeedDisplay gameId="style-guide" seed="K7Q2MX" onRandomise={() => {}} />
+        <SeedDisplay
+          gameId="style-guide"
+          seed="K7Q2MX"
+          onRandomise={() => {}}
+          onSeedChange={() => {}}
+        />
+        <p className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
+          Editable: type a 6-character code and press Enter (or Go). Invalid codes show an inline
+          error; Esc reverts.
+        </p>
         <div style={{ marginTop: 'var(--space-4)', maxWidth: '28rem' }}>
           <ScoreCard
             found={17}

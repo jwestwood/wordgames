@@ -59,9 +59,11 @@ code,
   box-shadow: var(--shadow-focus);
   border-radius: var(--radius-sm);
 }
-::selection {
-  background: var(--color-wood);
-  color: var(--color-ink);
+::selection,
+input::selection,
+textarea::selection {
+  background: var(--color-selection-bg);
+  color: var(--color-selection-fg);
 }
 .app {
   max-width: 1040px;
