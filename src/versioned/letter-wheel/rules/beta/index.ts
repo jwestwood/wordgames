@@ -22,6 +22,19 @@ export const TARGET_LENGTH = { min: 8, max: 10 } as const;
  */
 export const POOL_SIZE = { min: 20, max: 40 } as const;
 export const MAX_ATTEMPTS = 2000;
+/** Every distinct wheel letter must appear in at least this many answers (target included). */
+export const MIN_WORDS_PER_LETTER = 3;
+
+/** Total shortfall: for each distinct letter of the target, how many answers it lacks (0 = ok). */
+export function letterShortfall(target: string, pool: readonly string[]): number {
+  let short = 0;
+  for (const l of new Set(target)) {
+    let n = 0;
+    for (const w of pool) if (w.includes(l) && ++n >= MIN_WORDS_PER_LETTER) break;
+    short += Math.max(0, MIN_WORDS_PER_LETTER - n);
+  }
+  return short;
+}
 
 export interface Dictionaries {
   /** common tier: answers and pool */
@@ -96,10 +109,14 @@ export function criteria(dict: Dictionaries): Criterion<Candidate>[] {
       name: 'poolSize',
       test: (c) => c.pool.length >= POOL_SIZE.min && c.pool.length <= POOL_SIZE.max,
     },
+    { name: 'letterCoverage', test: (c) => letterShortfall(c.target, c.pool) === 0 },
   ];
 }
 
-/** Deterministic fallback: unique-anagram candidates first, then pool size closest to range. */
+/**
+ * Deterministic fallback: unique-anagram candidates first, then pool size closest to range plus
+ * missing letter usages (each missing usage weighs like 2 words outside the size range).
+ */
 function fallback(dict: Dictionaries) {
   const dist = (n: number) =>
     n < POOL_SIZE.min ? POOL_SIZE.min - n : Math.max(0, n - POOL_SIZE.max);
@@ -107,7 +124,10 @@ function fallback(dict: Dictionaries) {
     let best = cands[0];
     let bestScore = Infinity;
     for (const c of cands) {
-      const s = (findAnagrams(c.target, dict.all).length ? 1000 : 0) + dist(c.pool.length);
+      const s =
+        (findAnagrams(c.target, dict.all).length ? 1000 : 0) +
+        dist(c.pool.length) +
+        2 * letterShortfall(c.target, c.pool);
       if (s < bestScore) [best, bestScore] = [c, s];
     }
     return best;

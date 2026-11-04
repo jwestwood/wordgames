@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { canSpellFrom, findAnagrams } from '@core/words';
 import { versionId } from '@core/versions';
 import { ALL_VERSIONS, rulesFor, wordsFor } from './versions.node';
+import { letterShortfall } from '../../versioned/letter-wheel/rules/beta';
 
 describe.each(ALL_VERSIONS.map((v) => [versionId(v), v] as const))('rules %s', (_, version) => {
   const rules = rulesFor(version);
@@ -68,6 +69,17 @@ describe('beta rules', () => {
       expect(p.passed).toBe(true);
       expect(p.pool.length).toBeGreaterThanOrEqual(20);
       expect(p.pool.length).toBeLessThanOrEqual(40);
+      for (const l of new Set(p.target))
+        expect(
+          p.pool.filter((w) => w.includes(l)).length,
+          `${p.target}: ${l}`,
+        ).toBeGreaterThanOrEqual(3);
     }
+  });
+
+  it('letterShortfall counts missing usages per distinct letter', () => {
+    expect(letterShortfall('exam', ['exam', 'maxe', 'amex', 'mame'])).toBe(0);
+    expect(letterShortfall('exam', ['exam', 'mame', 'meam'])).toBe(2); // x appears once
+    expect(letterShortfall('aab', ['aab', 'aa', 'ba'])).toBe(0);
   });
 });

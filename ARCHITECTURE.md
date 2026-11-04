@@ -131,8 +131,9 @@ so _pant, veal, antler, leaper_ count), while the wheel is still drawn and sized
 strict `targets` list (= v1 common), with the full answer pool capped at 100. ~97% of seeds keep their v1
 wheel and just accept more words. Stats: `npx vite-node scripts/letter-wheel-stats.ts 300 <1|2|beta>`.
 
-Beta (unreleased): v2's lists, but the answer pool itself must be 20–40 words (shorter games); the
-wheel word is still drawn from `targets`.
+Beta (unreleased): v2's lists, but the answer pool itself must be 20–40 words (shorter games), and
+every distinct wheel letter must appear in at least 3 answers (target included); the wheel word is
+still drawn from `targets`.
 
 **Touch input:** interactive wheels act on press via `pressProps`/`createPressGuard` (`src/core/ui/tap.ts`):
 fire on pointerdown, swallow the follow-up click, keyboard clicks still work. Pair with the
