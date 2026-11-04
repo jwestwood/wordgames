@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import {
   isValidSeed,
   newPuzzle,
@@ -22,6 +22,8 @@ export interface SeedDisplayProps {
    * beta, otherwise goes to the latest numbered version.
    */
   version?: string;
+  /** Rendered inline right after the seed field (e.g. the game's settings cog). */
+  after?: ReactNode;
   /** Puzzle has progress: randomising asks for confirmation first. */
   started?: boolean;
   /** Override "new seed" behaviour (defaults to core newPuzzle navigation). */
@@ -37,6 +39,7 @@ export function SeedDisplay({
   seed,
   version,
   started = false,
+  after,
   onRandomise,
   onSeedChange,
   className = '',
@@ -173,6 +176,7 @@ export function SeedDisplay({
           </Button>
         )}
       </span>
+      {after}
       {invalid ? (
         <span id={errId} className="seed__msg seed__msg--error" role="alert">
           Codes are {SEED_LENGTH} letters/digits (no I, L, O, U)

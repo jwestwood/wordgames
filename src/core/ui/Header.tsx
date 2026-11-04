@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from './Button';
 import { IconClock, IconSpeaker, IconSpeakerOff } from './Icons';
-import { useMuted } from '../audio/hooks';
+import { useMuted, useSoundTheme } from '../audio/hooks';
 
 export interface HeaderProps {
   title?: ReactNode;
@@ -24,6 +24,7 @@ export function Header({
   soundToggle = true,
 }: HeaderProps) {
   const [muted, toggleMuted] = useMuted();
+  const [themeId, setTheme, themes] = useSoundTheme();
   return (
     <header className="site-header">
       <div>
@@ -66,6 +67,23 @@ export function Header({
             <IconClock />
             <span>Past Games</span>
           </Button>
+        )}
+        {soundToggle && (
+          <label className="sound-theme" title="Sound theme: plays a short preview when chosen">
+            <span className="sound-theme__label">Sound theme</span>
+            <select
+              className="btn btn--secondary btn--sm site-header__btn sound-theme__select"
+              value={themeId}
+              onChange={(e) => setTheme(e.target.value)}
+              aria-description="Plays a short preview when chosen"
+            >
+              {themes.map((t) => (
+                <option key={t.id} value={t.id} title={t.description}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
         {soundToggle && (
           <Button

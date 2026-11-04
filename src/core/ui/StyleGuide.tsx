@@ -24,8 +24,7 @@ import { contrastRatio } from './theme/contrast';
 const DEMO_SETTINGS: readonly SettingDefinition[] = [
   {
     key: 'autoScroll',
-    label: 'Scroll to word list when you find a word',
-    description: 'Toggle (role="switch").',
+    label: 'Scroll to found words',
     type: 'toggle',
     default: true,
   },

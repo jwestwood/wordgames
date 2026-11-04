@@ -1,6 +1,9 @@
 import type { SoundRegistry } from './manager';
 
-/** Shared sound names: every game uses these so the whole site sounds consistent. */
+/**
+ * Sound *slots*: every game plays these names; the active sound theme (themes.ts) decides which
+ * actual file each slot uses. Games never reference files or themes.
+ */
 export type SoundName =
   | 'tap'
   | 'button'
@@ -21,13 +24,14 @@ export type SoundName =
   | 'close';
 
 const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
-const s = (name: string, volume = 1, vary = 0) => ({
-  src: [`${base}sounds/${name}.ogg`, `${base}sounds/${name}.mp3`],
-  volume,
-  vary,
-});
+/** `dir` = '' for the classic files in public/sounds, else a theme folder (public/sounds/<dir>). */
+export const soundFile = (dir: string, name: string, volume = 1, vary = 0) => {
+  const path = `${base}sounds/${dir ? `${dir}/` : ''}${name}`;
+  return { src: [`${path}.ogg`, `${path}.mp3`], volume, vary };
+};
+const s = (name: string, volume = 1, vary = 0) => soundFile('', name, volume, vary);
 
-/** Files live in public/sounds (see CREDITS.md). Volumes balance clicks against jingles. */
+/** Classic theme. Files live in public/sounds (see CREDITS.md). Volumes balance clicks vs jingles. */
 export const SOUNDS: SoundRegistry<SoundName> = {
   tap: s('tap', 0.45, 0.08),
   button: s('button', 0.4, 0.05),

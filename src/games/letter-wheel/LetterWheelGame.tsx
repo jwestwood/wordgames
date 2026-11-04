@@ -369,11 +369,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
             seed={seed}
             version={vid}
             started={guessed || found.length > 0}
-          />
-          <GameSettingsButton
-            gameId={GAME_ID}
-            definitions={LETTER_WHEEL_SETTINGS}
-            title="Letter Wheel settings"
+            after={
+              <GameSettingsButton
+                gameId={GAME_ID}
+                definitions={LETTER_WHEEL_SETTINGS}
+                title="Letter Wheel settings"
+              />
+            }
           />
         </div>
       </div>

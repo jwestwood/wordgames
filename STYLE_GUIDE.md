@@ -132,7 +132,7 @@ export function MyGame() {
 
 Register it in `src/games`; global styles load automatically via `@core/ui`. If you need something new and reusable, add it to `src/core/ui` with tokens, a style-guide entry, and tests for any logic.
 
-All header buttons (nav icons, Past Games, mute) use one shared `.site-header__btn` style: secondary paper background, fixed 2.5rem height so icon and text buttons line up. Icon-only buttons anywhere (mute, settings cog, seed bar) use `.btn--icon` (2.75rem × 2.5rem). Buttons never move on hover or press — feedback is colour and shadow only.
+All header buttons (nav icons, Past Games, mute) use one shared `.site-header__btn` style: secondary paper background, fixed 2.5rem height so icon and text buttons line up. The sound-theme dropdown beside mute is a native `select` styled as the same paper button (`.sound-theme__select`, gradient caret). Icon-only buttons anywhere (mute, settings cog, seed bar) use `.btn--icon` (2.75rem × 2.5rem). Buttons never move on hover or press — feedback is colour and shadow only.
 
 Text selection (`::selection`, incl. inputs) uses `--color-selection-bg` (red-dark) / `--color-selection-fg` (paper-light); pairs are in the contrast tests.
 

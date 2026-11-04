@@ -1,6 +1,23 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { createSoundManager, type AudioCtxLike, type PlayOptions } from './manager';
-import { SOUNDS, type SoundName } from './sounds';
+import { type SoundName } from './sounds';
+import {
+  findSoundTheme,
+  PREVIEW_SLOT,
+  readSoundTheme,
+  SOUND_THEME_KEY,
+  SOUND_THEMES,
+} from './themes';
+
+function safeStorage() {
+  try {
+    return typeof window !== 'undefined' ? window.localStorage : null;
+  } catch {
+    return null;
+  }
+}
+let themeId = readSoundTheme(safeStorage());
+const themeListeners = new Set<() => void>();
 
 function browserManager() {
   const w = typeof window !== 'undefined' ? window : undefined;
@@ -10,7 +27,7 @@ function browserManager() {
       (w as unknown as { webkitAudioContext?: new () => AudioCtxLike }).webkitAudioContext);
   const probe = typeof document !== 'undefined' ? document.createElement('audio') : null;
   const m = createSoundManager<SoundName>({
-    sounds: SOUNDS,
+    sounds: findSoundTheme(themeId).sounds,
     createContext: () => (AC ? new AC() : null),
     canPlay: (url) => {
       if (!probe?.canPlayType) return true;
@@ -58,4 +75,30 @@ export function useMuted() {
     if (!m) void sound.unlock().then(() => sound.play('button'));
   }, []);
   return [muted, toggle] as const;
+}
+
+/** Switch the global sound theme (persisted); plays a short preview unless muted. */
+export function setSoundTheme(id: string, preview = true) {
+  const theme = findSoundTheme(id);
+  themeId = theme.id;
+  try {
+    safeStorage()?.setItem(SOUND_THEME_KEY, theme.id);
+  } catch {
+    /* storage blocked */
+  }
+  themeListeners.forEach((l) => l());
+  void sound.unlock().then(async () => {
+    await sound.setSounds(theme.sounds);
+    if (preview) sound.play(PREVIEW_SLOT);
+  });
+}
+
+/** `[themeId, setTheme, themes]` for the global sound theme. */
+export function useSoundTheme() {
+  const id = useSyncExternalStore(
+    (l) => (themeListeners.add(l), () => void themeListeners.delete(l)),
+    () => themeId,
+    () => themeId,
+  );
+  return [id, setSoundTheme, SOUND_THEMES] as const;
 }

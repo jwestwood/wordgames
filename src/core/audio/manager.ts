@@ -73,8 +73,8 @@ export function readMuted(storage: StorageLike | null | undefined, key = MUTE_KE
 }
 
 export function createSoundManager<N extends string>(opts: SoundManagerOptions<N>) {
+  let { sounds } = opts;
   const {
-    sounds,
     createContext = () => null,
     load = (u) => fetch(u).then((r) => r.arrayBuffer()),
     canPlay = () => true,
@@ -155,6 +155,13 @@ export function createSoundManager<N extends string>(opts: SoundManagerOptions<N
       g.connect(c.destination);
       src.start(c.currentTime + Math.max(0, o.delay ?? 0));
       return true;
+    },
+    /** Swap the sound registry (e.g. a new theme): drops decoded buffers, preloads if unlocked. */
+    setSounds(next: SoundRegistry<N>): Promise<void> {
+      sounds = next;
+      buffers.clear();
+      loading.clear();
+      return ctx ? Promise.all(api.names.map(preload)).then(() => undefined) : Promise.resolve();
     },
     get muted() {
       return muted;

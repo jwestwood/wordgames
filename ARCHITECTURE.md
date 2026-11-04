@@ -181,6 +181,13 @@ Render static site (`render.yaml`): build `npm ci && npm run build`, publish `di
 
 ## Sound
 
+Sound names are **slots**; a global **sound theme** (`src/core/audio/themes.ts`: Classic, Soft,
+Tabletop, Arcade) maps every slot to a file. The header has a theme dropdown next to the mute button
+(choosing one plays a short `success-big` preview); the choice persists in `wordgames:soundTheme`
+(`useSoundTheme` / `setSoundTheme`, which calls `sound.setSounds`). Games only ever call
+`play('<slot>')`. Mute stays a separate global button. Theme files: `public/sounds/<theme>/`, built
+by `scripts/sounds/build-theme.sh` (credits in `public/sounds/CREDITS.md`).
+
 Shared sound names (`tap`, `button`, `error`, `success`, `star`, `perfect`, `shuffle`, `delete`, `clear`,
 `word-land`, `already-found`, `copy`, `dice`, `open`, `close`) live in `src/core/audio/sounds.ts`; files are
 in `public/sounds/` (ogg + mp3, CC0, see `CREDITS.md`). Games call `const play = useSound(); play('tap')`.
