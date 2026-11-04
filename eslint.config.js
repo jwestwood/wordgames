@@ -27,5 +27,22 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  {
+    // Frozen puzzle rules/kernels must be self-contained (also enforced by src/versioning.test.ts).
+    files: ['src/versioned/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@core/*', '**/core/**', '**/games/**', 'react', 'react-dom'],
+              message: 'Versioned code may only import src/versioned kernels (ARCHITECTURE.md).',
+            },
+          ],
+        },
+      ],
+    },
+  },
   prettier,
 );

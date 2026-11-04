@@ -7,6 +7,7 @@ import {
   SEED_LENGTH,
   shareLink,
 } from '@core/random';
+import { BETA } from '../versions';
 import { Button } from './Button';
 import { IconCopy, IconDice, IconLink } from './Icons';
 import { useTransientMessage } from './transient';
@@ -15,6 +16,11 @@ import { sound } from '../audio/hooks';
 export interface SeedDisplayProps {
   gameId: string;
   seed: string;
+  /**
+   * Puzzle version id (`2`, `beta`). Included in share links; randomising/typing a seed stays on
+   * beta, otherwise goes to the latest numbered version.
+   */
+  version?: string;
   /** Override "new seed" behaviour (defaults to core newPuzzle navigation). */
   onRandomise?: () => void;
   /** Override applying a typed seed (defaults to core newPuzzle(gameId, seed)). */
@@ -26,6 +32,7 @@ export interface SeedDisplayProps {
 export function SeedDisplay({
   gameId,
   seed,
+  version,
   onRandomise,
   onSeedChange,
   className = '',
@@ -35,6 +42,8 @@ export function SeedDisplay({
   const [draft, setDraft] = useState(seed);
   const [invalid, setInvalid] = useState(false);
   const id = useId();
+  // New seeds stay on beta; numbered versions move on to the latest (missing v = latest).
+  const stay = version === BETA ? BETA : undefined;
   const errId = `${id}-err`;
 
   // Sync when the seed changes externally (dice, history, URL).
@@ -68,7 +77,7 @@ export function SeedDisplay({
     if (next === seed) return true;
     sound.play('button');
     if (onSeedChange) onSeedChange(next);
-    else newPuzzle(gameId, next);
+    else newPuzzle(gameId, next, stay);
     show('Puzzle loaded');
     return true;
   };
@@ -141,7 +150,9 @@ export function SeedDisplay({
           size="sm"
           aria-label="Copy share link"
           title="Copy share link"
-          onClick={() => copy(shareLink(gameId, seed), 'Link copied')}
+          onClick={() =>
+            copy(shareLink(gameId, seed, window.location.href, version), 'Link copied')
+          }
         >
           <IconLink />
         </Button>
@@ -156,7 +167,7 @@ export function SeedDisplay({
             setSpin((s) => s + 1);
             sound.play('dice');
             if (onRandomise) onRandomise();
-            else newPuzzle(gameId);
+            else newPuzzle(gameId, undefined, stay);
           }}
         >
           <IconDice />

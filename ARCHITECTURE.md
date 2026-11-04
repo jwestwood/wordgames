@@ -12,7 +12,9 @@ src/
     game/          scoring helpers, progressFor (stars/perfect), localStorage persistence,
                    per-seed state, hooks (useGameState, useCountdown, usePersistentState, useSeedState)
     history/       shared puzzle history: versioned localStorage store (upsert/list/remove/clear,
-                   200-entry cap), WORDLIST_VERSION (build-time hash of word lists), useHistoryEntry hook
+                   one entry per game+seed+puzzle version, 200-entry cap), useHistoryEntry hook
+    versions/      puzzle-version glue: manifest types, ?v= parsing/resolution, history labels,
+                   lazy versioned loader (rules + content-addressed lists), save/history migration
     settings/      per-game settings schema (toggle/select/range), tolerant load/save, useGameSettings
     brand/         GameBrand type (Icon, Logo, tagline, accent, favicon), documentTitle, useDocumentBrand
     audio/         Web Audio sound manager (lazy unlock on first gesture, preload/decode, deterministic
@@ -20,6 +22,10 @@ src/
     ui/            shared components (GameCard, Button, LetterTiles, LetterWheel, WordSlots, Confetti, ...)
     registry.ts    GameDefinition type
     router.ts      tiny hash router (#/games/<id>) – works on any static host
+  versioned/       FROZEN puzzle logic + data (see "Puzzle versions"); must not import anything else
+    kernel/<name>@<n>/   frozen deterministic helpers (rng@1, select@1, subwords@1)
+    words/<hash>.txt     content-addressed, immutable word lists
+    <game-id>/     manifest.json, rules/v1..vN (frozen) + rules/beta (working copy), golden/vN.json
   games/
     index.ts       games registry – add new games here
     <game-id>/     one thin module per game
@@ -45,7 +51,8 @@ lazy-loaded via `loadWords()` as separate chunks) is bundled.
 etc.) to build a puzzle. The seed lives in the URL: `#/games/<id>?seed=K7Q2MX`. Use `ensureSeed(id)` on
 load, `newPuzzle(id)` for "play again", and `shareLink(id, seed)` to share. The same seed + same app version
 must always yield the same puzzle, so keep word lists sorted and avoid iterating unordered collections when
-drawing from the RNG. Changing a word list changes puzzles for existing seeds; accept that knowingly.
+drawing from the RNG. Games with puzzle versions (below) guarantee this forever: a seed + numbered version
+is immutable, and word-list or rule changes only ever ship as a new version.
 
 ## Adding a game
 
@@ -67,6 +74,62 @@ Core uses it everywhere: `GameCard` (icon + tagline), `HistoryPanel` (small icon
 style guide's Branding panel, and `App` calls `useDocumentBrand` to set the document title/favicon.
 Brand assets live in `src/games/<id>/brand/` (Letter Wheel: `WheelMark`, `Icon`, `Logo`, `icon.svg`).
 
+## Puzzle versions
+
+A puzzle is identified by **(seed, version)**. Numbered versions (`1`, `2`, …) are immutable; `beta` is a
+mutable, opt-in working copy for development.
+
+**Layout** (`src/versioned/`):
+
+- `words/<hash>.txt` — word lists stored by content hash (sha256, 16 hex). Immutable once a manifest
+  references them; lazy-loaded (`import.meta.glob`), so old lists cost nothing until a save needs them.
+- `kernel/<name>@<n>/` — frozen copies of the deterministic helpers rules need (`rng@1`: cyrb128 + sfc32
+  `createRng`, `shuffle`; `select@1`: `selectWithCriteria`; `subwords@1`: word index, `findSubwords`,
+  `findAnagrams`). **Never edit**: a behaviour change is a new `@2`. Several rule sets share a kernel.
+  `src/core/random` and `src/core/words` re-export the latest kernels, so there is one implementation.
+- `<game>/rules/<id>/` — everything that maps seed → puzzle or affects save compatibility (target
+  selection, criteria, pool limits, min length, answer tiers, star thresholds, guess validation, scoring).
+  `rules/vN` are frozen; `rules/beta` is the working copy. UI, animation, sounds and settings live in
+  `src/games/<game>` and can change freely.
+- `<game>/manifest.json` — `{ beta: { rules: 'beta', words: { common: '<path of working list>' } },
+versions: [{ v: 1, rules: 'v1', words: { common: '<hash>', extended: '<hash>' } }] }`. A rules-only
+  release reuses the previous list hashes.
+- `<game>/golden/vN.json` — exact puzzles (target, centre, wheel order, pool) for pinned seeds.
+
+**Isolation:** files under `src/versioned` import only relative paths inside `src/versioned`; rule sets
+and kernels import only kernel folders or their own folder (no `@core`, games or npm packages).
+Enforced by `src/versioning.test.ts` (also checks every manifest hash has a stored list whose content
+matches, every rules folder exists and every version has a golden fixture) and an ESLint rule.
+`npm run build` runs these checks first (`npm run check:versions`).
+
+**Game side:** the game declares the rules interface it uses (Letter Wheel: `LetterWheelRules` in
+`src/games/letter-wheel/versions.ts`: `prepare(words)`, `generate(seed, dict)`, `checkGuess`, `stars`,
+`STAR_THRESHOLDS`, `MIN_WORD`) and loads a version with `createVersionedLoader` (`@core/versions`).
+Beta lists are the working copies in `src/core/words/data/` (regenerated by `scripts/build-wordlist.py`).
+
+**URLs & saves:** `#/games/<id>?seed=GSPOMH&v=2`. A missing or unknown `v` means the latest numbered
+version, and the game pins it into the URL on load. Share links always carry `v`; the dice/new-seed
+stay on beta when you are on beta, otherwise go to the latest version. Per-seed saves live at
+`wordgames:<game>:v<N>:seed:<seed>` (`…:beta:seed:…` for beta) and history entries store the version
+id (`'1'`, `'2'`, `'beta'`), so old saves always reopen with exactly the rules and lists they were
+made with. History shows a small `v1` / `Beta` stamp for non-latest entries; the game shows a note with
+a "Play vN" link when you are not on the latest version.
+
+**Beta:** opt in with `?v=beta` (e.g. `#/games/letter-wheel?v=beta`). Beta can change in any way and
+may break its saves; its history entries are stamped "Beta" and never mix with numbered ones.
+
+**Release** (`npm run release:version -- <game> [--dry-run]`, `scripts/release-version.mjs`):
+copies `rules/beta` → `rules/vN` (stamping the frozen header), hashes the beta word lists and stores
+any new ones under `words/<hash>.txt` (unchanged lists reuse their hash), appends the manifest entry,
+writes `golden/vN.json` (`GOLDEN_WRITE=1` run of `src/games/<game>/golden.test.ts`) and runs the
+integrity checks. It refuses if beta is identical to the latest version. Review, then commit
+`src/versioned`; on deploy vN becomes the public default.
+
+**Migration:** `GameDefinition.migrate` runs once at startup. Letter Wheel moves legacy history
+entries stamped `lw1-92d0b432` (the v1 lists) to version `1` and copies their saves from
+`letter-wheel:seed:<seed>` to `letter-wheel:v1:seed:<seed>`; other legacy stamps keep an "Older word
+list" label and open on the latest version.
+
 ## Puzzle history
 
 Games report progress with `useHistoryEntry(gameId, seed, { summary, found, total, stars, maxStars,
@@ -75,8 +138,8 @@ completed, version, started })`. One entry per (gameId, seed) lives in `wordgame
 must never spoil the answer (e.g. "9 letters · centre R"). Entries are only created once `started` is true;
 Letter Wheel sets it on the **first submitted guess** (right or wrong) or when the seed already has saved
 words, so opening/randomising puzzles does not clutter history. Cap: 200 entries, evicting the oldest
-completed first, then the oldest. Set `puzzleVersion` on the `GameDefinition` (e.g. `lw1-${WORDLIST_VERSION}`);
-entries recorded with another version are stamped "Older word list" in the panel.
+completed first, then the oldest. Entries are keyed by (gameId, seed, version); set `latestVersion` on the
+`GameDefinition` and entries from other versions get a small `v1` / `Beta` stamp (see Puzzle versions).
 
 ## Settings
 

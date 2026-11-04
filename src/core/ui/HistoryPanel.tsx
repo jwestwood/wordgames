@@ -1,6 +1,5 @@
 import { Suspense, useState, type ComponentType } from 'react';
 import {
-  isStale,
   relativeTime,
   removeHistory,
   useHistoryList,
@@ -8,6 +7,7 @@ import {
   type HistoryStatus,
 } from '@core/history';
 import { gameHash } from '@core/random';
+import { versionParam, versionTag } from '@core/versions';
 import { Button } from './Button';
 import { IconStar, IconTrash } from './Icons';
 import { Modal } from './Modal';
@@ -15,7 +15,8 @@ import { Modal } from './Modal';
 export interface HistoryGame {
   id: string;
   title: string;
-  puzzleVersion?: string;
+  /** Latest numbered puzzle version id; entries from other versions get a small label. */
+  latestVersion?: string;
   /** Optional branding; the icon is shown next to the game name. */
   brand?: { Icon: ComponentType<{ size?: number; className?: string }> };
   /** Optional mini, non-interactive puzzle preview shown prominently on each card. */
@@ -93,7 +94,7 @@ export function HistoryPanel({ open, onClose, games, now }: HistoryPanelProps) {
         <ul className="history__list">
           {entries.map((e) => (
             <HistoryItem
-              key={`${e.gameId}:${e.seed}`}
+              key={`${e.gameId}:${e.seed}:${e.version}`}
               entry={e}
               game={byId.get(e.gameId)}
               now={t}
@@ -118,12 +119,16 @@ function HistoryItem({
   onOpen: () => void;
 }) {
   const [confirm, setConfirm] = useState(false);
-  const stale = isStale(e, game?.puzzleVersion);
+  const tag = versionTag(e.version, game?.latestVersion);
   const Preview = game?.HistoryPreview;
   const pct = e.total > 0 ? Math.floor((e.found / e.total) * 100) : 0;
   return (
     <li className={`history__item${e.completed ? ' history__item--done' : ''}`}>
-      <a className="history__open" href={gameHash(e.gameId, e.seed)} onClick={onOpen}>
+      <a
+        className="history__open"
+        href={gameHash(e.gameId, e.seed, versionParam(e.version))}
+        onClick={onOpen}
+      >
         {Preview && (
           <span className="history__preview">
             <Suspense fallback={<span className="history__preview-blank" aria-hidden="true" />}>
@@ -153,15 +158,12 @@ function HistoryItem({
               ))}
             </span>
           </span>
-          {((e.summary && !Preview) || stale) && (
+          {((e.summary && !Preview) || tag) && (
             <span className="history__summary">
               {!Preview && e.summary}
-              {stale && (
-                <span
-                  className="history__stale"
-                  title="The word list has changed since you played this seed; the puzzle may differ."
-                >
-                  Older word list
+              {tag && (
+                <span className={`history__stale history__version--${tag.kind}`} title={tag.title}>
+                  {tag.label}
                 </span>
               )}
             </span>
@@ -187,7 +189,11 @@ function HistoryItem({
         {confirm ? (
           <>
             <span className="history__confirm">Remove?</span>
-            <Button size="sm" variant="danger" onClick={() => removeHistory(e.gameId, e.seed)}>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={() => removeHistory(e.gameId, e.seed, e.version)}
+            >
               Remove
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setConfirm(false)}>

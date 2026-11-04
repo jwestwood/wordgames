@@ -23,6 +23,7 @@
     "noUncheckedSideEffectImports": true,
 
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "paths": { "@core/*": ["src/core/*"] }
   },
   "include": ["src"]

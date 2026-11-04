@@ -17,10 +17,12 @@ export interface GameDefinition {
   /** Per-game branding: icon, wide logo, tagline, optional accent (STYLE_GUIDE.md › Branding). */
   brand?: GameBrand;
   /**
-   * Current puzzle version (algorithm + word list) for history entries; entries recorded with a
-   * different version are flagged as stale (the same seed may now give a different puzzle).
+   * Latest numbered puzzle version id (e.g. `'2'`, see src/core/versions). History entries from
+   * older versions or beta get a small label; they still open with their own version.
    */
-  puzzleVersion?: string;
+  latestVersion?: string;
+  /** Optional one-off migration of old saves/history, run once at app start. */
+  migrate?: () => void;
   /**
    * Optional player settings (src/core/settings). Values persist in `wordgames:settings:<id>`;
    * the game reads them with `useGameSettings(id, settings)` and shows `GameSettingsButton`.

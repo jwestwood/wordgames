@@ -16,8 +16,15 @@ export function getSeedFromHash(hash: string): string | null {
   return s ? normaliseSeed(s) : null;
 }
 
-export function gameHash(gameId: string, seed: string): string {
-  return `#/games/${encodeURIComponent(gameId)}?seed=${encodeURIComponent(seed)}`;
+/** `#/games/<id>?seed=X[&v=2]` – `version` (puzzle version id) is omitted when undefined. */
+export function gameHash(gameId: string, seed: string, version?: string): string {
+  const v = version ? `&v=${encodeURIComponent(version)}` : '';
+  return `#/games/${encodeURIComponent(gameId)}?seed=${encodeURIComponent(seed)}${v}`;
+}
+
+/** Raw `v` (puzzle version) query value from a hash, or null. */
+export function getVersionFromHash(hash: string): string | null {
+  return parseHashQuery(hash).params.get('v');
 }
 
 /** Full shareable URL for a game+seed. */
@@ -25,15 +32,16 @@ export function shareLink(
   gameId: string,
   seed: string,
   base: string = window.location.href,
+  version?: string,
 ): string {
   const u = new URL(base);
-  u.hash = gameHash(gameId, seed);
+  u.hash = gameHash(gameId, seed, version);
   return u.toString();
 }
 
 /** Start a new puzzle: navigates to a fresh seed and returns it. */
-export function newPuzzle(gameId: string, seed = generateSeed()): string {
-  window.location.hash = gameHash(gameId, seed);
+export function newPuzzle(gameId: string, seed = generateSeed(), version?: string): string {
+  window.location.hash = gameHash(gameId, seed, version);
   return seed;
 }
 

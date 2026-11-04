@@ -245,8 +245,9 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
         <p>
           Shared puzzle history (opened from the clock in the header). Game filter, In progress /
           Completed tabs, mini puzzle preview (e.g. a static wheel), small seed, optional summary,
-          progress bar, stars, relative time, remove-with-confirm and an &ldquo;Older word
-          list&rdquo; stamp for stale entries. Shows your real history.
+          progress bar, stars, relative time, remove-with-confirm and a small version stamp
+          (&ldquo;v1&rdquo; for an older puzzle version, &ldquo;Beta&rdquo;, or &ldquo;Older word
+          list&rdquo; for unmigrated legacy entries). Shows your real history.
         </p>
         <Button variant="secondary" onClick={() => setHistoryOpen(true)}>
           <IconClock /> Open history

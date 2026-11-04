@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createRng, ensureSeed, getSeedFromHash, newPuzzle, shuffle } from '@core/random';
-import { progressFor, useSeedState } from '@core/game';
+import {
+  createRng,
+  ensureSeed,
+  gameHash,
+  getSeedFromHash,
+  getVersionFromHash,
+  newPuzzle,
+  shuffle,
+} from '@core/random';
+import { BETA, resolveVersion, versionId, type PuzzleVersion } from '@core/versions';
+import { progressFor as coreProgressFor, useSeedState } from '@core/game';
 import { useHistoryEntry } from '@core/history';
 import { pickTier, useSound } from '@core/audio';
-import { PUZZLE_VERSION } from './version';
 import { useGameSettings } from '@core/settings';
 import { LETTER_WHEEL_SETTINGS } from './settings';
 import { toWheelPreview } from './preview';
@@ -30,61 +38,92 @@ import {
   useTransientMessage,
   WordSlots,
 } from '@core/ui';
-import { DEFAULT_STAR_THRESHOLDS } from '@core/game';
 import {
-  checkGuess,
-  GAME_ID,
-  generatePuzzle,
-  loadDictionaries,
-  MIN_WORD,
-  type Dictionaries,
+  LATEST,
+  loadVersion,
+  manifest,
+  saveNamespace,
   type GuessResult,
-} from './puzzle';
+  type LoadedRules,
+} from './versions';
 import { letterWheelBrand } from './brand';
 import { LetterWheelLogo } from './brand/Logo';
 import './letter-wheel.css';
 
 const CENTRE = -1;
-const STAR_LABELS = DEFAULT_STAR_THRESHOLDS.map((t) => `${Math.round(t * 100)}%`);
+const GAME_ID = 'letter-wheel';
 type Feedback = { tone: 'good' | 'bad' | 'info'; text: string } | null;
 
-const MESSAGES: Record<Exclude<GuessResult, { ok: true }>['reason'], string> = {
-  'too-short': `Words need at least ${MIN_WORD} letters.`,
+const messages = (
+  minWord: number,
+): Record<Exclude<GuessResult, { ok: true }>['reason'], string> => ({
+  'too-short': `Words need at least ${minWord} letters.`,
   'missing-required': 'Every word must use the centre letter.',
   'already-found': 'Already found!',
   'not-in-pool': 'Not in the word list.',
-};
+});
 
-function useSeed() {
-  const [seed, setSeed] = useState(() => ensureSeed(GAME_ID));
+interface PuzzleRef {
+  seed: string;
+  version: PuzzleVersion;
+}
+
+/** Seed + puzzle version from the URL; pins a missing/unknown `v` to the latest numbered one. */
+function readRef(): PuzzleRef {
+  const seed = ensureSeed(GAME_ID);
+  const raw = getVersionFromHash(window.location.hash);
+  const version = resolveVersion(manifest, raw);
+  if (raw !== versionId(version))
+    history.replaceState(null, '', gameHash(GAME_ID, seed, versionId(version)));
+  return { seed, version };
+}
+
+function usePuzzleRef(): PuzzleRef {
+  const [ref, setRef] = useState(readRef);
   useEffect(() => {
     const on = () => {
-      const s = getSeedFromHash(window.location.hash);
-      if (s) setSeed(s);
+      if (!getSeedFromHash(window.location.hash)) return;
+      const next = readRef();
+      setRef((r) => (r.seed === next.seed && r.version === next.version ? r : next));
     };
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
-  return seed;
+  return ref;
 }
 
 export function LetterWheelGame() {
-  const seed = useSeed();
-  const [dict, setDict] = useState<Dictionaries | null>(null);
+  const { seed, version } = usePuzzleRef();
+  const [loaded, setLoaded] = useState<LoadedRules | null>(null);
+  const [error, setError] = useState(false);
   useEffect(() => {
     let live = true;
-    loadDictionaries().then((d) => live && setDict(d));
+    loadVersion(version).then(
+      (l) => live && setLoaded(l),
+      () => live && setError(true),
+    );
     return () => {
       live = false;
     };
-  }, []);
-  if (!dict) return <p className="lw-loading">Laying out the letters…</p>;
-  return <Game key={seed} seed={seed} dict={dict} />;
+  }, [version]);
+  if (error) return <p className="lw-loading">Couldn&rsquo;t load this puzzle version.</p>;
+  if (!loaded || loaded.version !== version)
+    return <p className="lw-loading">Laying out the letters…</p>;
+  return <Game key={`${versionId(version)}:${seed}`} seed={seed} loaded={loaded} />;
 }
 
-function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
-  const puzzle = useMemo(() => generatePuzzle(seed, dict), [seed, dict]);
-  const [found, setFound] = useSeedState<string[]>(GAME_ID, seed, []);
+function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
+  const { rules, dict, version } = loaded;
+  const vid = versionId(version);
+  const thresholds = rules.STAR_THRESHOLDS;
+  const STAR_LABELS = thresholds.map((t) => `${Math.round(t * 100)}%`);
+  const MESSAGES = useMemo(() => messages(rules.MIN_WORD), [rules]);
+  const progressFor = useCallback(
+    (f: number, t: number) => coreProgressFor(f, t, thresholds),
+    [thresholds],
+  );
+  const puzzle = useMemo(() => rules.generate(seed, dict), [seed, rules, dict]);
+  const [found, setFound] = useSeedState<string[]>(saveNamespace(GAME_ID, version), seed, []);
   const [guess, setGuess] = useState<number[]>([]);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
   const shuffles = useRef(0);
@@ -125,7 +164,7 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
     stars: progress.stars,
     maxStars: progress.maxStars,
     completed: progress.perfect,
-    version: PUZZLE_VERSION,
+    version: vid,
     started: guessed || found.length > 0,
   });
   const revealed = useMemo(() => new Set(found), [found]);
@@ -235,7 +274,7 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
   const submit = useCallback(() => {
     if (!word) return;
     setGuessed(true);
-    const res = checkGuess(word, puzzle, found);
+    const res = rules.checkGuess(word, puzzle, found);
     if (res.ok) {
       const next = [...found, res.word];
       const before = progressFor(found.length, puzzle.pool.length).stars;
@@ -268,7 +307,19 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
       });
     }
     setGuess([]);
-  }, [word, puzzle, found, setFound, showFeedback, animateWord, animateStar, play]);
+  }, [
+    word,
+    puzzle,
+    found,
+    rules,
+    MESSAGES,
+    progressFor,
+    setFound,
+    showFeedback,
+    animateWord,
+    animateStar,
+    play,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -299,13 +350,21 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
             <LetterWheelLogo size={52} className="lw__logo" />
           </h2>
           <p className="lw__tagline">{letterWheelBrand.tagline}</p>
+          {version !== LATEST && (
+            <p className={`lw__version${version === BETA ? ' lw__version--beta' : ''}`}>
+              {version === BETA
+                ? 'Beta rules: puzzles and saves may change.'
+                : `Puzzle version ${vid} (as you played it).`}{' '}
+              <a href={gameHash(GAME_ID, seed, String(LATEST))}>Play v{LATEST}</a>
+            </p>
+          )}
           <p className="lw__hint">
-            Make words of {MIN_WORD}+ letters. Every word must use the centre letter; each letter
-            once.
+            Make words of {rules.MIN_WORD}+ letters. Every word must use the centre letter; each
+            letter once.
           </p>
         </div>
         <div className="lw__tools">
-          <SeedDisplay gameId={GAME_ID} seed={seed} />
+          <SeedDisplay gameId={GAME_ID} seed={seed} version={vid} />
           <GameSettingsButton
             gameId={GAME_ID}
             definitions={LETTER_WHEEL_SETTINGS}
@@ -428,7 +487,7 @@ function Game({ seed, dict }: { seed: string; dict: Dictionaries }) {
             <Button
               onClick={() => {
                 play('dice');
-                newPuzzle(GAME_ID);
+                newPuzzle(GAME_ID, undefined, version === BETA ? BETA : undefined);
               }}
             >
               New puzzle

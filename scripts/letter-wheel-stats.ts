@@ -1,11 +1,16 @@
-// Dev script: npx vite-node scripts/letter-wheel-stats.ts [count]
+// Dev script: npx vite-node scripts/letter-wheel-stats.ts [count] [version: 1|2|beta]
 import { generateSeed } from '@core/random';
-import { buildDictionaries, generatePuzzle } from '../src/games/letter-wheel/puzzle';
-import { loadWords } from '@core/words';
+import { parseVersionParam } from '@core/versions';
+import { LATEST } from '../src/games/letter-wheel/versions';
+import { rulesFor, wordsFor } from '../src/games/letter-wheel/versions.node';
 
 const n = Number(process.argv[2] ?? 200);
+const version = parseVersionParam(process.argv[3]) ?? LATEST;
+const rules = rulesFor(version);
+const generatePuzzle = rules.generate;
 let t = performance.now();
-const dict = buildDictionaries(await loadWords('common'), await loadWords('extended'));
+const dict = rules.prepare(wordsFor(version));
+console.log(`version ${version}`);
 console.log(
   `dictionary index: ${(performance.now() - t).toFixed(1)} ms, ${dict.targets.length} targets`,
 );

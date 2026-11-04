@@ -955,6 +955,14 @@ button.tile:active {
   padding: 0 var(--space-1);
   transform: rotate(-2deg);
 }
+.history__version--older {
+  color: var(--color-ink-muted);
+  border-color: var(--color-ink-muted);
+}
+.history__version--beta {
+  color: var(--color-green-dark);
+  border-color: var(--color-green);
+}
 .history__progress {
   display: flex;
   align-items: center;

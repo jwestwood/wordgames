@@ -60,9 +60,9 @@ describe('history store', () => {
     const s = mem();
     upsertHistory({ gameId: 'a', seed: '1', ...base }, { storage: s });
     upsertHistory({ gameId: 'a', seed: '2', ...base }, { storage: s });
-    removeHistory('a', '1', s);
-    expect(getHistoryEntry('a', '1', s)).toBeUndefined();
-    expect(getHistoryEntry('a', '2', s)).toBeDefined();
+    removeHistory('a', '1', undefined, s);
+    expect(getHistoryEntry('a', '1', undefined, s)).toBeUndefined();
+    expect(getHistoryEntry('a', '2', undefined, s)).toBeDefined();
     clearHistory(s);
     expect(readHistory(s)).toEqual([]);
   });
@@ -138,11 +138,14 @@ describe('history store', () => {
       { gameId: 'g', seed: 'P', found: 1, total: 2, preview: { letters: 'abc', centre: 'd' } },
       { storage: s },
     );
-    const e = getHistoryEntry('g', 'P', s)!;
+    const e = getHistoryEntry('g', 'P', undefined, s)!;
     expect(e.preview).toEqual({ letters: 'abc', centre: 'd' });
     expect(e.summary).toBe('');
     upsertHistory({ gameId: 'g', seed: 'P', found: 2 }, { storage: s });
-    expect(getHistoryEntry('g', 'P', s)!.preview).toEqual({ letters: 'abc', centre: 'd' });
+    expect(getHistoryEntry('g', 'P', undefined, s)!.preview).toEqual({
+      letters: 'abc',
+      centre: 'd',
+    });
     const bad = JSON.stringify({ schema: 1, entries: [{ gameId: 'a', seed: 'b', preview: [1] }] });
     expect(parseHistory(bad)[0].preview).toBeUndefined();
   });
@@ -152,6 +155,18 @@ describe('history store', () => {
     expect(isStale(e, 'v1')).toBe(false);
     expect(isStale(e, 'v2')).toBe(true);
     expect(isStale(e, undefined)).toBe(false);
+  });
+
+  it('keeps one entry per puzzle version of a seed', () => {
+    const s = mem();
+    upsertHistory({ gameId: 'g', seed: 'S', ...base, version: '1' }, { storage: s, now: 1 });
+    upsertHistory({ gameId: 'g', seed: 'S', ...base, version: '2' }, { storage: s, now: 2 });
+    upsertHistory({ gameId: 'g', seed: 'S', found: 3, version: '1' }, { storage: s, now: 3 });
+    expect(readHistory(s)).toHaveLength(2);
+    expect(getHistoryEntry('g', 'S', '1', s)!.found).toBe(3);
+    expect(getHistoryEntry('g', 'S', '2', s)!.found).toBe(1);
+    removeHistory('g', 'S', '2', s);
+    expect(readHistory(s).map((e) => e.version)).toEqual(['1']);
     const m = 60_000;
     expect(relativeTime(0, 30_000)).toBe('just now');
     expect(relativeTime(0, 5 * m)).toBe('5 min ago');

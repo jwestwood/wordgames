@@ -107,14 +107,16 @@ export function parseHistory(raw: string | null): HistoryEntry[] {
   for (const item of list as unknown[]) {
     const e = sanitiseEntry(item);
     if (!e) continue;
-    const k = entryKey(e.gameId, e.seed);
+    const k = entryKey(e.gameId, e.seed, e.version);
     const prev = seen.get(k);
     if (!prev || e.lastPlayed > prev.lastPlayed) seen.set(k, e);
   }
   return [...seen.values()];
 }
 
-export const entryKey = (gameId: string, seed: string) => `${gameId}\u0000${seed}`;
+/** One entry per (game, seed, puzzle version): the same seed can differ between versions. */
+export const entryKey = (gameId: string, seed: string, version = '') =>
+  `${gameId}\u0000${seed}\u0000${version}`;
 
 export function readHistory(storage = defaultStorage()): HistoryEntry[] {
   try {
@@ -173,8 +175,7 @@ export function upsertHistory(
   const storage = opts.storage ?? defaultStorage();
   const now = opts.now ?? Date.now();
   const entries = readHistory(storage);
-  const k = entryKey(update.gameId, update.seed);
-  const i = entries.findIndex((e) => entryKey(e.gameId, e.seed) === k);
+  const i = entries.findIndex((e) => matches(e, update.gameId, update.seed, update.version));
   const prev = i >= 0 ? entries[i] : undefined;
   const merged = sanitiseEntry({
     summary: '',
@@ -209,14 +210,35 @@ export function filterHistory(entries: HistoryEntry[], { gameId, status = 'all' 
     .sort(byRecent);
 }
 
-export function getHistoryEntry(gameId: string, seed: string, storage = defaultStorage()) {
-  return readHistory(storage).find((e) => e.gameId === gameId && e.seed === seed);
+/** True for (gameId, seed[, version]); an undefined version matches any version. */
+const matches = (e: HistoryEntry, gameId: string, seed: string, version?: string) =>
+  e.gameId === gameId && e.seed === seed && (version === undefined || e.version === version);
+
+/** Entry for (gameId, seed, version); with no version, the first entry for the seed. */
+export function getHistoryEntry(
+  gameId: string,
+  seed: string,
+  version?: string,
+  storage = defaultStorage(),
+) {
+  return readHistory(storage).find((e) => matches(e, gameId, seed, version));
 }
 
-export function removeHistory(gameId: string, seed: string, storage = defaultStorage()) {
+/** Remove the entry for (gameId, seed, version); with no version, every version of the seed. */
+export function removeHistory(
+  gameId: string,
+  seed: string,
+  version?: string,
+  storage = defaultStorage(),
+) {
   const entries = readHistory(storage);
-  const next = entries.filter((e) => !(e.gameId === gameId && e.seed === seed));
+  const next = entries.filter((e) => !matches(e, gameId, seed, version));
   if (next.length !== entries.length) write(next, storage);
+}
+
+/** Overwrite all entries (re-validated and de-duplicated); used by version migrations. */
+export function replaceHistory(entries: HistoryEntry[], storage = defaultStorage()) {
+  write(parseHistory(JSON.stringify({ schema: HISTORY_SCHEMA, entries })), storage);
 }
 
 export function clearHistory(storage = defaultStorage()) {

@@ -1,0 +1,17 @@
+{
+  "game": "letter-wheel",
+  "beta": {
+    "rules": "beta",
+    "words": {
+      "common": "src/core/words/data/common.txt",
+      "extended": "src/core/words/data/extended.txt"
+    }
+  },
+  "versions": [
+    {
+      "v": 1,
+      "rules": "v1",
+      "words": { "common": "542e059d3b91d28c", "extended": "fec9890ecc9c89db" }
+    }
+  ]
+}

@@ -1,13 +1,19 @@
-import { createRng, selectWithCriteria, shuffle, type Criterion, type Rng } from '@core/random';
+/**
+ * Letter Wheel rules v1 — FROZEN once released. Everything that maps seed -> puzzle and affects save
+ * compatibility lives here. Imports only frozen kernels (src/versioned/kernel). Never edit a released
+ * rule set: make changes in rules/beta and release a new version (ARCHITECTURE.md › Puzzle versions).
+ */
+import { createRng, shuffle, type Rng } from '../../../kernel/rng@1';
+import { selectWithCriteria, type Criterion } from '../../../kernel/select@1';
 import {
   createWordIndex,
   findAnagrams,
   findSubwords,
-  loadWords,
   type WordIndex,
-} from '@core/words';
+} from '../../../kernel/subwords@1';
 
 export const GAME_ID = 'letter-wheel';
+
 export const MIN_WORD = 4;
 export const TARGET_LENGTH = { min: 8, max: 10 } as const;
 export const POOL_SIZE = { min: 40, max: 80 } as const;
@@ -36,20 +42,20 @@ export interface Puzzle extends Candidate {
   passed: boolean;
 }
 
-export function buildDictionaries(common: readonly string[], all: readonly string[]): Dictionaries {
+/** Word lists by name, each sorted alphabetically (as stored). */
+export interface WordLists {
+  common: readonly string[];
+  extended: readonly string[];
+}
+
+export function prepare(words: WordLists): Dictionaries {
+  const common = words.common;
+  const all = [...words.common, ...words.extended].sort();
   return {
     common: createWordIndex(common),
     all: createWordIndex(all),
     targets: common.filter((w) => w.length >= TARGET_LENGTH.min && w.length <= TARGET_LENGTH.max),
   };
-}
-
-let dictPromise: Promise<Dictionaries> | undefined;
-export function loadDictionaries(): Promise<Dictionaries> {
-  dictPromise ??= Promise.all([loadWords('common'), loadWords('extended')]).then(([c, a]) =>
-    buildDictionaries(c, a),
-  );
-  return dictPromise;
 }
 
 export function buildPool(target: string, required: string, dict: Dictionaries): string[] {
@@ -98,7 +104,7 @@ function fallback(dict: Dictionaries) {
   };
 }
 
-export function generatePuzzle(seed: string, dict: Dictionaries): Puzzle {
+export function generate(seed: string, dict: Dictionaries): Puzzle {
   const rng = createRng(seed, GAME_ID);
   const res = selectWithCriteria(rng, candidateStream(dict), criteria(dict), {
     maxAttempts: MAX_ATTEMPTS,
@@ -129,4 +135,13 @@ export function checkGuess(guess: string, puzzle: Puzzle, found: readonly string
   if (found.includes(word)) return { ok: false, reason: 'already-found' };
   if (!puzzle.pool.includes(word)) return { ok: false, reason: 'not-in-pool' };
   return { ok: true, word };
+}
+
+/** Fraction thresholds for 1, 2, 3 stars. */
+export const STAR_THRESHOLDS = [0.6, 0.8, 0.9] as const;
+
+/** Stars earned for `found` of `total` words. */
+export function stars(found: number, total: number): number {
+  const f = total > 0 ? Math.min(1, found / total) : 0;
+  return STAR_THRESHOLDS.filter((t) => f >= t - 1e-9).length;
 }
