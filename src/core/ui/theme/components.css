@@ -384,7 +384,7 @@ button.tile:active {
 }
 .wheel__seg path,
 .wheel__seg circle {
-  fill: var(--color-tile);
+  fill: var(--color-white);
   stroke: var(--color-tile-edge);
   stroke-width: 1.5;
   transition: fill var(--duration-fast) var(--ease-out);
@@ -430,7 +430,7 @@ button.tile:active {
 }
 .wheel--static .wheel__seg:hover path,
 .wheel--static .wheel__centre:hover circle {
-  fill: var(--color-tile);
+  fill: var(--color-white);
 }
 .wheel--static .wheel__seg text {
   font-size: 26px;
@@ -539,7 +539,7 @@ button.tile:active {
 
 /* ---------- Centre letter: unselected looks like a tile, with a green ring ---------- */
 .wheel__centre circle {
-  fill: var(--color-tile);
+  fill: var(--color-white);
   stroke: var(--color-green);
   stroke-width: 3;
 }
