@@ -26,3 +26,4 @@ export * from './transient';
 export * from './motion';
 export * from './SettingsPanel';
 export { createPressGuard, pressProps, type PressGuard } from './tap';
+export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';

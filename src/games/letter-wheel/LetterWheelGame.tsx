@@ -364,7 +364,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           </p>
         </div>
         <div className="lw__tools">
-          <SeedDisplay gameId={GAME_ID} seed={seed} version={vid} />
+          <SeedDisplay
+            gameId={GAME_ID}
+            seed={seed}
+            version={vid}
+            started={guessed || found.length > 0}
+          />
           <GameSettingsButton
             gameId={GAME_ID}
             definitions={LETTER_WHEEL_SETTINGS}

@@ -131,12 +131,15 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
         <SeedDisplay
           gameId="style-guide"
           seed="K7Q2MX"
+          started
           onRandomise={() => {}}
           onSeedChange={() => {}}
         />
         <p className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
           Editable: type a 6-character code and press Enter (or Go). Invalid codes show an inline
-          error; Esc reverts.
+          error; Esc reverts. Icon buttons (share link, random) sit left of the field and use the
+          shared <code>btn--icon</code> size; when the puzzle is started (as here) the dice asks
+          first via the core <code>ConfirmDialog</code>. Buttons never move on hover or press.
         </p>
         <div style={{ marginTop: 'var(--space-4)', maxWidth: '28rem' }}>
           <ScoreCard

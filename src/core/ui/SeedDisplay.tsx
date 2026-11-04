@@ -9,7 +9,8 @@ import {
 } from '@core/random';
 import { BETA } from '../versions';
 import { Button } from './Button';
-import { IconCopy, IconDice, IconLink } from './Icons';
+import { ConfirmDialog } from './ConfirmDialog';
+import { IconDice, IconLink } from './Icons';
 import { useTransientMessage } from './transient';
 import { sound } from '../audio/hooks';
 
@@ -21,6 +22,8 @@ export interface SeedDisplayProps {
    * beta, otherwise goes to the latest numbered version.
    */
   version?: string;
+  /** Puzzle has progress: randomising asks for confirmation first. */
+  started?: boolean;
   /** Override "new seed" behaviour (defaults to core newPuzzle navigation). */
   onRandomise?: () => void;
   /** Override applying a typed seed (defaults to core newPuzzle(gameId, seed)). */
@@ -33,6 +36,7 @@ export function SeedDisplay({
   gameId,
   seed,
   version,
+  started = false,
   onRandomise,
   onSeedChange,
   className = '',
@@ -41,6 +45,7 @@ export function SeedDisplay({
   const [spin, setSpin] = useState(0);
   const [draft, setDraft] = useState(seed);
   const [invalid, setInvalid] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const id = useId();
   // New seeds stay on beta; numbered versions move on to the latest (missing v = latest).
   const stay = version === BETA ? BETA : undefined;
@@ -82,10 +87,43 @@ export function SeedDisplay({
     return true;
   };
 
+  const randomise = () => {
+    setConfirming(false);
+    setSpin((s) => s + 1);
+    sound.play('dice');
+    if (onRandomise) onRandomise();
+    else newPuzzle(gameId, undefined, stay);
+  };
+
   return (
     <div className={`seed ${className}`.trim()}>
+      <span className="seed__buttons">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="btn--icon"
+          aria-label="Copy share link"
+          title="Copy share link"
+          onClick={() =>
+            copy(shareLink(gameId, seed, window.location.href, version), 'Link copied')
+          }
+        >
+          <IconLink />
+        </Button>
+        <Button
+          variant="warning"
+          size="sm"
+          aria-label="New random puzzle"
+          title="New random puzzle"
+          className={`btn--icon${spin ? ' seed__dice--spin' : ''}`}
+          key={spin}
+          onClick={() => (started ? setConfirming(true) : randomise())}
+        >
+          <IconDice />
+        </Button>
+      </span>
       <label className="seed__label" htmlFor={id}>
-        Puzzle
+        Seed
       </label>
       <span className={`seed__field${invalid ? ' seed__field--invalid' : ''}`}>
         <input
@@ -135,44 +173,6 @@ export function SeedDisplay({
           </Button>
         )}
       </span>
-      <span className="seed__buttons">
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-label="Copy seed"
-          title="Copy seed"
-          onClick={() => copy(seed, 'Seed copied')}
-        >
-          <IconCopy />
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-label="Copy share link"
-          title="Copy share link"
-          onClick={() =>
-            copy(shareLink(gameId, seed, window.location.href, version), 'Link copied')
-          }
-        >
-          <IconLink />
-        </Button>
-        <Button
-          variant="warning"
-          size="sm"
-          aria-label="New random puzzle"
-          title="New random puzzle"
-          className={spin ? 'seed__dice--spin' : ''}
-          key={spin}
-          onClick={() => {
-            setSpin((s) => s + 1);
-            sound.play('dice');
-            if (onRandomise) onRandomise();
-            else newPuzzle(gameId, undefined, stay);
-          }}
-        >
-          <IconDice />
-        </Button>
-      </span>
       {invalid ? (
         <span id={errId} className="seed__msg seed__msg--error" role="alert">
           Codes are {SEED_LENGTH} letters/digits (no I, L, O, U)
@@ -182,6 +182,19 @@ export function SeedDisplay({
           {msg ?? ''}
         </span>
       )}
+      <ConfirmDialog
+        open={confirming}
+        title="Start a new puzzle?"
+        confirmLabel="New puzzle"
+        tone="warning"
+        onConfirm={randomise}
+        onCancel={() => setConfirming(false)}
+      >
+        <p>
+          You&rsquo;ve started this one. Your progress is saved and you can come back to it from
+          Past Games.
+        </p>
+      </ConfirmDialog>
     </div>
   );
 }
