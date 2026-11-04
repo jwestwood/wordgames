@@ -27,3 +27,22 @@ body {
   border-radius: 999px;
   background: #e6e6ff;
 }
+
+.tiles {
+  display: flex;
+  gap: 0.25rem;
+}
+.tile {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}

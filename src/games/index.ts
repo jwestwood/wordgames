@@ -1,15 +1,7 @@
-export interface GameInfo {
-  id: string;
-  title: string;
-  description: string;
-  status: 'coming-soon' | 'playable';
-}
+import type { GameDefinition } from '@core/registry';
+import { anagramScramble } from './anagram-scramble';
 
-export const games: GameInfo[] = [
-  {
-    id: 'anagram-scramble',
-    title: 'Anagram Scramble',
-    description: 'Unscramble the letters to find the hidden word.',
-    status: 'coming-soon',
-  },
-];
+/** Games registry: add new games here. */
+export const games: GameDefinition[] = [anagramScramble];
+
+export const findGame = (id: string) => games.find((g) => g.id === id);
