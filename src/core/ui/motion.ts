@@ -21,6 +21,22 @@ export function invertTransform(from: RectLike, to: RectLike, scale?: number) {
   return { dx, dy, s };
 }
 
+/**
+ * Rect of an element's rendered *content* (text/children), not its box: e.g. a list item that
+ * spans a whole column but whose letters only fill the left part. Use as a fly-to target so the
+ * flying content lines up with the content it represents. Falls back to the element's own rect.
+ */
+export function contentRect(el: Element): RectLike {
+  const box = el.getBoundingClientRect();
+  if (typeof document === 'undefined' || !document.createRange) return box;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const r = range.getBoundingClientRect();
+  return r.width > 0 && r.height > 0
+    ? { left: r.left, top: r.top, width: r.width, height: r.height }
+    : box;
+}
+
 /** Rect of `w`×`h` centred in `r`. */
 export function centredRect(r: RectLike, w: number, h: number): RectLike {
   return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w, height: h };
@@ -107,7 +123,24 @@ export function ensureInView(el: Element): Promise<void> {
   const vh = window.innerHeight;
   if (r.top >= 0 && r.bottom <= vh) return Promise.resolve();
   el.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-  return new Promise((res) => setTimeout(res, prefersReducedMotion() ? 0 : 350));
+  return waitForStableRect(el);
+}
+
+/** Resolves once `el` has stopped moving (e.g. smooth scrolling finished), or after `maxMs`. */
+export function waitForStableRect(el: Element, maxMs = 1200, stableFrames = 3): Promise<void> {
+  return new Promise((res) => {
+    const t0 = performance.now();
+    let last = el.getBoundingClientRect().top;
+    let still = 0;
+    const tick = () => {
+      const top = el.getBoundingClientRect().top;
+      still = Math.abs(top - last) < 0.5 ? still + 1 : 0;
+      last = top;
+      if (still >= stableFrames || performance.now() - t0 > maxMs) res();
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
 }
 
 /** Is the rect fully inside a viewport of height `vh` (and width `vw`, if given)? */

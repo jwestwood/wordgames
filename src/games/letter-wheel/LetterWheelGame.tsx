@@ -18,6 +18,7 @@ import { toWheelPreview } from './preview';
 import {
   Button,
   centredRect,
+  contentRect,
   Confetti,
   createAnimationQueue,
   ensureInView,
@@ -214,7 +215,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         void flashElement(wheel);
         const scroll = autoScroll.current;
         if (scroll) await ensureInView(slot);
-        const to = slot.getBoundingClientRect();
+        const to = contentRect(slot); // letters, not the full-column list item
         const wr = wheel.getBoundingClientRect();
         const width = Math.min(wr.width * 0.75, to.width * 2.6);
         const from = centredRect(wr, width, (width / to.width) * to.height);
@@ -255,7 +256,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       const slot = cardRef.current?.querySelector<HTMLElement>(`[data-star-slot="${i}"]`);
       if (wheel && slot && (autoScroll.current || isInView(slot))) {
         if (autoScroll.current) await ensureInView(slot);
-        const to = slot.getBoundingClientRect();
+        const to = contentRect(slot); // letters, not the full-column list item
         const wr = wheel.getBoundingClientRect();
         const from = centredRect(wr, wr.width * 0.4, wr.width * 0.4);
         const holder = document.createElement('div');

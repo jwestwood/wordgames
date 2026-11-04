@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createAnimationQueue } from './queue';
 import { createTransient, type Timers } from './transient';
-import { centredRect, invertTransform, isRectInView } from './motion';
+import { centredRect, contentRect, invertTransform, isRectInView } from './motion';
 
 describe('createAnimationQueue', () => {
   it('runs tasks sequentially in order', async () => {
@@ -99,5 +99,13 @@ describe('isRectInView', () => {
     expect(isRectInView({ left: 0, top: 90, width: 50, height: 20 }, 100)).toBe(false);
     expect(isRectInView({ left: 0, top: -5, width: 50, height: 20 }, 100)).toBe(false);
     expect(isRectInView({ left: 80, top: 0, width: 50, height: 20 }, 100, 100)).toBe(false);
+  });
+});
+
+describe('contentRect', () => {
+  it('falls back to the element box without a DOM range', () => {
+    const box = { left: 1, top: 2, width: 3, height: 4 };
+    const el = { getBoundingClientRect: () => box } as unknown as Element;
+    expect(contentRect(el)).toEqual(box);
   });
 });

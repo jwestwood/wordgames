@@ -469,6 +469,7 @@ button.tile:active {
   margin-bottom: var(--space-2);
 }
 .word-slots__cell {
+  flex: none; /* never squash letters in narrow columns (keeps fly-in alignment exact) */
   width: 1rem;
   height: 1.35rem;
   display: inline-grid;
@@ -744,10 +745,15 @@ button.tile:active {
 
 /* ---------- Fly overlays ---------- */
 .fly-overlay {
+  /* The overlay is sized to the target's content rect; content sits at its top-left, never squashed. */
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 2px;
+}
+.fly-overlay > * {
+  flex: none;
+  margin: 0;
 }
 .fly-word .word-slots__cell {
   background: var(--color-paper-light);
