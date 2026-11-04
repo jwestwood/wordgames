@@ -510,6 +510,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           <Panel className="lw__words">
             <div ref={listRef}>
               <div className="lw__words-head">
+                <span className="lw__last-word" aria-live="polite">
+                  Last word:{' '}
+                  <strong>
+                    {/* found is discovery order, so the last entry survives reload */}
+                    {(latest ?? found.at(-1))?.toUpperCase() ?? '—'}
+                  </strong>
+                </span>
                 {clueMode && (
                   <span className="lw__clue-hint" role="status">
                     Tap a blank for a clue

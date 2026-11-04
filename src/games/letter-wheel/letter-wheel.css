@@ -149,14 +149,24 @@
 .lw__words-head {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-2);
   margin-bottom: var(--space-2);
+}
+.lw__last-word {
+  margin-right: auto;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  min-width: 0;
+}
+.lw__last-word strong {
+  font-family: var(--font-accent);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  color: var(--color-ink);
 }
 .lw__clue-hint {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
-  margin-right: auto;
 }
 .btn--icon.lw__clue--on {
   background: var(--color-green);
