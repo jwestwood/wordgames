@@ -325,14 +325,20 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       showToast(`All ${L.toUpperCase()} words found!`, 'good');
       if (wheel && tile && (autoScroll.current || isInView(tile))) {
         if (autoScroll.current) await ensureInView(tile);
-        const to0 = contentRect(tile);
+        const tileBox = () => {
+          const r = tile.getBoundingClientRect();
+          const side = Math.max(r.width, r.height);
+          return centredRect(r, side, side);
+        };
+        const to0 = tileBox();
         const wr = wheel.getBoundingClientRect();
-        const size = Math.max(to0.width * 2.2, wr.width * 0.22);
+        const size = Math.max(to0.width * 2.4, wr.width * 0.22);
         const from = centredRect(wr, size, size);
         const content = document.createElement('div');
         content.className = 'fly-letter';
         content.textContent = L.toUpperCase();
-        await flyElement(from, tile, content, { className: 'fly-letter-wrap', duration: 1000 });
+        // Track the square tile box (not the glyph contentRect) so the flyer stays square.
+        await flyElement(from, tileBox, content, { className: 'fly-letter-wrap', duration: 1000 });
       }
       play('letter-complete');
       // Nudge the strip tile once it lands (highlight already derived from found).
