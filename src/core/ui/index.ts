@@ -28,11 +28,6 @@ export * from './SettingsPanel';
 export { createPressGuard, pressProps, type PressGuard } from './tap';
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
 export { Footer, type FooterProps } from './Footer';
-export {
-  ToastStack,
-  useToast,
-  type ToastItem,
-  type ToastTone,
-  type ToastStackProps,
-} from './Toast';
+export { ToastStack, type ToastItem, type ToastTone, type ToastStackProps } from './Toast';
+export { useToast } from './useToast';
 export { LetterStrip, type LetterStripProps } from './LetterStrip';
