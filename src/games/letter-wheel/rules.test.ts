@@ -49,8 +49,8 @@ describe.each(ALL_VERSIONS.filter((v) => v === 'beta' || v >= 2))('rules %s word
     for (const w of ['pant', 'veal', 'antler', 'leaper']) expect(dict.common.words).toContain(w);
   });
 
-  it.skipIf(v === 'beta')(
-    'keeps the v1 wheel for GSP0MH (prevalent / a) and accepts the new words',
+  it.skipIf(v !== 2)(
+    'v2 keeps the v1 wheel for GSP0MH (prevalent / a) and accepts the new words',
     () => {
       const rules = rulesFor(v);
       const p = rules.generate('GSP0MH', rules.prepare(wordsFor(v)));
@@ -58,6 +58,14 @@ describe.each(ALL_VERSIONS.filter((v) => v === 'beta' || v >= 2))('rules %s word
       expect(p.pool).toEqual(expect.arrayContaining(['pant', 'veal', 'antler', 'leaper']));
     },
   );
+
+  it.skipIf(v === 2)('v3+ GSP0MH is debating / i (20–40 pool + letter coverage)', () => {
+    const rules = rulesFor(v);
+    const p = rules.generate('GSP0MH', rules.prepare(wordsFor(v)));
+    expect([p.target, p.required]).toEqual(['debating', 'i']);
+    expect(p.pool.length).toBeGreaterThanOrEqual(20);
+    expect(p.pool.length).toBeLessThanOrEqual(40);
+  });
 });
 
 describe('beta rules', () => {
