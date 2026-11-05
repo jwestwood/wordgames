@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { applyClue, clueLetters, clueLevel, parseProgress, pruneClues } from './clues';
 
 describe('clues', () => {
-  it('first clue reveals the last letter, second also the first', () => {
+  it('first clue reveals the last letter, second the 2nd-to-last as well', () => {
     expect(clueLetters('plant', 0)).toEqual([null, null, null, null, null]);
     expect(clueLetters('plant', 1)).toEqual([null, null, null, null, 't']);
-    expect(clueLetters('plant', 2)).toEqual(['p', null, null, null, 't']);
+    expect(clueLetters('plant', 2)).toEqual([null, null, null, 'n', 't']);
+    expect(clueLetters('alert', 1)).toEqual([null, null, null, null, 't']);
+    expect(clueLetters('alert', 2)).toEqual([null, null, null, 'r', 't']);
     expect(clueLetters('a', 1)).toEqual(['a']);
     expect(clueLetters('a', 2)).toEqual(['a']);
     expect(clueLetters('ab', 1)).toEqual([null, 'b']);

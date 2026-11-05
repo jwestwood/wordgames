@@ -12,6 +12,7 @@ export type SoundName =
   | 'success-big'
   | 'success-epic'
   | 'star'
+  | 'letter-complete'
   | 'perfect'
   | 'shuffle'
   | 'delete'
@@ -40,6 +41,8 @@ export const SOUNDS: SoundRegistry<SoundName> = {
   'success-big': s('success-big', 0.6),
   'success-epic': s('success-epic', 0.7),
   star: s('star', 0.7),
+  // Alias: same files as star so themes need no new assets.
+  'letter-complete': s('star', 0.65),
   perfect: s('perfect', 0.75),
   shuffle: s('shuffle', 0.5, 0.05),
   delete: s('delete', 0.4, 0.05),

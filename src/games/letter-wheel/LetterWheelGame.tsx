@@ -61,6 +61,7 @@ import {
   pruneClues,
   type PuzzleProgress,
 } from './clues';
+import { completedLetters, newlyCompletedLetters } from './letters';
 import { LetterWheelLogo } from './brand/Logo';
 import './letter-wheel.css';
 
@@ -173,6 +174,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const wheelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const q = queue.current;
     return () => q.clear();
@@ -198,6 +200,10 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     started: guessed || found.length > 0 || Object.keys(clues).length > 0,
   });
   const revealed = useMemo(() => new Set(found), [found]);
+  const completeSet = useMemo(
+    () => completedLetters(puzzle.target, puzzle.pool, revealed),
+    [puzzle.target, puzzle.pool, revealed],
+  );
   const known = useMemo(() => {
     const m = new Map<string, readonly (string | null)[]>();
     for (const [w, n] of Object.entries(clues)) m.set(w, clueLetters(w, n));
@@ -311,6 +317,30 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     [play],
   );
 
+
+  const animateLetter = useCallback(
+    async (L: string) => {
+      const wheel = wheelRef.current;
+      const tile = stripRef.current?.querySelector<HTMLElement>(`[data-letter="${L}"]`);
+      showToast(`All ${L.toUpperCase()} words found!`, 'good');
+      if (wheel && tile && (autoScroll.current || isInView(tile))) {
+        if (autoScroll.current) await ensureInView(tile);
+        const to = contentRect(tile);
+        const wr = wheel.getBoundingClientRect();
+        const size = Math.max(to.width * 2.2, wr.width * 0.22);
+        const from = centredRect(wr, size, size);
+        const content = document.createElement('div');
+        content.className = 'fly-letter';
+        content.textContent = L.toUpperCase();
+        await flyElement(from, to, content, { className: 'fly-letter-wrap', duration: 1000 });
+      }
+      play('letter-complete');
+      // Nudge the strip tile once it lands (highlight already derived from found).
+      if (tile) void flashElement(tile);
+    },
+    [play, showToast],
+  );
+
   const submit = useCallback(() => {
     if (!word) return;
     setGuessed(true);
@@ -320,6 +350,14 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       const next = [...found, res.word];
       const before = progressFor(found.length, puzzle.pool.length).stars;
       const after = progressFor(next.length, puzzle.pool.length).stars;
+      const beforeComplete = completedLetters(puzzle.target, puzzle.pool, new Set(found));
+      const afterComplete = completedLetters(puzzle.target, puzzle.pool, new Set(next));
+      const newLetters = newlyCompletedLetters(
+        puzzle.target,
+        puzzle.pool,
+        beforeComplete,
+        afterComplete,
+      );
       setFound(next);
       setHidden((h) => new Set(h).add(res.word));
       play(
@@ -335,6 +373,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       const q = queue.current;
       q.enqueue(() => animateWord(res.word));
       for (let i = before; i < after; i++) q.enqueue(() => animateStar(i));
+      // Celebrate newly completed LETTERS (incl. no-starters when puzzle hits 100%).
+      for (const L of newLetters) q.enqueue(() => animateLetter(L));
       if (next.length === puzzle.pool.length)
         q.enqueue(() => {
           play('perfect');
@@ -367,6 +407,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     showToast,
     animateWord,
     animateStar,
+    animateLetter,
     play,
   ]);
 
@@ -532,7 +573,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                   title={
                     clueMode
                       ? 'Cancel clue'
-                      : 'Reveal a letter: last first, then first. Click a blank word.'
+                      : 'Reveal a letter: last first, then 2nd-to-last. Click a blank word.'
                   }
                   onClick={() => setClueMode((on) => !on)}
                 >
@@ -561,7 +602,9 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                   setGuessed(true);
                 }}
               />
-              <LetterStrip letters={puzzle.target} />
+              <div ref={stripRef}>
+                <LetterStrip letters={puzzle.target} complete={completeSet} />
+              </div>
             </div>
           </Panel>
         </div>

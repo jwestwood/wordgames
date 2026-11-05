@@ -3,17 +3,20 @@ export interface LetterStripProps {
   /** Letters to show (duplicates ignored; non a–z dropped). */
   letters: string | readonly string[];
   className?: string;
-  /** Visible caption before the tiles (default "Order:"). */
+  /** Visible caption before the tiles (default "LETTERS:"). */
   caption?: string;
   /** Accessible name; defaults from the caption. */
   label?: string;
+  /** Letters whose tiles should show as complete (highlighted). */
+  complete?: ReadonlySet<string>;
 }
 
 export function LetterStrip({
   letters,
   className = '',
-  caption = 'Order:',
+  caption = 'LETTERS:',
   label,
+  complete,
 }: LetterStripProps) {
   const source = typeof letters === 'string' ? [...letters] : letters;
   const distinct = [
@@ -27,11 +30,19 @@ export function LetterStrip({
         {caption}
       </span>
       <ol className="letter-strip__tiles">
-        {distinct.map((c) => (
-          <li key={c} className="letter-strip__tile" aria-hidden="true">
-            {c.toUpperCase()}
-          </li>
-        ))}
+        {distinct.map((c) => {
+          const done = complete?.has(c) ?? false;
+          return (
+            <li
+              key={c}
+              data-letter={c}
+              className={`letter-strip__tile${done ? ' letter-strip__tile--complete' : ''}`}
+              aria-hidden="true"
+            >
+              {c.toUpperCase()}
+            </li>
+          );
+        })}
       </ol>
     </div>
   );

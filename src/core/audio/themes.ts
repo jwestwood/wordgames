@@ -14,12 +14,18 @@ export const DEFAULT_SOUND_THEME = 'classic';
 /** Slot played as a short preview when a theme is chosen. */
 export const PREVIEW_SLOT: SoundName = 'success-big';
 
+/** Slots that reuse another slot's filename (no extra theme assets). */
+const FILE_ALIASES: Partial<Record<SoundName, string>> = {
+  'letter-complete': 'star',
+};
+
 /** Same slot volumes/variation as Classic, scaled, with files from public/sounds/<dir>/. */
 function themed(dir: string, scale = 1, overrides: Partial<Record<SoundName, number>> = {}) {
   const out = {} as SoundRegistry<SoundName>;
   for (const name of Object.keys(SOUNDS) as SoundName[]) {
     const base = SOUNDS[name];
-    out[name] = soundFile(dir, name, (overrides[name] ?? base.volume ?? 1) * scale, base.vary ?? 0);
+    const file = FILE_ALIASES[name] ?? name;
+    out[name] = soundFile(dir, file, (overrides[name] ?? base.volume ?? 1) * scale, base.vary ?? 0);
   }
   return out;
 }

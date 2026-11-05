@@ -1,5 +1,5 @@
 /**
- * Letter Wheel clues: first clue reveals the last letter, second also reveals the first.
+ * Letter Wheel clues: first clue reveals the last letter; second reveals the 2nd-to-last as well.
  * No limit on how many words you can clue; no scoring effect.
  */
 
@@ -50,13 +50,12 @@ export function applyClue(clues: ClueMap, word: string, found: ReadonlySet<strin
 
 /**
  * Letters shown in a blank slot for a given clue level: `null` = still blank.
- * Level 1 → last letter; level 2 → first + last.
+ * Level 1 → last letter; level 2 → 2nd-to-last + last.
  */
 export function clueLetters(word: string, level: ClueLevel): (string | null)[] {
   const out: (string | null)[] = Array.from({ length: word.length }, () => null);
   if (level >= 1 && word.length > 0) out[word.length - 1] = word[word.length - 1];
-  if (level >= 2 && word.length > 1) out[0] = word[0];
-  if (level >= 2 && word.length === 1) out[0] = word[0];
+  if (level >= 2 && word.length > 1) out[word.length - 2] = word[word.length - 2];
   return out;
 }
 
