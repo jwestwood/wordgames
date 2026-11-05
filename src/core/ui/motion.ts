@@ -1,10 +1,14 @@
-/** DOM motion helpers (Web Animations API). All honour prefers-reduced-motion. */
+/** DOM motion helpers. All honour prefers-reduced-motion. */
+
 export interface RectLike {
   left: number;
   top: number;
   width: number;
   height: number;
 }
+
+/** Destination for flyElement: a fixed rect, a live element (contentRect), or a getter. */
+export type FlyTarget = RectLike | Element | (() => RectLike);
 
 export function prefersReducedMotion(): boolean {
   return (
@@ -42,8 +46,63 @@ export function centredRect(r: RectLike, w: number, h: number): RectLike {
   return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w, height: h };
 }
 
+/** True when `v` looks like a rect (not a DOM node / function). */
+function isRectLike(v: FlyTarget): v is RectLike {
+  if (!v || typeof v === 'function') return false;
+  if (typeof (v as Element).nodeType === 'number') return false;
+  if (typeof (v as Element).getBoundingClientRect === 'function') return false;
+  const r = v as RectLike;
+  return typeof r.left === 'number' && typeof r.top === 'number';
+}
+
+/** Resolve a fly target to its current rect (elements use contentRect for letter-level align). */
+export function readFlyTarget(to: FlyTarget): RectLike {
+  if (typeof to === 'function') return to();
+  if (isRectLike(to)) return to;
+  return contentRect(to as Element);
+}
+
+/**
+ * Cubic-bezier easing matching the previous WAAPI default `cubic-bezier(0.5, 0, 0.2, 1)`.
+ * Solves for y given x in [0, 1].
+ */
+export function easeFly(t: number): number {
+  const x1 = 0.5;
+  const y1 = 0;
+  const x2 = 0.2;
+  const y2 = 1;
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  // Newton-Raphson on x(u) = u, then evaluate y(u).
+  let u = t;
+  for (let i = 0; i < 8; i++) {
+    const x = cubic(u, x1, x2) - t;
+    const dx = cubicDeriv(u, x1, x2);
+    if (Math.abs(dx) < 1e-6) break;
+    u -= x / dx;
+    u = Math.min(1, Math.max(0, u));
+  }
+  return cubic(u, y1, y2);
+}
+
+function cubic(u: number, a: number, b: number): number {
+  // (1-u)^3*0 + 3(1-u)^2*u*a + 3(1-u)*u^2*b + u^3*1
+  const u2 = u * u;
+  const u3 = u2 * u;
+  return 3 * (1 - u) * (1 - u) * u * a + 3 * (1 - u) * u2 * b + u3;
+}
+
+function cubicDeriv(u: number, a: number, b: number): number {
+  return (
+    3 * (1 - u) * (1 - u) * a +
+    6 * (1 - u) * u * (b - a) +
+    3 * u * u * (1 - b)
+  );
+}
+
 export interface FlyOptions {
   duration?: number;
+  /** Kept for API compat; fly uses easeFly (former cubic-bezier(0.5,0,0.2,1)). */
   easing?: string;
   className?: string;
   /** Fraction of the duration spent appearing + holding at the start (0..0.6). */
@@ -52,51 +111,93 @@ export interface FlyOptions {
   fromScale?: number;
 }
 
+/** One rAF frame of a fly: layout at live `to`, invert toward `from` by remaining progress. */
+export function flyFrameStyle(
+  from: RectLike,
+  to: RectLike,
+  t: number,
+  opts: { hold?: number; fromScale?: number } = {},
+): { left: number; top: number; width: number; height: number; transform: string; opacity: number } {
+  const h = Math.min(0.6, Math.max(0, opts.hold ?? 0.35));
+  const appearEnd = h * 0.45;
+  const { dx, dy, s } = invertTransform(from, to, opts.fromScale);
+  let flyU = 0;
+  let opacity = 1;
+  let pop = 1;
+  if (t < appearEnd) {
+    const a = appearEnd > 0 ? t / appearEnd : 1;
+    opacity = a;
+    pop = 0.6 + 0.4 * a;
+  } else if (t >= h) {
+    const raw = h < 1 ? (t - h) / (1 - h) : 1;
+    flyU = easeFly(Math.min(1, Math.max(0, raw)));
+  }
+  const inv = 1 - flyU;
+  const scale = (1 + (s - 1) * inv) * pop;
+  return {
+    left: to.left,
+    top: to.top,
+    width: to.width,
+    height: to.height,
+    opacity,
+    transform: `translate(${dx * inv}px, ${dy * inv}px) scale(${scale})`,
+  };
+}
+
 /**
- * Fly `content` from `fromRect` to `toRect` in a fixed-position overlay (FLIP: the overlay is laid
- * out at the destination and animated from the inverted start transform). Resolves when finished
- * and the overlay removed. Under reduced motion resolves immediately.
+ * Fly `content` from `fromRect` to a (possibly moving) destination. The overlay is laid out at the
+ * live destination each animation frame (FLIP), so scroll/resize mid-flight still lands on target.
+ * `to` may be a rect, an Element (measured with contentRect), or a getter. Resolves when finished
+ * and the overlay is removed. Under reduced motion resolves immediately.
  */
 export function flyElement(
   fromRect: RectLike,
-  toRect: RectLike,
+  to: FlyTarget,
   content: HTMLElement | string,
   opts: FlyOptions = {},
 ): Promise<void> {
   if (prefersReducedMotion() || typeof document === 'undefined') return Promise.resolve();
-  const { duration = 900, easing = 'cubic-bezier(0.5, 0, 0.2, 1)', hold = 0.35 } = opts;
+  const { duration = 900, hold = 0.35 } = opts;
   const el = document.createElement('div');
   el.className = `fly-overlay ${opts.className ?? ''}`.trim();
   el.setAttribute('aria-hidden', 'true');
   Object.assign(el.style, {
     position: 'fixed',
-    left: `${toRect.left}px`,
-    top: `${toRect.top}px`,
-    width: `${toRect.width}px`,
-    height: `${toRect.height}px`,
     pointerEvents: 'none',
     zIndex: '300',
     transformOrigin: 'center',
+    willChange: 'transform, opacity, left, top',
   });
   if (typeof content === 'string') el.textContent = content;
   else el.appendChild(content);
   document.body.appendChild(el);
-  const { dx, dy, s } = invertTransform(fromRect, toRect, opts.fromScale);
-  const start = `translate(${dx}px, ${dy}px) scale(${s})`;
-  const h = Math.min(0.6, Math.max(0, hold));
-  const anim = el.animate(
-    [
-      { transform: `translate(${dx}px, ${dy}px) scale(${s * 0.6})`, opacity: 0, offset: 0 },
-      { transform: start, opacity: 1, offset: h * 0.45, easing: 'ease-out' },
-      { transform: start, opacity: 1, offset: h, easing },
-      { transform: 'none', opacity: 1, offset: 1 },
-    ],
-    { duration, fill: 'forwards' },
-  );
-  return anim.finished.then(
-    () => el.remove(),
-    () => el.remove(),
-  );
+
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    let raf = 0;
+    const finish = () => {
+      cancelAnimationFrame(raf);
+      el.remove();
+      resolve();
+    };
+    const tick = (now: number) => {
+      const t = Math.min(1, Math.max(0, (now - t0) / duration));
+      const dest = readFlyTarget(to);
+      const frame = flyFrameStyle(fromRect, dest, t, {
+        hold,
+        fromScale: opts.fromScale,
+      });
+      el.style.left = `${frame.left}px`;
+      el.style.top = `${frame.top}px`;
+      el.style.width = `${frame.width}px`;
+      el.style.height = `${frame.height}px`;
+      el.style.opacity = String(frame.opacity);
+      el.style.transform = frame.transform;
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else finish();
+    };
+    raf = requestAnimationFrame(tick);
+  });
 }
 
 /** Brief brightness pulse on an element. */

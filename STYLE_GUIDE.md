@@ -89,7 +89,7 @@ A JS mirror of the colours is in `theme/tokens.ts` (keep in sync).
 | Icons                     | `IconX`, `IconBackspace`, `IconShuffle`, `IconCopy`, `IconLink`, `IconDice`, `IconStar`, `IconClock`, `IconTrash`, `IconSpeaker`, `IconSpeakerOff`, `IconPalette`, `IconPawn`, `IconCog` (inline SVG, currentColor)                                                                                         |
 | `ScoreDisplay`            | `score`, `delta` (+/−), `best`; live region                                                                                                                                                                                                                                                                 |
 
-Motion (`motion.ts`, `queue.ts`, `transient.ts`): `flyElement(fromRect, toRect, content, opts)` (FLIP fixed overlay, WAAPI), `flashElement`, `attentionFlash` (pulse a few times), `ensureInView`, `createAnimationQueue()` (sequential tasks), `useTransientMessage(ms)` / `createTransient`. All motion helpers resolve instantly under reduced motion.
+Motion (`motion.ts`, `queue.ts`, `transient.ts`): `flyElement(fromRect, to, content, opts)` (FLIP fixed overlay; `to` may be a rect, Element, or getter — rAF re-reads the live destination each frame so scroll/resize mid-flight still lands), `flashElement`, `attentionFlash` (pulse a few times), `ensureInView`, `createAnimationQueue()` (sequential tasks), `useTransientMessage(ms)` / `createTransient`. All motion helpers resolve instantly under reduced motion.
 
 Pure helpers (tested in `ui.test.ts`): `evaluateGuess`, `tileLabel`, `formatScore`, `gridNavigate`, `trapFocusIndex`; `contrastRatio`/`meetsAA` in `theme/contrast.ts`.
 

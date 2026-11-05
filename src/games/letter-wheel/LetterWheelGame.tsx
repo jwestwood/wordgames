@@ -260,7 +260,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         void flashElement(wheel);
         const scroll = autoScroll.current;
         if (scroll) await ensureInView(slot);
-        const to = contentRect(slot); // letters, not the full-column list item
+        const to = contentRect(slot); // letters, not the full-column list item (initial size)
         const wr = wheel.getBoundingClientRect();
         const width = Math.min(wr.width * 0.75, to.width * 2.6);
         const from = centredRect(wr, width, (width / to.width) * to.height);
@@ -273,7 +273,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           content.appendChild(cell);
         }
         if (scroll || isInView(slot))
-          await flyElement(from, to, content, { className: 'fly-word', duration: 1100 });
+          // Pass the slot so fly tracks it if the page scrolls mid-flight.
+          await flyElement(from, slot, content, { className: 'fly-word', duration: 1100 });
         else {
           // Target off-screen and scrolling is off: show the word over the wheel, fade it there.
           content.style.transform = `scale(${from.width / to.width})`;
@@ -301,7 +302,6 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       const slot = cardRef.current?.querySelector<HTMLElement>(`[data-star-slot="${i}"]`);
       if (wheel && slot && (autoScroll.current || isInView(slot))) {
         if (autoScroll.current) await ensureInView(slot);
-        const to = contentRect(slot); // letters, not the full-column list item
         const wr = wheel.getBoundingClientRect();
         const from = centredRect(wr, wr.width * 0.4, wr.width * 0.4);
         const holder = document.createElement('div');
@@ -309,7 +309,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         const svg = slot.querySelector('svg')?.cloneNode(true) as SVGElement | undefined;
         svg?.querySelector('path')?.setAttribute('fill', 'currentColor');
         if (svg) holder.appendChild(svg);
-        await flyElement(from, to, holder, { className: 'fly-star', duration: 1000 });
+        await flyElement(from, slot, holder, { className: 'fly-star', duration: 1000 });
       }
       play('star'); // timed to the star landing in its slot
       setShownStars((s) => Math.max(s, i + 1));
@@ -325,14 +325,14 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       showToast(`All ${L.toUpperCase()} words found!`, 'good');
       if (wheel && tile && (autoScroll.current || isInView(tile))) {
         if (autoScroll.current) await ensureInView(tile);
-        const to = contentRect(tile);
+        const to0 = contentRect(tile);
         const wr = wheel.getBoundingClientRect();
-        const size = Math.max(to.width * 2.2, wr.width * 0.22);
+        const size = Math.max(to0.width * 2.2, wr.width * 0.22);
         const from = centredRect(wr, size, size);
         const content = document.createElement('div');
         content.className = 'fly-letter';
         content.textContent = L.toUpperCase();
-        await flyElement(from, to, content, { className: 'fly-letter-wrap', duration: 1000 });
+        await flyElement(from, tile, content, { className: 'fly-letter-wrap', duration: 1000 });
       }
       play('letter-complete');
       // Nudge the strip tile once it lands (highlight already derived from found).
