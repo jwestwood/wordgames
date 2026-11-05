@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Board } from './Board';
 import { Button } from './Button';
+import { ToastStack } from './Toast';
+import { useToast } from './useToast';
+import { LetterStrip } from './LetterStrip';
 import { IconBackspace, IconHint, IconShuffle, IconX } from './Icons';
 import { ScoreCard } from './ScoreCard';
 import { SeedDisplay } from './SeedDisplay';
@@ -53,6 +56,18 @@ const DEMO_SETTINGS: readonly SettingDefinition[] = [
 const STATES: TileState[] = ['default', 'selected', 'correct', 'present', 'absent'];
 
 /** Living showcase of the shared design system (route: #/style-guide). */
+function ToastDemo() {
+  const [toast, show] = useToast(2000);
+  return (
+    <>
+      <ToastStack toast={toast} />
+      <Button size="sm" variant="secondary" onClick={() => show('ALERT already found!', 'info')}>
+        Show toast
+      </Button>
+    </>
+  );
+}
+
 export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }) {
   const [open, setOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -110,6 +125,18 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
           icon-only (<code>.btn--icon</code>), labelled, and icon+label all match the header mute /
           settings buttons. Size only changes padding and type; never omit the shared height.
         </p>
+        <p>
+          Toasts (<code>useToast</code> / <code>ToastStack</code>) slide in from the top of a
+          relative panel; <code>attentionFlash</code> pulses a list item. Letter strips show
+          distinct letters A–Z for reference.
+        </p>
+        <div
+          className="panel"
+          style={{ position: 'relative', minHeight: '4.5rem', marginTop: 'var(--space-3)' }}
+        >
+          <ToastDemo />
+          <LetterStrip letters="wheel" />
+        </div>
         <div className="row">
           <Button>Primary</Button>
           <Button variant="secondary">Secondary</Button>

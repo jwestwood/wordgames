@@ -1305,3 +1305,106 @@ button.tile:active {
 .site-footer a:hover {
   color: var(--color-accent);
 }
+
+/* ---------- Toast (slides in from top of a relative parent) ---------- */
+.toast-stack {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: min(100% - 2 * var(--space-3), 22rem);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-light);
+  border: 1.5px solid var(--color-tile-edge);
+  box-shadow: var(--shadow-raised);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  animation: toast-in var(--duration-slow) var(--ease-out);
+}
+.toast--good {
+  border-color: var(--color-green);
+  color: var(--color-green-dark);
+}
+.toast--bad {
+  border-color: var(--color-red);
+  color: var(--color-red-dark);
+}
+.toast--info {
+  border-color: var(--color-wood);
+}
+.toast__mark {
+  font-weight: var(--weight-bold);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+/* ---------- Letter strip (alphabetical reference) ---------- */
+.letter-strip {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-2) 0 0;
+  border-top: 1px dashed var(--color-tile-edge);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem var(--space-1);
+}
+.letter-strip__cell {
+  min-width: 1.1rem;
+  text-align: center;
+  font-family: var(--font-accent);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  color: var(--color-ink-muted);
+}
+
+/* Attention flash (already-found word in a list, etc.) */
+.is-flashing {
+  animation: attention-flash 0.28s ease-in-out 3;
+  border-radius: var(--radius-sm);
+}
+@keyframes attention-flash {
+  0%,
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+  50% {
+    background-color: color-mix(in srgb, var(--color-yellow) 55%, transparent);
+    box-shadow: 0 0 0 2px var(--color-yellow);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-flashing {
+    animation: none;
+    background-color: color-mix(in srgb, var(--color-yellow) 40%, transparent);
+  }
+}

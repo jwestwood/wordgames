@@ -38,6 +38,7 @@
   }
 }
 .lw__play {
+  position: relative; /* toast anchors to the top of this panel */
   display: flex;
   flex-direction: column;
   align-items: center;

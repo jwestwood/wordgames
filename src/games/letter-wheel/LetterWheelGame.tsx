@@ -22,6 +22,7 @@ import {
   Confetti,
   createAnimationQueue,
   ensureInView,
+  attentionFlash,
   flashElement,
   flyElement,
   GameSettingsButton,
@@ -31,13 +32,15 @@ import {
   IconHint,
   IconShuffle,
   IconX,
+  LetterStrip,
   LetterWheel,
   Modal,
   Panel,
   ScoreCard,
   SeedDisplay,
   Tile,
-  useTransientMessage,
+  ToastStack,
+  useToast,
   WordSlots,
 } from '@core/ui';
 import {
@@ -63,8 +66,6 @@ import './letter-wheel.css';
 
 const CENTRE = -1;
 const GAME_ID = 'letter-wheel';
-type Feedback = { tone: 'good' | 'bad' | 'info'; text: string } | null;
-
 const messages = (
   minWord: number,
 ): Record<Exclude<GuessResult, { ok: true }>['reason'], string> => ({
@@ -156,7 +157,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const [guess, setGuess] = useState<number[]>([]);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
   const shuffles = useRef(0);
-  const [feedback, showFeedback] = useTransientMessage<NonNullable<Feedback>>(2800);
+  const [toast, showToast] = useToast(2800);
   const [latest, setLatest] = useState<string>();
   const [celebrate, setCelebrate] = useState(false);
   // Words/stars already counted but still mid-animation (not yet shown).
@@ -330,7 +331,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
               'success' as const,
             ),
       );
-      showFeedback({ tone: 'good', text: `${res.word.toUpperCase()} — nice!` });
+      showToast(`${res.word.toUpperCase()} — nice!`, 'good');
       const q = queue.current;
       q.enqueue(() => animateWord(res.word));
       for (let i = before; i < after; i++) q.enqueue(() => animateStar(i));
@@ -341,10 +342,18 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         });
     } else {
       play(res.reason === 'already-found' ? 'already-found' : 'error');
-      showFeedback({
-        tone: res.reason === 'already-found' ? 'info' : 'bad',
-        text: MESSAGES[res.reason],
-      });
+      if (res.reason === 'already-found') {
+        showToast(`${word.toUpperCase()} already found!`, 'info');
+        const el = listRef.current?.querySelector<HTMLElement>(`[data-word="${word}"]`);
+        if (el) {
+          void (async () => {
+            if (autoScroll.current) await ensureInView(el);
+            await attentionFlash(el, { times: 3 });
+          })();
+        }
+      } else {
+        showToast(MESSAGES[res.reason], 'bad');
+      }
     }
     setGuess([]);
   }, [
@@ -355,7 +364,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     MESSAGES,
     progressFor,
     setFound,
-    showFeedback,
+    showToast,
     animateWord,
     animateStar,
     play,
@@ -423,6 +432,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
 
       <div className="lw__layout">
         <Panel variant="wood" className="lw__play">
+          <ToastStack toast={toast} />
           <div ref={wheelRef} className="lw__wheel">
             <LetterWheel
               centre={puzzle.required}
@@ -486,14 +496,6 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
               ))
             )}
           </div>
-          <p
-            className={`lw__feedback lw__feedback--${feedback?.tone ?? 'info'}${feedback ? '' : ' lw__feedback--hidden'}`}
-            role="status"
-          >
-            {feedback
-              ? `${feedback.tone === 'good' ? '✓' : feedback.tone === 'bad' ? '✗' : '•'} ${feedback.text}`
-              : '\u00a0'}
-          </p>
         </Panel>
 
         <div className="lw__side">
@@ -559,6 +561,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                   setGuessed(true);
                 }}
               />
+              <LetterStrip letters={puzzle.target} />
             </div>
           </Panel>
         </div>

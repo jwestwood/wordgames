@@ -117,6 +117,42 @@ export function flashElement(el: Element | null, duration = 450): Promise<void> 
     );
 }
 
+export interface AttentionFlashOptions {
+  /** Number of highlight pulses (default 3). */
+  times?: number;
+  /** Duration of one pulse cycle in ms (default 280). */
+  duration?: number;
+  /** CSS class toggled for the flash (default `is-flashing`). */
+  className?: string;
+}
+
+/**
+ * Draw attention to an element by flashing it a few times (CSS class + WAAPI fallback).
+ * Resolves when the flashes finish (or immediately under reduced motion / no element).
+ */
+export function attentionFlash(
+  el: Element | null,
+  opts: AttentionFlashOptions = {},
+): Promise<void> {
+  if (!el) return Promise.resolve();
+  const target = el;
+  const { times = 3, duration = 280, className = 'is-flashing' } = opts;
+  const clear = () => target.classList.remove(className);
+  target.classList.add(className);
+  if (prefersReducedMotion() || typeof (target as HTMLElement).animate !== 'function') {
+    return new Promise((res) =>
+      setTimeout(() => (clear(), res()), duration * (prefersReducedMotion() ? 1 : times)),
+    );
+  }
+  const frames = Array.from({ length: times * 2 + 1 }, (_, i) => ({
+    offset: i / (times * 2),
+    filter: i % 2 === 0 ? 'brightness(1)' : 'brightness(1.25)',
+  }));
+  return (target as HTMLElement)
+    .animate(frames, { duration: duration * times, easing: 'ease-in-out' })
+    .finished.then(clear, clear);
+}
+
 /** Scroll `el` into view if needed; waits a frame so measurements are fresh. */
 export function ensureInView(el: Element): Promise<void> {
   const r = el.getBoundingClientRect();
