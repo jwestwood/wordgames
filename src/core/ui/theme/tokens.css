@@ -76,6 +76,7 @@
 
   /* Radius */
   --radius-sm: 4px;
+  --control-height: 2.5rem; /* shared button/control height */
   --radius-md: 8px;
   --radius-lg: 14px;
   --radius-pill: 999px;

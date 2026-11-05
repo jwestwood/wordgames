@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Board } from './Board';
 import { Button } from './Button';
-import { IconBackspace, IconShuffle, IconX } from './Icons';
+import { IconBackspace, IconHint, IconShuffle, IconX } from './Icons';
 import { ScoreCard } from './ScoreCard';
 import { SeedDisplay } from './SeedDisplay';
 import { LetterTiles } from './LetterTiles';
@@ -105,11 +105,20 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
       </Panel>
 
       <Panel title="Buttons">
+        <p>
+          Every <code>.btn</code> is <strong>2.5rem</strong> tall (<code>--control-height</code>) —
+          icon-only (<code>.btn--icon</code>), labelled, and icon+label all match the header mute /
+          settings buttons. Size only changes padding and type; never omit the shared height.
+        </p>
         <div className="row">
           <Button>Primary</Button>
           <Button variant="secondary">Secondary</Button>
           <Button variant="danger">Danger</Button>
           <Button variant="warning">Warning</Button>
+          <Button variant="secondary">
+            <IconHint />
+            Clue
+          </Button>
           <Button variant="danger" className="btn--icon" aria-label="Clear">
             <IconX />
           </Button>

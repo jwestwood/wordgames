@@ -168,10 +168,6 @@
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
-.lw__clue {
-  gap: var(--space-1);
-  white-space: nowrap;
-}
 .lw__clue--on {
   background: var(--color-green);
   color: var(--color-text-inverse);
