@@ -126,14 +126,13 @@ integrity checks. It refuses if beta is identical to the latest version. Review,
 `src/versioned`; on deploy vN becomes the public default.
 
 **Letter Wheel versions:** v1 — original generator and lists (answers = common: SCOWL ≤ 35, Zipf ≥ 3.3).
-v2 — answers come from a looser common list (Zipf ≥ 2.6 + `scripts/wordlist-sources/extra-allowlist.txt`,
-so _pant, veal, antler, leaper_ count), while the wheel is still drawn and sized (core pool 40–80) from the
-strict `targets` list (= v1 common), with the full answer pool capped at 100. ~97% of seeds keep their v1
-wheel and just accept more words. Stats: `npx vite-node scripts/letter-wheel-stats.ts 300 <1|2|beta>`.
+v2 — looser common answers (Zipf ≥ 2.6 + allowlist: _pant, veal, antler, leaper_, …); wheel drawn/sized
+from strict `targets` (= v1 common), answer pool capped at 100.
+v3 — same lists as v2; answer pool must be 20–40 words; every distinct wheel letter in ≥ 3 answers
+(target included); wheel still from `targets`. Public default. Stats:
+`npx vite-node scripts/letter-wheel-stats.ts 300 <1|2|3|beta>`.
 
-Beta (unreleased): v2's lists, but the answer pool itself must be 20–40 words (shorter games), and
-every distinct wheel letter must appear in at least 3 answers (target included); the wheel word is
-still drawn from `targets`.
+Beta (unreleased working copy): currently matches v3; edit freely until the next release.
 
 **Touch input:** interactive wheels act on press via `pressProps`/`createPressGuard` (`src/core/ui/tap.ts`):
 fire on pointerdown, swallow the follow-up click, keyboard clicks still work. Pair with the

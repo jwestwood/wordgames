@@ -25,6 +25,15 @@
         "extended": "49f0cc357a3de157",
         "targets": "542e059d3b91d28c"
       }
+    },
+    {
+      "v": 3,
+      "rules": "v3",
+      "words": {
+        "common": "fc0653f792876d36",
+        "extended": "49f0cc357a3de157",
+        "targets": "542e059d3b91d28c"
+      }
     }
   ]
 }
