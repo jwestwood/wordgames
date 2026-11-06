@@ -1,5 +1,7 @@
 # Architecture
 
+How the codebase is put together. How Letter Wheel *plays* — each mechanic and the strategy (or comfort) it adds — is in [GAME_MECHANICS.md](./GAME_MECHANICS.md).
+
 ```
 src/
   core/            shared, game-agnostic code (import via `@core/...`)
