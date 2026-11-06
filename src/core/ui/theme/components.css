@@ -465,22 +465,21 @@ button.tile:active {
   list-style: none;
   margin: 0;
   padding: 0;
-  /* Cell metrics: 10 letters + gaps must fit one column (wheels go to 10). */
-  --word-slot-cell: 0.72rem;
-  --word-slot-gap: 1px;
-  /* Column-major flow: alphabetical down each column, then across. */
+  /* Column-major flow: alphabetical down each column, then across.
+     Cell metrics (--word-slot-cell / --word-slot-gap) live on :root so fly-in
+     clones of .word-slots__item / __cell (not nested in .word-slots) match. */
   columns: 8rem;
   column-gap: var(--space-4);
 }
 .word-slots__item {
   display: flex;
-  gap: var(--word-slot-gap);
+  gap: var(--word-slot-gap, 1px);
   break-inside: avoid;
   margin-bottom: var(--space-2);
 }
 .word-slots__cell {
   flex: none; /* never squash letters in narrow columns (keeps fly-in alignment exact) */
-  width: var(--word-slot-cell);
+  width: var(--word-slot-cell, 0.72rem);
   height: 1.2rem;
   display: inline-grid;
   place-items: center;

@@ -64,6 +64,10 @@
   --weight-medium: 500;
   --weight-bold: 700;
 
+  /* Word-list letter cells (list + fly-in overlay; defined globally so fly clones inherit). */
+  --word-slot-cell: 0.72rem;
+  --word-slot-gap: 1px;
+
   /* Spacing (4px base) */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
