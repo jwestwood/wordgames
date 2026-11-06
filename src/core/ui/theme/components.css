@@ -476,6 +476,10 @@ button.tile:active {
   gap: var(--word-slot-gap, 1px);
   break-inside: avoid;
   margin-bottom: var(--space-2);
+  position: relative; /* anchor for clue-mode outline / hit-area; no size change */
+  /* Transparent outline reserved so clue mode only changes colour, not box size. */
+  outline: 1.5px dashed transparent;
+  outline-offset: 2px;
 }
 .word-slots__cell {
   flex: none; /* never squash letters in narrow columns (keeps fly-in alignment exact) */
@@ -500,13 +504,13 @@ button.tile:active {
 .word-slots--picking .word-slots__item--pickable {
   cursor: pointer;
   border-radius: var(--radius-sm);
-  outline: 1.5px dashed var(--color-wood-dark);
-  outline-offset: 2px;
-  padding: 1px 2px;
-  margin-left: -2px;
-  /* Larger tap target on touch without shifting layout much */
-  min-height: 2rem;
-  align-items: center;
+  outline-color: var(--color-wood-dark);
+}
+.word-slots--picking .word-slots__item--pickable::after {
+  /* Larger tap target without changing the item's layout box. */
+  content: '';
+  position: absolute;
+  inset: -0.4rem -0.2rem;
 }
 .word-slots--picking .word-slots__item--pickable:hover,
 .word-slots--picking .word-slots__item--pickable:focus-visible {
