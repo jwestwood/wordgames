@@ -244,7 +244,11 @@ after route cleanup without restoring a stale route lock. Home/style guide remai
 history and trays retain their own scrolling surfaces, including over the game.
 
 Short windows save gaps, not text/button size. Landscape 600–859px wide / ≤500px high places the
-wheel beside the three control rows. At ≤599px wide / ≤500px high (e.g. a software keyboard), play
+wheel beside the three control rows. Its size-contained wheel stretches with `height:auto` and a
+160px minimum instead of percentage height across flexible spanning tracks; three ≥50px tracks
+plus gaps supply a nonzero block axis for `cqh` and the square SVG. The play panel has a 180px
+floor (tracks + padding/border); if chrome/safe areas leave less space, the layout scrolls internally
+instead of reducing its viewport to zero or clipping the controls. At ≤599px wide / ≤500px high (e.g. a software keyboard), play
 becomes an **internal** scroller with a 160px minimum wheel and 40px controls; the seed field remains
 above it. This is an intentional extreme-height accessibility fallback, not clipping unreachable
 controls and not reintroducing document scroll. Normal mobile sizes keep the one-screen layout.

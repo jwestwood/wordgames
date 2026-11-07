@@ -445,15 +445,27 @@
     width: auto;
     flex: 1;
   }
+  .app--letter-wheel .lw__layout {
+    /* If chrome/safe areas consume the remaining space, scroll this surface, not the page. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
   .app--letter-wheel .lw__play {
+    min-height: 180px; /* 162px track area + 16px padding + 2px border. */
     grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr);
-    grid-template-rows: repeat(3, minmax(40px, 1fr));
+    /* Three 50px tracks + gaps leave a real 160px+ block axis for the contained SVG. */
+    grid-template-rows: repeat(3, minmax(50px, 1fr));
     overflow-y: auto;
     overscroll-behavior: contain;
   }
   .app--letter-wheel .lw__wheel {
     grid-column: 1;
     grid-row: 1 / 4;
+    /* Do not resolve height:100% through spanning flexible tracks. Size containment makes
+       its intrinsic block contribution zero, so cqh (and the SVG) otherwise has no floor. */
+    height: auto;
+    min-height: 160px;
+    align-self: stretch;
   }
   .app--letter-wheel .lw__guess,
   .app--letter-wheel .lw__controls,

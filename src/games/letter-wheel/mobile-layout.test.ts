@@ -61,11 +61,40 @@ describe('mobile layout contracts (visual checks still required)', () => {
     const media = '(min-width: 600px) and (max-width: 859px) and (max-height: 500px)';
     expect(declarations('.app--letter-wheel .lw__play', media)).toMatchObject({
       'grid-template-columns': 'minmax(0, 1fr) minmax(240px, 1fr)',
-      'grid-template-rows': 'repeat(3, minmax(40px, 1fr))',
+      'grid-template-rows': 'repeat(3, minmax(50px, 1fr))',
+      'min-height': '180px',
       'overflow-y': 'auto',
     });
     expect(declarations('.app--letter-wheel .lw__wheel', media)['grid-row']).toBe('1 / 4');
   });
+  it.each([667, 740, 844])(
+    'gives the landscape SVG nonzero physical sizing at width %i, not just accessible buttons',
+    (width) => {
+      const media = '(min-width: 600px) and (max-width: 859px) and (max-height: 500px)';
+      const wheel = declarations('.app--letter-wheel .lw__wheel', media);
+      expect(declarations('.app--letter-wheel .lw__layout', media)).toMatchObject({
+        'overflow-y': 'auto',
+        'overscroll-behavior': 'contain',
+      });
+      expect(wheel).toMatchObject({
+        height: 'auto',
+        'min-height': '160px',
+        'align-self': 'stretch',
+      });
+      // Size-contained SVG must not depend on a percentage block size in flexible spanning tracks.
+      // Conservative two-column width budget includes 44px safe areas on BOTH sides.
+      const innerWidth = width - 2 * 44 - 2 * 9;
+      const leftColumn = (innerWidth - 6) / 2;
+      const minimumTrackArea = 3 * 50 + 2 * 6;
+      const minimumSvg = Math.min(leftColumn, Number.parseFloat(wheel['min-height']));
+      expect(minimumTrackArea).toBeGreaterThanOrEqual(minimumSvg);
+      expect(minimumSvg).toBeGreaterThanOrEqual(160);
+      expect(declarations('.app--letter-wheel .lw__wheel .wheel')).toMatchObject({
+        width: 'min(100cqw, 100cqh)',
+        height: 'min(100cqw, 100cqh)',
+      });
+    },
+  );
   it('makes very-short portrait/keyboard overflow reachable inside play, not clipped offscreen', () => {
     const media = '(max-width: 599px) and (max-height: 500px)';
     expect(declarations('.app--letter-wheel .lw__play', media)).toMatchObject({
