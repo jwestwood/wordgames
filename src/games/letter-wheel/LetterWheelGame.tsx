@@ -15,6 +15,7 @@ import { useHistoryEntry } from '@core/history';
 import { pickTier, useSound } from '@core/audio';
 import { useGameSettings } from '@core/settings';
 import { LETTER_WHEEL_SETTINGS } from './settings';
+import { submitGuessOnEnter } from './keyboard';
 import { toWheelPreview } from './preview';
 import {
   BottomSheet,
@@ -481,9 +482,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       } else if (e.key === 'Backspace') {
         e.preventDefault();
         backspace();
-      } else if (e.key === 'Enter' && !t.closest('button, [role="button"], a')) {
-        e.preventDefault(); // otherwise Enter "clicks" the modal button focused mid-event
-        submit();
+      } else if (e.key === 'Enter') {
+        submitGuessOnEnter(e, Boolean(word), `${trayId}-opener`, submit);
       } else if (e.key === 'Escape') {
         if (clueMode) setClueMode(false);
         else clear();
@@ -491,7 +491,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [typeLetter, backspace, submit, clear, clueMode]);
+  }, [typeLetter, backspace, submit, clear, clueMode, word, trayId]);
 
   return (
     <div className="lw">
