@@ -275,29 +275,36 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const animateWord = useCallback(
     async (w: string) => {
       const signal = revealAbort.current.signal;
-      // No state changes in queued microtasks before the tray's React commit.
-      const ready = await waitForRevealVisibility(
-        () => !view.current.mobile || view.current.wordsOpen,
-        signal,
-      );
-      if (!ready) return;
-      const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
-      if (!slot) return;
-      if (view.current.mobile) {
-        const scroller = slot.closest<HTMLElement>('.bottom-sheet__scroll');
-        if (scroller) await ensureInScrollContainer(slot, scroller);
-      } else if (autoScroll.current) await ensureInView(slot);
-      // Closed early? Wait for a deliberate reopen, without forcing the tray back open.
-      // Desktop with auto-scroll off similarly waits until the player scrolls to this row.
-      const visible = await waitForRevealVisibility(
-        () => (!view.current.mobile || view.current.wordsOpen) && isRevealTargetVisible(slot),
-        signal,
-      );
-      if (!visible || signal.aborted) return;
-      slot.classList.remove('word-slots__item--reveal-finished');
-      flushSync(() => setRevealingWords((words) => new Set(words).add(w)));
-      await revealWordInPlace(slot, signal);
+      // Yield for the auto-open commit, but a deliberate close wins. Never reopen here.
+      const trayClosed = () => view.current.mobile && !view.current.wordsOpen;
+      const ready = await waitForRevealVisibility(() => !trayClosed(), signal, {
+        shouldStop: trayClosed,
+      });
       if (signal.aborted) return;
+      const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
+      let visible = false;
+      if (ready && slot) {
+        if (view.current.mobile) {
+          const scroller = slot.closest<HTMLElement>('.bottom-sheet__scroll');
+          if (scroller) await ensureInScrollContainer(slot, scroller);
+        } else if (autoScroll.current) await ensureInView(slot);
+        // A closed tray or offscreen desktop row with auto-scroll off completes silently.
+        // Other clipping/visibility races get a short bounded grace period, not an endless wait.
+        visible = await waitForRevealVisibility(() => isRevealTargetVisible(slot), signal, {
+          shouldStop: () =>
+            trayClosed() ||
+            (!view.current.mobile && !autoScroll.current && !isRevealTargetVisible(slot)),
+        });
+      }
+      if (signal.aborted) return;
+      if (visible && slot) {
+        slot.classList.remove('word-slots__item--reveal-finished');
+        flushSync(() => setRevealingWords((words) => new Set(words).add(w)));
+        await revealWordInPlace(slot, signal);
+      }
+      if (signal.aborted) return;
+      // Always expose the accepted word, even when its reveal was skipped. Stars, completed
+      // letters and perfect must continue; hidden words must never hold the shared queue.
       flushSync(() => {
         setRevealingWords((words) => {
           const next = new Set(words);
@@ -311,7 +318,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         });
         setLatest(w);
       });
-      slot.classList.remove('word-slots__item--reveal-finished');
+      slot?.classList.remove('word-slots__item--reveal-finished');
       play('word-land');
     },
     [play],

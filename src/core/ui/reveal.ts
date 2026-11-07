@@ -37,24 +37,35 @@ export function isRevealTargetVisible(el: HTMLElement): boolean {
   );
 }
 
-/** Yield at least one frame for React to commit/open a tray. Abort also stops queued waits. */
+/**
+ * Yield a frame for React to commit/open a tray, but never hold a celebration queue on an
+ * invisible target. False means complete the found state without animating it. The timer
+ * also releases the queue when rAF is suspended; abort/early close cleans up both handles.
+ */
 export function waitForRevealVisibility(
   visible: () => boolean,
   signal: AbortSignal,
+  options: { maxWaitMs?: number; shouldStop?: () => boolean } = {},
 ): Promise<boolean> {
   if (signal.aborted) return Promise.resolve(false);
   return new Promise((resolve) => {
     let frame = 0;
+    let done = false;
     const finish = (ok: boolean) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
       cancelAnimationFrame(frame);
       signal.removeEventListener('abort', abort);
       resolve(ok);
     };
     const abort = () => finish(false);
     const tick = () => {
-      if (visible()) finish(true);
+      if (options.shouldStop?.()) finish(false);
+      else if (visible()) finish(true);
       else frame = requestAnimationFrame(tick);
     };
+    const timer = setTimeout(() => finish(false), options.maxWaitMs ?? 250);
     signal.addEventListener('abort', abort, { once: true });
     frame = requestAnimationFrame(tick);
   });

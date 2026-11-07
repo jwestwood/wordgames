@@ -142,12 +142,13 @@ _Comfort / light strategy._ On a long list, or with auto-scroll off, it answers 
 
 Letter Wheel’s settings cog currently has one toggle: **Scroll to found words** (on by default).
 On desktop, when on, a new word scrolls into view before its in-place reveal. When off,
-the page stays put: an off-screen new word waits to reveal until you scroll to its row.
-The found count and percentage update immediately; queued reveal/star celebrations follow when seen.
+the page stays put: an off-screen new word is filled without motion rather than delaying other
+celebrations. The found count and percentage update immediately.
 On mobile, page auto-scroll is **always off**, regardless of this saved setting. Each new valid
 word opens the Words tray and scrolls **only its internal surface** to the new blank before revealing.
-The tray stays open afterwards. If you deliberately close it before the reveal starts, it waits
-for you to reopen/see the row rather than forcing the tray open again. The progress plaque stays
+The tray stays open afterwards. If you deliberately close it before the reveal starts, the word
+fills without motion; no stale reveal reopens the tray. Visibility races are bounded, so stars,
+letter-complete celebrations and perfect completion never wait for a hidden word. The progress plaque stays
 on the base screen, outside the tray. Completed-letter tiles still fly to a visible LETTERS strip
 or pop over the wheel when the tray is closed.
 

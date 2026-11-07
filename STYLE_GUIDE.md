@@ -182,16 +182,19 @@ Letter Wheel's `Words · found/total` opener is live. The tray contains the exis
 last word and LETTERS strip — no duplicate IDs or competing hidden targets. Mobile ignores the
 page auto-scroll setting. **New valid words auto-open the tray**, which stays open until explicitly
 closed; invalid/repeated guesses never auto-open it. Only its internal scroller brings the blank
-into view. If closed before the reveal starts, the pending reveal waits for a deliberate reopen.
-On desktop, auto-scroll off waits for the player to bring an offscreen row into view. Found count
-and percentage update immediately even while a reveal waits. Pending reveals/queued celebrations
-are transient; reloading shows saved words normally.
+into view. If closed before the reveal starts, complete the found state without motion; never
+reopen a tray from a queued reveal. Desktop auto-scroll off does the same for an offscreen row.
+Found count and percentage update immediately. Visibility gates have a 250ms deadline plus an
+early-stop predicate for closed/offscreen targets, so hidden reveals cannot hold the shared
+star/letter/perfect queue. Saved words always load normally; skipped reveals do not replay.
 
 `WordSlots.revealing` commits the real ink under an opacity mask before the shared
 `revealWordInPlace` helper animates it. Only ink transforms (perspective flip), opacity/filter and
 row background change: 420ms per letter plus up to 180ms total stagger, a warm/green paper wash,
 no layout shifts. A visibility gate yields a frame for the tray commit, then checks viewport **and**
-scroll clipping. Reduced motion/no WAAPI fills immediately. Abort on unmount cancels waits/animations.
+scroll clipping, with a bounded timer fallback even when rAF is suspended. Reduced motion/no WAAPI
+fills immediately. Abort on unmount cancels waits/animations. An in-progress short reveal may finish
+after the tray closes, but is never replayed or allowed to reopen it.
 The Style Guide's ALERT demo can reset/replay deliberately; saved game loads never replay.
 
 **Only discovered-word fly-ins were replaced.** Letter-complete square tiles and star fly-ins remain;

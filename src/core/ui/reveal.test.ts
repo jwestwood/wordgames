@@ -8,8 +8,12 @@ import {
   wordRevealTiming,
 } from './reveal';
 import { WordSlots } from './WordSlots';
+import { createAnimationQueue } from './queue';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 
 describe('discovery reveal timing', () => {
   it.each([1, 4, 8, 10])('keeps a %i letter word within the short reveal budget', (length) => {
@@ -118,6 +122,39 @@ describe('visibility/React commit gate', () => {
     expect(await waiting).toBe(false);
     expect(clock.pending.size).toBe(0);
   });
+  it('releases an invisible target at the deadline even when rAF never runs', async () => {
+    vi.useFakeTimers();
+    const clock = frames();
+    const waiting = waitForRevealVisibility(() => false, new AbortController().signal);
+    await vi.advanceTimersByTimeAsync(250);
+    expect(await waiting).toBe(false);
+    expect(clock.pending.size).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it.each(['closed tray', 'desktop auto-scroll off'])(
+    '%s cannot block stars, letters or perfect',
+    async () => {
+      const clock = frames();
+      const queue = createAnimationQueue();
+      const events: string[] = [];
+      void queue.enqueue(async () => {
+        const visible = await waitForRevealVisibility(() => false, new AbortController().signal, {
+          shouldStop: () => true,
+        });
+        events.push(visible ? 'animated word' : 'found without animation');
+      });
+      for (const event of ['star', 'letter-complete', 'perfect'])
+        void queue.enqueue(() => {
+          events.push(event);
+        });
+      await Promise.resolve();
+      clock.tick();
+      await queue.idle();
+      expect(events).toEqual(['found without animation', 'star', 'letter-complete', 'perfect']);
+      expect(clock.pending.size).toBe(0);
+      expect(queue.size).toBe(0);
+    },
+  );
   it('accounts for the tray scroll clip, not just the viewport', () => {
     vi.stubGlobal('window', { innerWidth: 390, innerHeight: 844 });
     vi.stubGlobal('getComputedStyle', () => ({ overflowY: 'auto', overflowX: 'hidden' }));
