@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { revealWordInPlace } from './reveal';
 import { Board } from './Board';
 import { Button } from './Button';
 import { ToastStack } from './Toast';
@@ -67,6 +69,48 @@ function ToastDemo() {
         Show toast
       </Button>
     </>
+  );
+}
+
+function WordRevealDemo() {
+  const [found, setFound] = useState(false);
+  const [revealing, setRevealing] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <Panel title="In-place discovery reveal">
+      <p>
+        Only the ink flips, left to right, with a warm-to-green wash (520ms for ALERT). Blank cell
+        size stays fixed. Reduced motion fills immediately. In Letter Wheel a new mobile discovery
+        opens the Words tray and scrolls its row into view before this starts.
+      </p>
+      <Button
+        variant="secondary"
+        disabled={revealing}
+        onClick={async () => {
+          if (found) {
+            setFound(false);
+            return;
+          }
+          flushSync(() => {
+            setFound(true);
+            setRevealing(true);
+          });
+          const row = ref.current?.querySelector<HTMLElement>('[data-word="alert"]');
+          if (row) await revealWordInPlace(row);
+          flushSync(() => setRevealing(false));
+          row?.classList.remove('word-slots__item--reveal-finished');
+        }}
+      >
+        {found ? 'Reset blank' : 'Reveal ALERT'}
+      </Button>
+      <div ref={ref} style={{ marginTop: 16 }}>
+        <WordSlots
+          words={['alert']}
+          revealed={new Set(found ? ['alert'] : [])}
+          revealing={new Set(revealing ? ['alert'] : [])}
+        />
+      </div>
+    </Panel>
   );
 }
 
@@ -319,6 +363,8 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
           onReset={() => setDemo(defaultsFor(DEMO_SETTINGS) as Record<string, SettingValue>)}
         />
       </Panel>
+
+      <WordRevealDemo />
 
       <Panel title="Bottom sheet / mobile game table">
         <p>

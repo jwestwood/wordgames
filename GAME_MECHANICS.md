@@ -73,8 +73,10 @@ How you can tell how you are doing, and what “done enough” means.
 Below 860px, Letter Wheel is a fixed, one-screen table: compact branding and seed controls,
 progress/stars, wheel, guess and 40px controls remain on the base screen. **Words · 12/30**
 shows the live found/total count and opens a paper bottom tray with the existing word list,
-Clue button, last-word reminder and LETTERS strip. The tray scrolls internally; its Close
-button, Escape or shaded backdrop returns to the wheel. Closing keeps clue state and the
+Clue button, last-word reminder and LETTERS strip. Every **new valid discovery** also opens this
+tray automatically and brings that blank into view inside its own scroll area. The word then reveals in place; the tray stays open until
+you close it. Invalid and already-found guesses do not auto-open it. Its Close button,
+Escape or shaded backdrop returns to the wheel. Closing keeps clue state and the
 tray's scroll position. Wider screens keep the side-by-side wheel and list.
 
 _Comfort, not a rules change._ Checking the list is an intentional action on a small screen.
@@ -139,14 +141,18 @@ _Comfort / light strategy._ On a long list, or with auto-scroll off, it answers 
 ### Scroll-to-found setting
 
 Letter Wheel’s settings cog currently has one toggle: **Scroll to found words** (on by default).
-On desktop, when on, a found word's fly-in scrolls that row into view. When off, an off-screen
-word pops and fades over the wheel instead; star fly-ins only play if the score plaque is visible.
-On mobile, page auto-scroll is **always off**, regardless of this saved setting. With the Words
-tray closed, found words and completed-letter tiles briefly pop over the wheel. With it open,
-only the tray's own scroll surface can move to show a destination; fly-ins keep tracking it live.
-The progress plaque stays on the base screen, outside the tray.
+On desktop, when on, a new word scrolls into view before its in-place reveal. When off,
+the page stays put: an off-screen new word waits to reveal until you scroll to its row.
+The found count and percentage update immediately; queued reveal/star celebrations follow when seen.
+On mobile, page auto-scroll is **always off**, regardless of this saved setting. Each new valid
+word opens the Words tray and scrolls **only its internal surface** to the new blank before revealing.
+The tray stays open afterwards. If you deliberately close it before the reveal starts, it waits
+for you to reopen/see the row rather than forcing the tray open again. The progress plaque stays
+on the base screen, outside the tray. Completed-letter tiles still fly to a visible LETTERS strip
+or pop over the wheel when the tray is closed.
 
-_Comfort._ This does not change the puzzle. Turn it off if the page jumping on a phone is more distraction than help.
+_Comfort._ This does not change the puzzle. On desktop, turn it off to keep the page still.
+Mobile always keeps the page still, while the tray handles discoveries.
 
 ---
 
@@ -168,15 +174,21 @@ on mobile, scrolling only inside an open Words tray). A closed tray stays closed
 
 _Feedback, with a small use._ If you cannot remember whether you already entered something, submitting it again _finds it for you_ in the list. That is bookkeeping, not a new scoring trick.
 
-### Fly-ins
+### Discovery reveal and remaining fly-ins
 
-Found words fly from the wheel into a visible list slot (matching its letter sizing). Stars fly
-onto the score plaque when you cross a threshold. Completed letters fly onto a visible LETTERS
-strip as square tiles. On mobile with the tray closed, words and completed letters pop over the
-wheel instead — never into a hidden target. Closing a tray during a fly redirects the destination
-to the wheel. Animations queue rather than collide and track live scrolling destinations.
+A newly discovered word now reveals **on its own blank**, not in a flying word overlay.
+Once the tray is open and the row is visible, its letters flip/ink in from left to right with
+a subtle warm-to-green wash (about 495–600ms for 4–10 letters). Cell widths, row height and
+letter spacing do not change. The complete word cannot flash before the animation: its ink is
+hidden until each letter's reveal. Reduced motion fills it immediately. Saved found words load
+fully shown without replaying a reveal; clue reveals and the already-found flash remain separate.
 
-_Celebration / feedback._ The motion is there so the eye can follow where a word or star landed. It does not hide or reveal extra information beyond what the list and plaque already show.
+Stars still fly onto the score plaque at thresholds. Completed letters still fly as square tiles
+onto a visible LETTERS strip (or pop over the wheel with the tray closed). Their live targets
+continue tracking scroll. Discoveries, stars and letter-complete celebrations remain queued.
+
+_Celebration / feedback._ The short ink reveal makes it clear which blank you just solved. It
+adds no information beyond the accepted word and does not change scoring or the puzzle rules.
 
 ### Sounds and mute
 

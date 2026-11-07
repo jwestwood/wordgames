@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   createRng,
@@ -19,7 +20,6 @@ import {
   BottomSheet,
   Button,
   centredRect,
-  contentRect,
   Confetti,
   createAnimationQueue,
   ensureInView,
@@ -29,8 +29,10 @@ import {
   flyElement,
   GameSettingsButton,
   isInView,
-  popElement,
   popOverElement,
+  revealWordInPlace,
+  waitForRevealVisibility,
+  isRevealTargetVisible,
   useMediaQuery,
   IconBackspace,
   IconHint,
@@ -172,7 +174,9 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const [toast, showToast] = useToast(2800);
   const [latest, setLatest] = useState<string>();
   const [celebrate, setCelebrate] = useState(false);
-  // Words/stars already counted but still mid-animation (not yet shown).
+  // Only newly discovered words enter transient pending/reveal state; saved words never do.
+  const [revealingWords, setRevealingWords] = useState<ReadonlySet<string>>(() => new Set());
+  const revealAbort = useRef(new AbortController());
   const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
   const [shownStars, setShownStars] = useState(
     () => progressFor(found.length, puzzle.pool.length).stars,
@@ -188,7 +192,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const stripRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const q = queue.current;
-    return () => q.clear();
+    const controller = new AbortController();
+    revealAbort.current = controller;
+    return () => {
+      controller.abort();
+      q.clear();
+    };
   }, []);
 
   const letterAt = useCallback(
@@ -265,55 +274,45 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
 
   const animateWord = useCallback(
     async (w: string) => {
-      const wheel = wheelRef.current;
+      const signal = revealAbort.current.signal;
+      // No state changes in queued microtasks before the tray's React commit.
+      const ready = await waitForRevealVisibility(
+        () => !view.current.mobile || view.current.wordsOpen,
+        signal,
+      );
+      if (!ready) return;
       const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
-      if (wheel && slot) {
-        void flashElement(wheel);
-        const scroll = autoScroll.current;
-        if (scroll) await ensureInView(slot);
+      if (!slot) return;
+      if (view.current.mobile) {
         const scroller = slot.closest<HTMLElement>('.bottom-sheet__scroll');
-        if (view.current.mobile && view.current.wordsOpen && scroller) {
-          await ensureInScrollContainer(slot, scroller);
-        }
-        const content = document.createElement('div');
-        content.className = 'word-slots__item word-slots__item--shown';
-        for (const c of w) {
-          const cell = document.createElement('span');
-          cell.className = 'word-slots__cell';
-          cell.textContent = c.toUpperCase();
-          content.appendChild(cell);
-        }
-        if (view.current.mobile && !view.current.wordsOpen) {
-          await popOverElement(wheel, content, { className: 'fly-word', duration: 1100 });
-        } else {
-          const to = contentRect(slot); // letters, not the full-column item
-          const wr = wheel.getBoundingClientRect();
-          const width = Math.min(wr.width * 0.75, to.width * 2.6);
-          const from = centredRect(wr, width, (width / to.width) * to.height);
-          if ((view.current.mobile && view.current.wordsOpen) || scroll || isInView(slot)) {
-            // Getter stays live if the tray closes during a queued animation.
-            const destination = () =>
-              view.current.mobile && !view.current.wordsOpen
-                ? centredRect(wheel.getBoundingClientRect(), to.width, to.height)
-                : contentRect(slot);
-            await flyElement(from, destination, content, { className: 'fly-word', duration: 1100 });
-          } else {
-            content.style.transform = `scale(${from.width / to.width})`;
-            content.style.transformOrigin = 'center';
-            await popElement(centredRect(wr, to.width, to.height), content, {
-              className: 'fly-word',
-              duration: 1100,
-            });
-          }
-        }
-        play('word-land');
-      }
-      setHidden((h) => {
-        const n = new Set(h);
-        n.delete(w);
-        return n;
+        if (scroller) await ensureInScrollContainer(slot, scroller);
+      } else if (autoScroll.current) await ensureInView(slot);
+      // Closed early? Wait for a deliberate reopen, without forcing the tray back open.
+      // Desktop with auto-scroll off similarly waits until the player scrolls to this row.
+      const visible = await waitForRevealVisibility(
+        () => (!view.current.mobile || view.current.wordsOpen) && isRevealTargetVisible(slot),
+        signal,
+      );
+      if (!visible || signal.aborted) return;
+      slot.classList.remove('word-slots__item--reveal-finished');
+      flushSync(() => setRevealingWords((words) => new Set(words).add(w)));
+      await revealWordInPlace(slot, signal);
+      if (signal.aborted) return;
+      flushSync(() => {
+        setRevealingWords((words) => {
+          const next = new Set(words);
+          next.delete(w);
+          return next;
+        });
+        setHidden((words) => {
+          const next = new Set(words);
+          next.delete(w);
+          return next;
+        });
+        setLatest(w);
       });
-      setLatest(w);
+      slot.classList.remove('word-slots__item--reveal-finished');
+      play('word-land');
     },
     [play],
   );
@@ -407,6 +406,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         beforeComplete,
         afterComplete,
       );
+      if (view.current.mobile) setWordsOpen(true);
       setFound(next);
       setHidden((h) => new Set(h).add(res.word));
       play(
@@ -594,6 +594,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
             )}
           </div>
           <Button
+            id={`${trayId}-opener`}
             className="lw__words-button"
             variant="secondary"
             aria-haspopup="dialog"
@@ -611,9 +612,9 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         <div className="lw__side">
           <div ref={cardRef} className="lw__score">
             <ScoreCard
-              found={score.found - hidden.size}
+              found={score.found}
               total={score.total}
-              percent={progressFor(score.found - hidden.size, score.total).percent}
+              percent={score.percent}
               stars={Math.min(shownStars, score.stars)}
               maxStars={score.maxStars}
               thresholds={STAR_LABELS}
@@ -625,6 +626,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
             onClose={closeWords}
             title={`Words · ${found.length}/${puzzle.pool.length}`}
             id={trayId}
+            returnFocusId={`${trayId}-opener`}
           >
             <Panel className="lw__words">
               {mobile && wordsOpen && <ToastStack toast={toast} />}
@@ -663,6 +665,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                   revealed={revealed}
                   latest={latest}
                   hidden={hidden}
+                  revealing={revealingWords}
                   known={known}
                   picking={clueMode}
                   pickable={pickable}

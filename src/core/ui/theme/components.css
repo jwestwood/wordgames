@@ -519,7 +519,6 @@ button.tile:active {
 }
 .word-slots__item--latest .word-slots__cell {
   color: var(--color-green-dark);
-  animation: slot-pop var(--duration-slow) var(--ease-bounce);
 }
 @keyframes slot-pop {
   from {
@@ -1536,4 +1535,19 @@ button.tile:active {
 
 .bottom-sheet__panel .toast-stack {
   top: 4.5rem;
+}
+
+/* Discovery reveal: blank cell geometry/borders remain fixed; only ink flips in place. */
+.word-slots__ink {
+  display: inline-block;
+  transform-origin: center;
+}
+.word-slots__item--revealing .word-slots__ink {
+  opacity: 0;
+}
+.word-slots__item--reveal-finished .word-slots__ink {
+  opacity: 1;
+}
+.word-slots__item--revealing {
+  border-radius: var(--radius-sm);
 }

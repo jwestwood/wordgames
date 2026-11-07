@@ -33,3 +33,4 @@ export { useToast } from './useToast';
 export { LetterStrip, type LetterStripProps } from './LetterStrip';
 export { BottomSheet, type BottomSheetProps } from './BottomSheet';
 export { useMediaQuery } from './useMediaQuery';
+export { revealWordInPlace, waitForRevealVisibility, isRevealTargetVisible } from './reveal';

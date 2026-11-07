@@ -9,8 +9,10 @@ export interface WordSlotsProps {
   revealed: ReadonlySet<string>;
   /** Most recently revealed word (highlighted). */
   latest?: string;
-  /** Words treated as not yet shown (e.g. while an animation flies them in). */
+  /** Words kept blank while waiting for their reveal. */
   hidden?: ReadonlySet<string>;
+  /** Transient discovery reveal only; saved games must not populate this. */
+  revealing?: ReadonlySet<string>;
   /**
    * Optional known letters for unrevealed words (same length as the word; `null`/empty = blank).
    * Used for clues: e.g. `[null,null,null,'t']` then `[null,null,'n','t']`.
@@ -29,6 +31,7 @@ export function WordSlots({
   revealed,
   latest,
   hidden,
+  revealing,
   known,
   picking = false,
   pickable,
@@ -37,7 +40,8 @@ export function WordSlots({
   return (
     <ol className={`word-slots${picking ? ' word-slots--picking' : ''}`}>
       {words.map((w) => {
-        const shown = revealed.has(w) && !hidden?.has(w);
+        const animating = revealing?.has(w) ?? false;
+        const shown = revealed.has(w) && (!hidden?.has(w) || animating);
         const letters = known?.get(w);
         const canPick = picking && !shown && (pickable ? pickable.has(w) : true) && !!onPick;
         const knownCount = letters?.filter(Boolean).length ?? 0;
@@ -57,7 +61,7 @@ export function WordSlots({
             data-word={w}
             className={`word-slots__item${shown ? ' word-slots__item--shown' : ''}${
               w === latest ? ' word-slots__item--latest' : ''
-            }${canPick ? ' word-slots__item--pickable' : ''}${
+            }${animating ? ' word-slots__item--revealing' : ''}${canPick ? ' word-slots__item--pickable' : ''}${
               knownCount && !shown ? ' word-slots__item--clued' : ''
             }`}
             role={canPick ? 'button' : undefined}
@@ -84,7 +88,7 @@ export function WordSlots({
                   className={`word-slots__cell${k && !shown ? ' word-slots__cell--clue' : ''}`}
                   aria-hidden="true"
                 >
-                  {ch}
+                  <span className="word-slots__ink">{ch}</span>
                 </span>
               );
             })}

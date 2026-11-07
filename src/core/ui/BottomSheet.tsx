@@ -12,6 +12,8 @@ export interface BottomSheetProps {
   title: ReactNode;
   children: ReactNode;
   id?: string;
+  /** Explicit focus return for auto-open sheets whose triggering button may become disabled. */
+  returnFocusId?: string;
 }
 const FOCUSABLE =
   'button:not(:disabled), [href], input:not(:disabled), select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -24,6 +26,7 @@ export function BottomSheet({
   title,
   children,
   id,
+  returnFocusId,
 }: BottomSheetProps) {
   const branch = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
@@ -75,9 +78,10 @@ export function BottomSheet({
       document.removeEventListener('focusin', focus);
       unisolate();
       unlock();
-      if (prev?.isConnected) prev.focus({ preventScroll: true });
+      const target = (returnFocusId ? document.getElementById(returnFocusId) : null) ?? prev;
+      if (target?.isConnected) target.focus({ preventScroll: true });
     };
-  }, [active]);
+  }, [active, returnFocusId]);
   return (
     <div
       ref={branch}
