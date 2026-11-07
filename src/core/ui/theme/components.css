@@ -1487,11 +1487,13 @@ button.tile:active {
   z-index: 90;
 }
 .bottom-sheet__backdrop {
+  opacity: 0;
   position: absolute;
   inset: 0;
   background: var(--color-overlay);
 }
 .bottom-sheet__panel {
+  transform: translateY(100%);
   position: absolute;
   inset: auto 0 0;
   display: flex;

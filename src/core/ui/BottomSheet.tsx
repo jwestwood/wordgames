@@ -1,8 +1,9 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Button } from './Button';
 import { IconX } from './Icons';
 import { trapFocusIndex } from './logic';
 import { isolateDialog, lockBodyScroll } from './dialog';
+import { isSheetPresent, transitionSheet, type SheetPhase } from './sheetMotion';
 
 export interface BottomSheetProps {
   /** false = normal inline content (desktop), true = bottom-sheet dialog. */
@@ -14,6 +15,9 @@ export interface BottomSheetProps {
   id?: string;
   /** Explicit focus return for auto-open sheets whose triggering button may become disabled. */
   returnFocusId?: string;
+  onPhaseChange?: (phase: SheetPhase) => void;
+  /** Explicit browsing cancels a game's auto-dismiss; programmatic focus/scroll does not. */
+  onInteract?: () => void;
 }
 const FOCUSABLE =
   'button:not(:disabled), [href], input:not(:disabled), select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -27,12 +31,47 @@ export function BottomSheet({
   children,
   id,
   returnFocusId,
+  onPhaseChange,
+  onInteract,
 }: BottomSheetProps) {
   const branch = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
+  const backdrop = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<SheetPhase>('closed');
+  const phaseRef = useRef<SheetPhase>('closed');
+  const notify = useRef(onPhaseChange);
+  notify.current = onPhaseChange;
+  useEffect(() => {
+    const update = (next: SheetPhase) => {
+      phaseRef.current = next;
+      setPhase(next);
+      notify.current?.(next);
+    };
+    const panel = dialog.current;
+    if (!enabled || !panel) {
+      if (panel) panel.style.transform = '';
+      update('closed');
+      return;
+    }
+    if (!open && phaseRef.current === 'closed') {
+      update('closed');
+      return;
+    }
+    update(open ? 'opening' : 'closing');
+    const motion = transitionSheet(panel, backdrop.current, open);
+    let alive = true;
+    void motion.finished.then((completed) => {
+      if (alive && completed) update(open ? 'open' : 'closed');
+    });
+    return () => {
+      alive = false;
+      motion.cancel();
+    };
+  }, [enabled, open]);
   const generatedId = useId();
   const titleId = `${generatedId}-title`;
-  const active = enabled && open;
+  // Keep aria/inert/focus/scroll lock alive through the complete exit animation.
+  const active = enabled && isSheetPresent(open, phase);
   // Stable callback ref: progress / clue renders must not restart the focus trap.
   const close = useRef(onClose);
   close.current = onClose;
@@ -86,9 +125,21 @@ export function BottomSheet({
     <div
       ref={branch}
       className={enabled ? 'bottom-sheet' : 'bottom-sheet-inline'}
-      hidden={enabled && !open}
+      hidden={enabled && !active}
+      data-state={enabled ? phase : undefined}
+      onPointerDownCapture={onInteract}
+      onKeyDownCapture={onInteract}
+      onWheelCapture={onInteract}
+      onTouchMoveCapture={onInteract}
     >
-      {enabled && <div className="bottom-sheet__backdrop" onClick={onClose} aria-hidden="true" />}
+      {enabled && (
+        <div
+          ref={backdrop}
+          className="bottom-sheet__backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
       <div
         ref={dialog}
         id={id}

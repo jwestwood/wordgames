@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { revealWordInPlace } from './reveal';
+import { useSound } from '../audio';
 import { Board } from './Board';
 import { Button } from './Button';
 import { ToastStack } from './Toast';
@@ -73,6 +74,7 @@ function ToastDemo() {
 }
 
 function WordRevealDemo() {
+  const play = useSound();
   const [found, setFound] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -81,7 +83,8 @@ function WordRevealDemo() {
       <p>
         Only the ink flips, left to right, with a warm-to-green wash (520ms for ALERT). Blank cell
         size stays fixed. Reduced motion fills immediately. In Letter Wheel a new mobile discovery
-        opens the Words tray and scrolls its row into view before this starts.
+        slides the Words tray open first (280ms), reveals with one themed sound, holds the word for
+        750ms, then slides closed. Manual browsing cancels the automatic close.
       </p>
       <Button
         variant="secondary"
@@ -96,7 +99,10 @@ function WordRevealDemo() {
             setRevealing(true);
           });
           const row = ref.current?.querySelector<HTMLElement>('[data-word="alert"]');
-          if (row) await revealWordInPlace(row);
+          if (row) {
+            play('success');
+            await revealWordInPlace(row);
+          }
           flushSync(() => setRevealing(false));
           row?.classList.remove('word-slots__item--reveal-finished');
         }}
@@ -369,11 +375,13 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
       <Panel title="Bottom sheet / mobile game table">
         <p>
           Letter Wheel below 860px uses a fixed viewport table: wheel, guess, stars and a Words
-          count stay on screen. One word list lives in a paper bottom sheet with internal scroll.
-          Closing keeps its scroll and clue state; the base page never auto-scrolls. Desktop keeps
-          the side-by-side layout.
+          count stay on screen. The paper tray slides up/down in 280ms, keeping focus and scroll
+          lock through exit. A discovery auto-opens, reveals, holds 750ms, then closes; interacting
+          with it keeps it open for browsing. This manual demo stays open until closed. Internal
+          scroll and clue state survive closing; the base page never auto-scrolls. Desktop stays
+          side-by-side.
         </p>
-        <Button variant="secondary" onClick={() => setTrayOpen(true)}>
+        <Button variant="primary" onClick={() => setTrayOpen(true)}>
           Words · 2/6
         </Button>
         <BottomSheet open={trayOpen} onClose={() => setTrayOpen(false)} title="Words · 2/6">

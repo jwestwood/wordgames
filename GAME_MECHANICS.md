@@ -73,14 +73,22 @@ How you can tell how you are doing, and what “done enough” means.
 Below 860px, Letter Wheel is a fixed, one-screen table: compact branding and seed controls,
 progress/stars, wheel, guess and 40px controls remain on the base screen. **Words · 12/30**
 shows the live found/total count and opens a paper bottom tray with the existing word list,
-Clue button, last-word reminder and LETTERS strip. Every **new valid discovery** also opens this
-tray automatically and brings that blank into view inside its own scroll area. The word then reveals in place; the tray stays open until
-you close it. Invalid and already-found guesses do not auto-open it. Its Close button,
-Escape or shaded backdrop returns to the wheel. Closing keeps clue state and the
-tray's scroll position. Wider screens keep the side-by-side wheel and list.
+Clue button, last-word reminder and LETTERS strip. It slides up from the bottom in **280ms**,
+and slides down before it is hidden. Every **new valid discovery** opens it automatically,
+scrolls only its internal surface to the blank, reveals the word with a satisfying themed sound,
+holds the finished word for **750ms**, then slides closed. Invalid and already-found guesses do
+not auto-open it. A manual open stays open until you close it. Touching, scrolling or using the
+keyboard/clues in an automatic tray turns it into intentional browsing and cancels auto-close.
+If it was already manually open, a discovery never closes it for you.
 
-_Comfort, not a rules change._ Checking the list is an intentional action on a small screen.
-No answers, clues or progress are lost or changed by opening or closing it.
+Its Close button, Escape or shaded backdrop returns to the wheel. A deliberate close wins over
+pending automatic work; nothing reopens it later. Closing keeps clue state and the tray's scroll
+position. Focus, background isolation and page scroll lock remain in place until the exit finishes.
+Reduced motion removes sheet/reveal motion but keeps the readable 750ms hold. Wider screens keep
+the side-by-side wheel and list with no automatic sheet or hold.
+
+_Comfort, not a rules change._ The tray briefly shows where a word belongs, then gives the table
+back to the wheel. You can interrupt that rhythm to study the list or take a clue.
 
 ### The blank list
 
@@ -146,8 +154,9 @@ the page stays put: an off-screen new word is filled without motion rather than 
 celebrations. The found count and percentage update immediately.
 On mobile, page auto-scroll is **always off**, regardless of this saved setting. Each new valid
 word opens the Words tray and scrolls **only its internal surface** to the new blank before revealing.
-The tray stays open afterwards. If you deliberately close it before the reveal starts, the word
-fills without motion; no stale reveal reopens the tray. Visibility races are bounded, so stars,
+An automatic tray closes after the reveal and readable hold unless you start browsing it.
+If you deliberately close it before the reveal starts, the word fills without motion; no stale
+reveal reopens the tray. Visibility races are bounded, so stars,
 letter-complete celebrations and perfect completion never wait for a hidden word. The progress plaque stays
 on the base screen, outside the tray. Completed-letter tiles still fly to a visible LETTERS strip
 or pop over the wheel when the tray is closed.
@@ -183,10 +192,15 @@ a subtle warm-to-green wash (about 495–600ms for 4–10 letters). Cell widths,
 letter spacing do not change. The complete word cannot flash before the animation: its ink is
 hidden until each letter's reveal. Reduced motion fills it immediately. Saved found words load
 fully shown without replaying a reveal; clue reveals and the already-found flash remain separate.
+The visible ink reveal plays one word-found sound: normal, bigger for 6+ letters, or epic for the
+full-wheel target. There is no extra word-found sound on submission or landing. A deliberately
+closed/offscreen reveal skipped without motion also skips that reveal sound.
 
 Stars still fly onto the score plaque at thresholds. Completed letters still fly as square tiles
 onto a visible LETTERS strip (or pop over the wheel with the tray closed). Their live targets
 continue tracking scroll. Discoveries, stars and letter-complete celebrations remain queued.
+After an automatic discovery, sheet exit finishes before subsequent stars/letters/perfect. Manual
+interaction cancels the auto-close hold immediately; hidden targets cannot block completion.
 
 _Celebration / feedback._ The short ink reveal makes it clear which blank you just solved. It
 adds no information beyond the accepted word and does not change scoring or the puzzle rules.

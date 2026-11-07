@@ -23,6 +23,8 @@ import {
   centredRect,
   Confetti,
   createAnimationQueue,
+  createAutoDismiss,
+  type SheetPhase,
   ensureInView,
   ensureInScrollContainer,
   attentionFlash,
@@ -164,10 +166,36 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const mobile = useMediaQuery('(max-width: 859px)');
   const [wordsOpen, setWordsOpen] = useState(false);
   const trayId = useId();
-  const closeWords = useCallback(() => setWordsOpen(false), []);
   // Read live values inside queued tasks (not values captured by the guess).
   const view = useRef({ mobile, wordsOpen });
   view.current = { mobile, wordsOpen };
+  const sheetPhase = useRef<SheetPhase>('closed');
+  const autoDismiss = useRef(createAutoDismiss());
+  const browsingWords = useRef(false);
+  const closeWords = useCallback(() => {
+    autoDismiss.current.cancel();
+    browsingWords.current = false;
+    view.current.wordsOpen = false;
+    setWordsOpen(false);
+  }, []);
+  const browseWords = useCallback(() => {
+    autoDismiss.current.cancel();
+    browsingWords.current = true;
+    view.current.wordsOpen = true;
+    setWordsOpen(true);
+  }, []);
+  const interactWords = useCallback(() => {
+    if (view.current.mobile && view.current.wordsOpen) {
+      autoDismiss.current.cancel();
+      browsingWords.current = true;
+    }
+  }, []);
+  const onSheetPhase = useCallback((phase: SheetPhase) => {
+    sheetPhase.current = phase;
+  }, []);
+  useEffect(() => {
+    if (!mobile) closeWords();
+  }, [mobile, closeWords]);
   const [clueMode, setClueMode] = useState(false);
   const [guess, setGuess] = useState<number[]>([]);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
@@ -193,10 +221,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const stripRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const q = queue.current;
+    const dismiss = autoDismiss.current;
     const controller = new AbortController();
     revealAbort.current = controller;
     return () => {
       controller.abort();
+      dismiss.cancel();
       q.clear();
     };
   }, []);
@@ -274,13 +304,15 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   }, [seed, play]);
 
   const animateWord = useCallback(
-    async (w: string) => {
+    async (w: string, autoToken?: number) => {
       const signal = revealAbort.current.signal;
       // Yield for the auto-open commit, but a deliberate close wins. Never reopen here.
       const trayClosed = () => view.current.mobile && !view.current.wordsOpen;
-      const ready = await waitForRevealVisibility(() => !trayClosed(), signal, {
-        shouldStop: trayClosed,
-      });
+      const ready = await waitForRevealVisibility(
+        () => !view.current.mobile || (view.current.wordsOpen && sheetPhase.current === 'open'),
+        signal,
+        { maxWaitMs: 600, shouldStop: trayClosed },
+      );
       if (signal.aborted) return;
       const slot = listRef.current?.querySelector<HTMLElement>(`[data-word="${w}"]`);
       let visible = false;
@@ -301,6 +333,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       if (visible && slot) {
         slot.classList.remove('word-slots__item--reveal-finished');
         flushSync(() => setRevealingWords((words) => new Set(words).add(w)));
+        // One rich themed word-found sound, tied to the ink appearing, never submission.
+        play(
+          w.length >= puzzle.target.length
+            ? 'success-epic'
+            : pickTier(w.length, [{ min: 6, value: 'success-big' as const }], 'success' as const),
+        );
         await revealWordInPlace(slot, signal);
       }
       if (signal.aborted) return;
@@ -320,9 +358,20 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         setLatest(w);
       });
       slot?.classList.remove('word-slots__item--reveal-finished');
-      play('word-land');
+      if (autoToken !== undefined && autoDismiss.current.isCurrent(autoToken)) {
+        // Manual browsing, another discovery, close or unmount releases this hold immediately.
+        const elapsed = await autoDismiss.current.hold(autoToken, visible ? undefined : 0);
+        if (elapsed && !signal.aborted && autoDismiss.current.isCurrent(autoToken)) closeWords();
+      }
+      // Subsequent stars/letters land on the base screen only after an auto/manual exit.
+      // Both phase gates are bounded; hidden rows can never strand the celebration queue.
+      if (!signal.aborted && trayClosed()) {
+        await waitForRevealVisibility(() => sheetPhase.current === 'closed', signal, {
+          maxWaitMs: 600,
+        });
+      }
     },
-    [play],
+    [play, puzzle.target.length, closeWords],
   );
 
   const animateStar = useCallback(
@@ -414,21 +463,17 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         beforeComplete,
         afterComplete,
       );
-      if (view.current.mobile) setWordsOpen(true);
+      let autoToken: number | undefined;
+      if (view.current.mobile && !browsingWords.current) {
+        autoToken = autoDismiss.current.begin();
+        view.current.wordsOpen = true;
+        setWordsOpen(true);
+      }
       setFound(next);
       setHidden((h) => new Set(h).add(res.word));
-      play(
-        res.word.length >= puzzle.target.length
-          ? 'success-epic'
-          : pickTier(
-              res.word.length,
-              [{ min: 6, value: 'success-big' as const }],
-              'success' as const,
-            ),
-      );
       showToast(`${res.word.toUpperCase()} — nice!`, 'good');
       const q = queue.current;
-      q.enqueue(() => animateWord(res.word));
+      q.enqueue(() => animateWord(res.word, autoToken));
       for (let i = before; i < after; i++) q.enqueue(() => animateStar(i));
       // Celebrate newly completed LETTERS (incl. no-starters when puzzle hits 100%).
       for (const L of newLetters) q.enqueue(() => animateLetter(L));
@@ -603,13 +648,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           <Button
             id={`${trayId}-opener`}
             className="lw__words-button"
-            variant="secondary"
+            variant="primary"
             aria-haspopup="dialog"
             aria-expanded={mobile && wordsOpen}
             aria-controls={trayId}
             onClick={() => {
               play('button');
-              setWordsOpen(true);
+              browseWords();
             }}
           >
             Words · {found.length}/{puzzle.pool.length}
@@ -634,6 +679,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
             title={`Words · ${found.length}/${puzzle.pool.length}`}
             id={trayId}
             returnFocusId={`${trayId}-opener`}
+            onPhaseChange={onSheetPhase}
+            onInteract={interactWords}
           >
             <Panel className="lw__words">
               {mobile && wordsOpen && <ToastStack toast={toast} />}

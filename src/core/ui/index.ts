@@ -34,3 +34,6 @@ export { LetterStrip, type LetterStripProps } from './LetterStrip';
 export { BottomSheet, type BottomSheetProps } from './BottomSheet';
 export { useMediaQuery } from './useMediaQuery';
 export { revealWordInPlace, waitForRevealVisibility, isRevealTargetVisible } from './reveal';
+
+export { transitionSheet, SHEET_TRANSITION_MS, type SheetPhase } from './sheetMotion';
+export { createAutoDismiss, DISCOVERY_HOLD_MS } from './autoDismiss';

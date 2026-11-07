@@ -172,36 +172,52 @@ height. The wheel gets the remaining grid space (container-query sizing), rather
 text or allowing document scroll. At 860px and above the existing side-by-side view is unchanged.
 
 `BottomSheet` is shared core UI (`enabled={false}` renders the **same** children inline).
-It keeps one content tree mounted while closed, preserving scroll and clue state. The open sheet
-has a labelled modal dialog, clear close, focus containment/return, Escape/backdrop close, an inert
-background and reference-counted body lock. `.bottom-sheet__scroll` owns vertical scrolling and
-overscroll containment; the header/close stay outside that scroll surface. The Style Guide page
-includes interactive sheet and in-place word reveal examples.
+It keeps one content tree mounted while closed, preserving scroll and clue state. Shared
+`transitionSheet` moves the fixed paper panel from `translateY(100%)` to `0%` (280ms) while fading
+the backdrop; closing reverses this. `BottomSheet` retains mounted **presence** through `closing`,
+not merely the requested `open` value: labelled dialog/aria-modal, inert background, focus trap and
+reference-counted body lock survive until exit completes. Then it hides the root and returns focus
+without scrolling. Escape/backdrop/clear close remain available through exit. Interruptions snapshot
+the live transform; stale animation completions cannot hide a reopened sheet. Reduced motion/no
+WAAPI completes immediately; a 360ms fallback prevents a stranded exit. Inline desktop clears the
+sheet transform. `.bottom-sheet__scroll` owns scrolling and overscroll containment; header/close
+remain outside it. The Style Guide includes manual sliding-sheet and ink-reveal demos.
 
-Letter Wheel's `Words · found/total` opener is live. The tray contains the existing list, Clue control,
-last word and LETTERS strip — no duplicate IDs or competing hidden targets. Mobile ignores the
-page auto-scroll setting. **New valid words auto-open the tray**, which stays open until explicitly
-closed; invalid/repeated guesses never auto-open it. Only its internal scroller brings the blank
-into view. If closed before the reveal starts, complete the found state without motion; never
-reopen a tray from a queued reveal. Desktop auto-scroll off does the same for an offscreen row.
-Found count and percentage update immediately. Visibility gates have a 250ms deadline plus an
-early-stop predicate for closed/offscreen targets, so hidden reveals cannot hold the shared
-star/letter/perfect queue. Saved words always load normally; skipped reveals do not replay.
+Letter Wheel's solid green, inverse-text **primary** `Words · found/total` opener remains 40px, with
+normal focus/hover feedback and no movement. The tray contains the existing list, Clue, last word
+and LETTERS strip — no duplicate IDs or competing hidden targets. Mobile never page-auto-scrolls.
 
-`WordSlots.revealing` commits the real ink under an opacity mask before the shared
-`revealWordInPlace` helper animates it. Only ink transforms (perspective flip), opacity/filter and
-row background change: 420ms per letter plus up to 180ms total stagger, a warm/green paper wash,
-no layout shifts. A visibility gate yields a frame for the tray commit, then checks viewport **and**
-scroll clipping, with a bounded timer fallback even when rAF is suspended. Reduced motion/no WAAPI
-fills immediately. Abort on unmount cancels waits/animations. An in-progress short reveal may finish
-after the tray closes, but is never replayed or allowed to reopen it.
-The Style Guide's ALERT demo can reset/replay deliberately; saved game loads never replay.
+**Automatic discovery sequence:** slide open completely → internally scroll blank into view →
+ink reveal (495–600ms for 4–10 letters) + one rich themed word-found sound at the start → 750ms
+readable hold → slide closed completely → queued stars/letters/perfect. Reduced motion uses
+immediate sheet/ink changes, retains the readable hold and respects global mute/theme. Sound tiers
+are existing `success` / `success-big` (6+) / `success-epic` (target length); no submission success
+or additional `word-land` sound. Skipped invisible reveals are silent.
 
-**Only discovered-word fly-ins were replaced.** Letter-complete square tiles and star fly-ins remain;
-closed-tray letter-complete feedback still uses `popOverElement`. Live fly getters continue tracking
-internal scroll and fall back to the wheel if the tray closes mid-flight. Clue rendering and
-already-found attention flashes do not use the discovery reveal pipeline. The tray's explicit
-focus-return target is the Words opener, including automatic opens from a now-disabled Guess button.
+`createAutoDismiss` gives each automatic discovery a generation/lease. Only its current owner can
+hold/close; close, explicit browsing, another discovery, resize to desktop and unmount invalidate
+old work and release pending holds immediately. Manual opens have no lease and stay open. Any
+pointer/keyboard/wheel/touch-scroll interaction within an automatic tray promotes it to manual
+browsing, including clue use; programmatic focus/scroll does **not**. A discovery while manually
+browsing preserves that intent. Queued work never opens the tray; only a new valid guess or explicit
+opener does. Repeated/invalid guesses never auto-open.
+
+`WordSlots.revealing` commits real ink under an opacity mask before shared `revealWordInPlace`
+animates it. Only ink transforms (perspective flip), opacity/filter and row background change:
+420ms per letter plus up to 180ms total stagger, a warm/green paper wash, no layout shifts. The
+visibility gate waits for the sheet's `open` phase before scrolling/revealing, then checks viewport
+**and** scroll clipping. Phase gates are bounded to 600ms; row visibility has a 250ms grace period.
+Closed/offscreen targets complete found state without motion or stale replay, so they cannot hold
+the shared celebration queue. Desktop auto-scroll off never scrolls to an offscreen row. Saved found
+words always load normally, without auto-opening/revealing. Abort on unmount cancels waits/ink
+animations; the AutoDismiss lease cancels its readable hold. The ALERT demo resets/replays only
+when explicitly requested.
+
+Only discovered-word fly-ins were replaced. Letter-complete square tiles and star fly-ins remain;
+closed-tray letter-complete feedback uses `popOverElement`. Live fly getters track internal scroll
+and fall back to the wheel if a tray closes mid-flight. Clue rendering and already-found flashes
+remain separate. The explicit focus-return target is the Words opener (also for automatic opens);
+Enter with a typed guess there submits and suppresses the opener's native click.
 
 Responsive regression contracts live in `mobile-layout.test.ts`; they check CSS sizing and conservative
 space budgets, **not rendered layout**. Browser checks at 375×667, 390×844 and 360×740 (including iOS
