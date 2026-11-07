@@ -80,7 +80,7 @@ A JS mirror of the colours is in `theme/tokens.ts` (keep in sync).
 | `LetterWheel`             | segmented SVG circle: `centre`, `letters`, `used` indices, `onCentre`, `onLetter` (geometry in `wheel.ts`)                                                                                                                                                                                                  |
 | `ToastStack` / `useToast` | paper toast overlay (slide from top of a `position: relative` parent); new toast replaces the previous                                                                                                                                                                                                      |
 | `LetterStrip`             | `LETTERS:` + mini wood letter tiles (distinct, A–Z); `complete` set highlights tiles; equal padding around the divider                                                                                                                                                                                      |
-| `WordSlots`               | word list (column-major, ~8rem cols); letter cells sized to fit 10-letter words; blank slots, optional `known` clue letters + `picking`/`onPick`; `latest` highlighted                                                                                                                                     |
+| `WordSlots`               | word list (column-major, ~8rem cols); letter cells sized to fit 10-letter words; blank slots, optional `known` clue letters + `picking`/`onPick`; `latest` highlighted                                                                                                                                      |
 | `Confetti`                | seeded CSS paper-confetti burst; hidden under reduced motion                                                                                                                                                                                                                                                |
 | `ScoreCard`               | wooden plaque: `found`, `total`, `percent`, `stars`, `maxStars`, `thresholds`; star slots carry `data-star-slot`                                                                                                                                                                                            |
 | `SeedDisplay`             | editable seed field (Special Elite, typed input normalised via `normaliseSeedInput`; Enter/blur/Go applies if `isValidSeed`, else inline error + `aria-invalid`; Esc reverts) ; `.btn--icon` buttons on the left: copy link, randomise (`newPuzzle`; asks via `ConfirmDialog` when `started`); label "Seed" |
@@ -162,3 +162,28 @@ form. Put the cog (`GameSettingsButton`) beside the seed field in the game heade
 sentences in plain language; use `description` for the consequence of turning it off. Toggles show On/Off
 text as well as colour. Mute stays in the site header, not in settings. Live demo: style guide ›
 SettingsPanel.
+
+## Mobile game table and bottom sheet
+
+Letter Wheel below **860px** uses a fixed `100dvh` game table with `viewport-fit=cover` and
+safe-area padding. One compact header keeps history, sound theme and mute available; seed/settings,
+progress/stars, wheel, guess and controls remain on the base screen. Buttons keep the shared 40px
+height. The wheel gets the remaining grid space (container-query sizing), rather than shrinking all
+text or allowing document scroll. At 860px and above the existing side-by-side view is unchanged.
+
+`BottomSheet` is shared core UI (`enabled={false}` renders the **same** children inline).
+It keeps one content tree mounted while closed, preserving scroll and clue state. The open sheet
+has a labelled modal dialog, clear close, focus containment/return, Escape/backdrop close, an inert
+background and reference-counted body lock. `.bottom-sheet__scroll` owns vertical scrolling and
+overscroll containment; the header/close stay outside that scroll surface. The Style Guide page
+includes an interactive sheet example.
+
+Letter Wheel's `Words · found/total` opener is live. The tray contains the existing list, Clue control,
+last word and LETTERS strip — no duplicate IDs or competing hidden targets. Mobile ignores the
+page auto-scroll setting; only the tray's internal scroller can reveal a row. A closed tray uses
+`popOverElement` feedback over the wheel, never a hidden destination. Live fly getters continue
+tracking internal scroll and fall back to the wheel if the tray closes mid-flight.
+
+Responsive regression contracts live in `mobile-layout.test.ts`; they check CSS sizing and conservative
+space budgets, **not rendered layout**. Browser checks at 375×667, 390×844 and 360×740 (including iOS
+safe areas, tray focus/scroll and desktop regressions) are still required when changing this layout.

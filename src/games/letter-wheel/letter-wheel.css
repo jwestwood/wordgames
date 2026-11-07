@@ -174,3 +174,248 @@
   color: var(--color-text-inverse);
   border-color: var(--color-green-dark);
 }
+
+.lw__words-button,
+.lw__mobile-hint {
+  display: none;
+}
+
+/* Fixed game table on phones/tablets; desktop above this breakpoint is unchanged. */
+@media (max-width: 859px) {
+  html:has(.app--letter-wheel),
+  body:has(.app--letter-wheel) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .app--letter-wheel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+  .app--letter-wheel > .site-footer {
+    display: none;
+  }
+  .app--letter-wheel .site-header {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .app--letter-wheel .site-header__default-title {
+    display: none;
+  }
+  .app--letter-wheel .site-header__mobile-title {
+    display: inline;
+  }
+  .app--letter-wheel .site-header__title {
+    font-size: 1rem;
+    line-height: 1.05;
+    display: block;
+    max-width: 5rem;
+  }
+  .app--letter-wheel .site-header__tagline,
+  .app--letter-wheel .site-header nav {
+    display: none;
+  }
+  .app--letter-wheel .site-header__end {
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+  .app--letter-wheel .site-header__history span {
+    display: none;
+  }
+  .app--letter-wheel .site-header__btn {
+    min-width: 40px;
+    padding-inline: 10px;
+  }
+  .app--letter-wheel .sound-theme__select {
+    width: 6.1rem;
+    padding-left: 8px;
+    padding-right: 22px;
+  }
+  .app--letter-wheel .lw {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    min-height: 0;
+  }
+  .app--letter-wheel .lw__head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+  }
+  .app--letter-wheel .lw__head > div {
+    width: 100%;
+    min-width: 0;
+  }
+  .app--letter-wheel .lw__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .app--letter-wheel .lw__tagline,
+  .app--letter-wheel .lw__hint {
+    display: none;
+  }
+  .app--letter-wheel .lw__mobile-hint {
+    display: block;
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+  .app--letter-wheel .lw__version {
+    font-size: 0.75rem;
+    margin: 0;
+  }
+  .app--letter-wheel .seed {
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 6px;
+    position: relative;
+  }
+  .app--letter-wheel .seed .btn {
+    min-width: 40px;
+    padding-inline: 10px;
+  }
+  .app--letter-wheel .seed__label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+  }
+  .app--letter-wheel .seed__field {
+    min-width: 0;
+    flex: 1;
+  }
+  .app--letter-wheel .seed__input {
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    font-size: 1rem;
+    letter-spacing: 0.16em;
+    padding-inline: 4px;
+  }
+  .app--letter-wheel .seed__msg {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 6;
+    font-size: 0.75rem;
+    min-width: 0;
+    background: var(--color-paper-light);
+  }
+  .app--letter-wheel .seed__msg:empty {
+    display: none;
+  }
+  .app--letter-wheel .lw__layout {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+  }
+  .app--letter-wheel .lw__side {
+    display: contents;
+  }
+  .app--letter-wheel .lw__score {
+    order: -1;
+    min-width: 0;
+  }
+  .app--letter-wheel .score-card {
+    gap: 8px;
+    padding: 6px 10px 16px;
+  }
+  .app--letter-wheel .score-card__value {
+    font-size: 1.5rem;
+  }
+  .app--letter-wheel .score-card__percent {
+    font-size: 1.125rem;
+    padding: 4px 8px;
+  }
+  .app--letter-wheel .score-card__total {
+    font-size: 1rem;
+  }
+  .app--letter-wheel .score-card__star {
+    width: 28px;
+    height: 28px;
+  }
+  .app--letter-wheel .lw__play {
+    min-height: 0;
+    padding: 8px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 40px 40px 40px;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .app--letter-wheel .lw__wheel {
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    container-type: size;
+    display: grid;
+    place-items: center;
+  }
+  .app--letter-wheel .lw__wheel .wheel {
+    width: min(100cqw, 100cqh);
+    height: min(100cqw, 100cqh);
+    max-width: none;
+  }
+  .app--letter-wheel .lw__guess {
+    grid-row: 2;
+    flex-wrap: nowrap;
+    min-height: 40px;
+    padding: 4px;
+    gap: 2px;
+  }
+  .app--letter-wheel .lw__guess .tile {
+    flex: 0 1 2rem;
+    min-width: 0;
+    height: 30px;
+    font-size: 1rem;
+  }
+  .app--letter-wheel .lw__controls {
+    grid-row: 3;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .app--letter-wheel .lw__controls .btn {
+    height: 40px;
+    min-height: 40px;
+  }
+  .app--letter-wheel .lw__words-button {
+    display: inline-flex;
+    grid-row: 4;
+    width: 100%;
+    height: 40px;
+  }
+  .app--letter-wheel .lw__words {
+    border: 0;
+    box-shadow: none;
+    padding: 3px;
+    background: none;
+  }
+  .app--letter-wheel .lw__words-head {
+    flex-wrap: wrap;
+  }
+  .app--letter-wheel .lw__clue-hint {
+    order: 3;
+    width: 100%;
+  }
+  .app--letter-wheel .bottom-sheet .word-slots {
+    font-size: 1rem;
+  }
+}

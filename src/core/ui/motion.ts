@@ -93,11 +93,7 @@ function cubic(u: number, a: number, b: number): number {
 }
 
 function cubicDeriv(u: number, a: number, b: number): number {
-  return (
-    3 * (1 - u) * (1 - u) * a +
-    6 * (1 - u) * u * (b - a) +
-    3 * u * u * (1 - b)
-  );
+  return 3 * (1 - u) * (1 - u) * a + 6 * (1 - u) * u * (b - a) + 3 * u * u * (1 - b);
 }
 
 export interface FlyOptions {
@@ -117,7 +113,14 @@ export function flyFrameStyle(
   to: RectLike,
   t: number,
   opts: { hold?: number; fromScale?: number } = {},
-): { left: number; top: number; width: number; height: number; transform: string; opacity: number } {
+): {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  transform: string;
+  opacity: number;
+} {
   const h = Math.min(0.6, Math.max(0, opts.hold ?? 0.35));
   const appearEnd = h * 0.45;
   const { dx, dy, s } = invertTransform(from, to, opts.fromScale);
@@ -327,4 +330,37 @@ export function popElement(
     () => el.remove(),
     () => el.remove(),
   );
+}
+
+/** Measure the same styled content in body, then pop it over an anchor (no scroll/hidden targets). */
+export function popOverElement(
+  anchor: Element,
+  content: HTMLElement,
+  opts: { className?: string; duration?: number; scale?: number } = {},
+): Promise<void> {
+  if (prefersReducedMotion() || typeof document === 'undefined') return Promise.resolve();
+  const measure = document.createElement('div');
+  Object.assign(measure.style, { position: 'fixed', visibility: 'hidden', width: 'max-content' });
+  measure.appendChild(content);
+  document.body.appendChild(measure);
+  const r = content.getBoundingClientRect();
+  measure.remove();
+  if (!r.width || !r.height) return Promise.resolve();
+  const box = anchor.getBoundingClientRect();
+  const scale = Math.min(opts.scale ?? 2.6, (box.width * 0.8) / r.width);
+  content.style.transform = `scale(${scale})`;
+  content.style.transformOrigin = 'center';
+  return popElement(centredRect(box, r.width, r.height), content, opts);
+}
+
+/** Reveal only inside a sheet's scroller, never by scrolling ancestors/the document. */
+export function ensureInScrollContainer(el: Element, scroller: HTMLElement): Promise<void> {
+  const r = el.getBoundingClientRect();
+  const box = scroller.getBoundingClientRect();
+  if (r.top >= box.top && r.bottom <= box.bottom) return Promise.resolve();
+  scroller.scrollBy({
+    top: r.top - box.top - (box.height - r.height) / 2,
+    behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+  });
+  return waitForStableRect(el);
 }

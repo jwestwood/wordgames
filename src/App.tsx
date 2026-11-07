@@ -13,9 +13,18 @@ export default function App() {
   useDocumentBrand(game?.title, game?.brand?.tagline, game?.brand?.favicon);
 
   return (
-    <main className="app">
+    <main className={`app${game?.id === 'letter-wheel' ? ' app--letter-wheel' : ''}`}>
       <Header
-        title="Word Games"
+        title={
+          game?.id === 'letter-wheel' ? (
+            <>
+              <span className="site-header__default-title">Word Games</span>
+              <span className="site-header__mobile-title">Letter Wheel</span>
+            </>
+          ) : (
+            'Word Games'
+          )
+        }
         tagline="Words to the wise"
         nav={[{ href: '#/', label: 'Games', icon: <IconPawn /> }]}
         onHistory={() => setHistoryOpen(true)}

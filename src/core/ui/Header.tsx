@@ -63,6 +63,7 @@ export function Header({
             className="site-header__btn site-header__history"
             onClick={onHistory}
             title="Your past games"
+            aria-label="Your past games"
           >
             <IconClock />
             <span>Past Games</span>

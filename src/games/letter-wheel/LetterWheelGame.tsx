@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   createRng,
   ensureSeed,
@@ -16,18 +16,22 @@ import { useGameSettings } from '@core/settings';
 import { LETTER_WHEEL_SETTINGS } from './settings';
 import { toWheelPreview } from './preview';
 import {
+  BottomSheet,
   Button,
   centredRect,
   contentRect,
   Confetti,
   createAnimationQueue,
   ensureInView,
+  ensureInScrollContainer,
   attentionFlash,
   flashElement,
   flyElement,
   GameSettingsButton,
   isInView,
   popElement,
+  popOverElement,
+  useMediaQuery,
   IconBackspace,
   IconHint,
   IconShuffle,
@@ -154,6 +158,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       }),
     [setProgressState],
   );
+  const mobile = useMediaQuery('(max-width: 859px)');
+  const [wordsOpen, setWordsOpen] = useState(false);
+  const trayId = useId();
+  const closeWords = useCallback(() => setWordsOpen(false), []);
+  // Read live values inside queued tasks (not values captured by the guess).
+  const view = useRef({ mobile, wordsOpen });
+  view.current = { mobile, wordsOpen };
   const [clueMode, setClueMode] = useState(false);
   const [guess, setGuess] = useState<number[]>([]);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
@@ -169,7 +180,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const play = useSound();
   const { values: settings } = useGameSettings(GAME_ID, LETTER_WHEEL_SETTINGS);
   const autoScroll = useRef(settings.autoScroll);
-  autoScroll.current = settings.autoScroll;
+  autoScroll.current = !mobile && settings.autoScroll;
   const queue = useRef(createAnimationQueue());
   const wheelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -260,10 +271,10 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         void flashElement(wheel);
         const scroll = autoScroll.current;
         if (scroll) await ensureInView(slot);
-        const to = contentRect(slot); // letters, not the full-column list item (initial size)
-        const wr = wheel.getBoundingClientRect();
-        const width = Math.min(wr.width * 0.75, to.width * 2.6);
-        const from = centredRect(wr, width, (width / to.width) * to.height);
+        const scroller = slot.closest<HTMLElement>('.bottom-sheet__scroll');
+        if (view.current.mobile && view.current.wordsOpen && scroller) {
+          await ensureInScrollContainer(slot, scroller);
+        }
         const content = document.createElement('div');
         content.className = 'word-slots__item word-slots__item--shown';
         for (const c of w) {
@@ -272,17 +283,28 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           cell.textContent = c.toUpperCase();
           content.appendChild(cell);
         }
-        if (scroll || isInView(slot))
-          // Pass the slot so fly tracks it if the page scrolls mid-flight.
-          await flyElement(from, slot, content, { className: 'fly-word', duration: 1100 });
-        else {
-          // Target off-screen and scrolling is off: show the word over the wheel, fade it there.
-          content.style.transform = `scale(${from.width / to.width})`;
-          content.style.transformOrigin = 'center';
-          await popElement(centredRect(wr, to.width, to.height), content, {
-            className: 'fly-word',
-            duration: 1100,
-          });
+        if (view.current.mobile && !view.current.wordsOpen) {
+          await popOverElement(wheel, content, { className: 'fly-word', duration: 1100 });
+        } else {
+          const to = contentRect(slot); // letters, not the full-column item
+          const wr = wheel.getBoundingClientRect();
+          const width = Math.min(wr.width * 0.75, to.width * 2.6);
+          const from = centredRect(wr, width, (width / to.width) * to.height);
+          if ((view.current.mobile && view.current.wordsOpen) || scroll || isInView(slot)) {
+            // Getter stays live if the tray closes during a queued animation.
+            const destination = () =>
+              view.current.mobile && !view.current.wordsOpen
+                ? centredRect(wheel.getBoundingClientRect(), to.width, to.height)
+                : contentRect(slot);
+            await flyElement(from, destination, content, { className: 'fly-word', duration: 1100 });
+          } else {
+            content.style.transform = `scale(${from.width / to.width})`;
+            content.style.transformOrigin = 'center';
+            await popElement(centredRect(wr, to.width, to.height), content, {
+              className: 'fly-word',
+              duration: 1100,
+            });
+          }
         }
         play('word-land');
       }
@@ -317,16 +339,37 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     [play],
   );
 
-
   const animateLetter = useCallback(
     async (L: string) => {
       const wheel = wheelRef.current;
       const tile = stripRef.current?.querySelector<HTMLElement>(`[data-letter="${L}"]`);
       showToast(`All ${L.toUpperCase()} words found!`, 'good');
-      if (wheel && tile && (autoScroll.current || isInView(tile))) {
+      if (wheel && tile && view.current.mobile && !view.current.wordsOpen) {
+        const content = document.createElement('div');
+        content.className = 'letter-strip__tile letter-strip__tile--complete';
+        content.textContent = L.toUpperCase();
+        await popOverElement(wheel, content, {
+          className: 'fly-letter-wrap',
+          duration: 1000,
+          scale: 3,
+        });
+      } else if (
+        wheel &&
+        tile &&
+        ((view.current.mobile && view.current.wordsOpen) || autoScroll.current || isInView(tile))
+      ) {
+        // Cache the visible size before an awaited scroll: closing the tray may hide the tile.
+        const landingSize = tile.getBoundingClientRect().width;
         if (autoScroll.current) await ensureInView(tile);
+        const scroller = tile.closest<HTMLElement>('.bottom-sheet__scroll');
+        if (view.current.mobile && view.current.wordsOpen && scroller) {
+          await ensureInScrollContainer(tile, scroller);
+        }
         const tileBox = () => {
-          const r = tile.getBoundingClientRect();
+          const r =
+            view.current.mobile && !view.current.wordsOpen
+              ? centredRect(wheel.getBoundingClientRect(), landingSize, landingSize)
+              : tile.getBoundingClientRect();
           const side = Math.max(r.width, r.height);
           return centredRect(r, side, side);
         };
@@ -342,7 +385,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       }
       play('letter-complete');
       // Nudge the strip tile once it lands (highlight already derived from found).
-      if (tile) void flashElement(tile);
+      if (tile && (!view.current.mobile || view.current.wordsOpen)) void flashElement(tile);
     },
     [play, showToast],
   );
@@ -391,9 +434,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       if (res.reason === 'already-found') {
         showToast(`${word.toUpperCase()} already found!`, 'info');
         const el = listRef.current?.querySelector<HTMLElement>(`[data-word="${word}"]`);
-        if (el) {
+        if (el && (!view.current.mobile || view.current.wordsOpen)) {
           void (async () => {
             if (autoScroll.current) await ensureInView(el);
+            const scroller = el.closest<HTMLElement>('.bottom-sheet__scroll');
+            if (view.current.mobile && view.current.wordsOpen && scroller) {
+              await ensureInScrollContainer(el, scroller);
+            }
             await attentionFlash(el, { times: 3 });
           })();
         }
@@ -455,6 +502,9 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
               <a href={gameHash(GAME_ID, seed, String(LATEST))}>Play v{LATEST}</a>
             </p>
           )}
+          <p className="lw__mobile-hint">
+            {rules.MIN_WORD}+ letters · use the centre · each tile once
+          </p>
           <p className="lw__hint">
             Make words of {rules.MIN_WORD}+ letters. Every word must use the centre letter; each
             letter once.
@@ -479,7 +529,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
 
       <div className="lw__layout">
         <Panel variant="wood" className="lw__play">
-          <ToastStack toast={toast} />
+          {(!mobile || !wordsOpen) && <ToastStack toast={toast} />}
           <div ref={wheelRef} className="lw__wheel">
             <LetterWheel
               centre={puzzle.required}
@@ -543,10 +593,23 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
               ))
             )}
           </div>
+          <Button
+            className="lw__words-button"
+            variant="secondary"
+            aria-haspopup="dialog"
+            aria-expanded={mobile && wordsOpen}
+            aria-controls={trayId}
+            onClick={() => {
+              play('button');
+              setWordsOpen(true);
+            }}
+          >
+            Words · {found.length}/{puzzle.pool.length}
+          </Button>
         </Panel>
 
         <div className="lw__side">
-          <div ref={cardRef}>
+          <div ref={cardRef} className="lw__score">
             <ScoreCard
               found={score.found - hidden.size}
               total={score.total}
@@ -556,63 +619,72 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
               thresholds={STAR_LABELS}
             />
           </div>
-          <Panel className="lw__words">
-            <div ref={listRef}>
-              <div className="lw__words-head">
-                <span className="lw__last-word" aria-live="polite">
-                  Last word:{' '}
-                  <strong>
-                    {/* found is discovery order, so the last entry survives reload */}
-                    {(latest ?? found.at(-1))?.toUpperCase() ?? '—'}
-                  </strong>
-                </span>
-                {clueMode && (
-                  <span className="lw__clue-hint" role="status">
-                    Tap a blank for a clue
+          <BottomSheet
+            enabled={mobile}
+            open={wordsOpen}
+            onClose={closeWords}
+            title={`Words · ${found.length}/${puzzle.pool.length}`}
+            id={trayId}
+          >
+            <Panel className="lw__words">
+              {mobile && wordsOpen && <ToastStack toast={toast} />}
+              <div ref={listRef}>
+                <div className="lw__words-head">
+                  <span className="lw__last-word" aria-live="polite">
+                    Last word:{' '}
+                    <strong>
+                      {/* found is discovery order, so the last entry survives reload */}
+                      {(latest ?? found.at(-1))?.toUpperCase() ?? '—'}
+                    </strong>
                   </span>
-                )}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className={`lw__clue${clueMode ? ' lw__clue--on' : ''}`}
-                  aria-pressed={clueMode}
-                  title={
-                    clueMode
-                      ? 'Cancel clue'
-                      : 'Reveal a letter: last first, then 2nd-to-last. Click a blank word.'
-                  }
-                  onClick={() => setClueMode((on) => !on)}
-                >
-                  <IconHint />
-                  Clue
-                </Button>
+                  {clueMode && (
+                    <span className="lw__clue-hint" role="status">
+                      Tap a blank for a clue
+                    </span>
+                  )}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className={`lw__clue${clueMode ? ' lw__clue--on' : ''}`}
+                    aria-pressed={clueMode}
+                    title={
+                      clueMode
+                        ? 'Cancel clue'
+                        : 'Reveal a letter: last first, then 2nd-to-last. Click a blank word.'
+                    }
+                    onClick={() => setClueMode((on) => !on)}
+                  >
+                    <IconHint />
+                    Clue
+                  </Button>
+                </div>
+                <WordSlots
+                  words={puzzle.pool}
+                  revealed={revealed}
+                  latest={latest}
+                  hidden={hidden}
+                  known={known}
+                  picking={clueMode}
+                  pickable={pickable}
+                  onPick={(w) => {
+                    setProgressState((p) => {
+                      const cur = parseProgress(p);
+                      return {
+                        found: cur.found,
+                        clues: applyClue(cur.clues, w, new Set(cur.found)),
+                      };
+                    });
+                    play('copy');
+                    setClueMode(false);
+                    setGuessed(true);
+                  }}
+                />
+                <div ref={stripRef}>
+                  <LetterStrip letters={puzzle.target} complete={completeSet} />
+                </div>
               </div>
-              <WordSlots
-                words={puzzle.pool}
-                revealed={revealed}
-                latest={latest}
-                hidden={hidden}
-                known={known}
-                picking={clueMode}
-                pickable={pickable}
-                onPick={(w) => {
-                  setProgressState((p) => {
-                    const cur = parseProgress(p);
-                    return {
-                      found: cur.found,
-                      clues: applyClue(cur.clues, w, new Set(cur.found)),
-                    };
-                  });
-                  play('copy');
-                  setClueMode(false);
-                  setGuessed(true);
-                }}
-              />
-              <div ref={stripRef}>
-                <LetterStrip letters={puzzle.target} complete={completeSet} />
-              </div>
-            </div>
-          </Panel>
+            </Panel>
+          </BottomSheet>
         </div>
       </div>
 

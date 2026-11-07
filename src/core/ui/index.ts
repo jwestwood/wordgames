@@ -31,3 +31,5 @@ export { Footer, type FooterProps } from './Footer';
 export { ToastStack, type ToastItem, type ToastTone, type ToastStackProps } from './Toast';
 export { useToast } from './useToast';
 export { LetterStrip, type LetterStripProps } from './LetterStrip';
+export { BottomSheet, type BottomSheetProps } from './BottomSheet';
+export { useMediaQuery } from './useMediaQuery';

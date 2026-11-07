@@ -13,10 +13,10 @@ export interface WordSlotsProps {
   hidden?: ReadonlySet<string>;
   /**
    * Optional known letters for unrevealed words (same length as the word; `null`/empty = blank).
-   * Used for clues: e.g. `[null,null,null,'t']` then `['p',null,null,'t']`.
+   * Used for clues: e.g. `[null,null,null,'t']` then `[null,null,'n','t']`.
    */
   known?: ReadonlyMap<string, readonly (string | null)[]>;
-  /** When true, unrevealed words that still accept a pick become large tap targets. */
+  /** When true, eligible unrevealed words get layout-neutral outlines and expanded hit areas. */
   picking?: boolean;
   /** Words that can be picked while `picking` (defaults to every unrevealed word). */
   pickable?: ReadonlySet<string>;

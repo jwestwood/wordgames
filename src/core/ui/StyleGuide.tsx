@@ -9,6 +9,8 @@ import { ScoreCard } from './ScoreCard';
 import { SeedDisplay } from './SeedDisplay';
 import { LetterTiles } from './LetterTiles';
 import { Modal } from './Modal';
+import { BottomSheet } from './BottomSheet';
+import { WordSlots } from './WordSlots';
 import { SettingsPanel } from './SettingsPanel';
 import { IconCog } from './Icons';
 import type { SettingDefinition, SettingValue } from '../settings/schema';
@@ -70,6 +72,7 @@ function ToastDemo() {
 
 export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }) {
   const [open, setOpen] = useState(false);
+  const [trayOpen, setTrayOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [demo, setDemo] = useState<Record<string, SettingValue>>(
@@ -315,6 +318,26 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
           onChange={(k, v) => setDemo((d) => ({ ...d, [k]: v }))}
           onReset={() => setDemo(defaultsFor(DEMO_SETTINGS) as Record<string, SettingValue>)}
         />
+      </Panel>
+
+      <Panel title="Bottom sheet / mobile game table">
+        <p>
+          Letter Wheel below 860px uses a fixed viewport table: wheel, guess, stars and a Words
+          count stay on screen. One word list lives in a paper bottom sheet with internal scroll.
+          Closing keeps its scroll and clue state; the base page never auto-scrolls. Desktop keeps
+          the side-by-side layout.
+        </p>
+        <Button variant="secondary" onClick={() => setTrayOpen(true)}>
+          Words · 2/6
+        </Button>
+        <BottomSheet open={trayOpen} onClose={() => setTrayOpen(false)} title="Words · 2/6">
+          <p>Escape, Close or the shaded backdrop returns focus to the opener.</p>
+          <WordSlots
+            words={['able', 'bale', 'bead', 'deal', 'lade', 'lead']}
+            revealed={new Set(['able', 'bale'])}
+          />
+          <LetterStrip letters="abled" complete={new Set(['a'])} />
+        </BottomSheet>
       </Panel>
 
       <Panel title="Modal">
