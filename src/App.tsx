@@ -1,5 +1,13 @@
 import { Suspense, useState } from 'react';
-import { Footer, GameCard, Header, HistoryPanel, IconPawn, MoreGamesCard } from '@core/ui';
+import {
+  Footer,
+  GameCard,
+  Header,
+  HistoryPanel,
+  IconPawn,
+  MoreGamesCard,
+  useFixedGameViewport,
+} from '@core/ui';
 import { StyleGuide } from '@core/ui/StyleGuide';
 import { useHashRoute } from '@core/router';
 import { useDocumentBrand } from '@core/brand';
@@ -9,6 +17,7 @@ export default function App() {
   const [section, id] = useHashRoute();
   const game = section === 'games' && id ? findGame(id) : undefined;
   const Game = game?.component;
+  useFixedGameViewport(game?.id === 'letter-wheel');
   const [historyOpen, setHistoryOpen] = useState(false);
   useDocumentBrand(game?.title, game?.brand?.tagline, game?.brand?.favicon);
 

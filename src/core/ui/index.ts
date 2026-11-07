@@ -1,5 +1,6 @@
 import './theme/tokens.css';
 import './theme/global.css';
+import './theme/viewport.css';
 import './theme/components.css';
 
 export * from './GameCard';
@@ -37,3 +38,5 @@ export { revealWordInPlace, waitForRevealVisibility, isRevealTargetVisible } fro
 
 export { transitionSheet, SHEET_TRANSITION_MS, type SheetPhase } from './sheetMotion';
 export { createAutoDismiss, DISCOVERY_HOLD_MS } from './autoDismiss';
+
+export { useFixedGameViewport } from './fixedViewport';

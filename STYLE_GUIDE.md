@@ -219,6 +219,40 @@ and fall back to the wheel if a tray closes mid-flight. Clue rendering and alrea
 remain separate. The explicit focus-return target is the Words opener (also for automatic opens);
 Enter with a typed guess there submits and suppresses the opener's native click.
 
-Responsive regression contracts live in `mobile-layout.test.ts`; they check CSS sizing and conservative
-space budgets, **not rendered layout**. Browser checks at 375×667, 390×844 and 360×740 (including iOS
-safe areas, tray focus/scroll and desktop regressions) are still required when changing this layout.
+### Mobile viewport ownership (Firefox/toolbar/keyboard)
+
+`useFixedGameViewport` is enabled by App only for the Letter Wheel route below 860px. It marks
+`html[data-fixed-game]`; no `:has()` support is needed. Shared `viewport.css` bounds html → fixed
+body → positioned `#root` → absolute app to one border-box viewport. This replaces the previous
+normal-flow document beneath a separately fixed game panel, with no bounded `#root` and a root
+minimum override dependent on `:has()`. The global site's `body { min-height:100vh }` cannot leak
+into the route, and there is no oversized fixed panel contributing another viewport's scroll range.
+
+Height progressively uses **100vh → 100svh → 100dvh**, so dynamic toolbar expansion/collapse resizes
+one shared containing block. The app consumes `height:100%`, not a second independently sized fixed
+viewport. Root/app margins and root padding are zero; the game's safe-area padding remains **inside**
+its border-box. Footer stays out of the mobile game layout. Grid tracks use `minmax(0,1fr)` and
+min-size resets so intrinsic flex/grid content cannot grow the shell. Desktop is unchanged.
+
+While the flag is active, the existing viewport meta policy temporarily uses
+`interactive-widget=resizes-content` (Firefox Android 132+/Chromium), letting CSS viewport units
+shrink above the keyboard rather than leaving an obscured layout viewport. It preserves zoom and
+all other directives, restoring the exact prior policy on route/desktop cleanup. There is no
+visualViewport listener, hard-coded toolbar offset, touch prevention or new inline overflow write.
+The BottomSheet's independent reference-counted overflow snapshot can therefore release before or
+after route cleanup without restoring a stale route lock. Home/style guide remain document-scrollable;
+history and trays retain their own scrolling surfaces, including over the game.
+
+Short windows save gaps, not text/button size. Landscape 600–859px wide / ≤500px high places the
+wheel beside the three control rows. At ≤599px wide / ≤500px high (e.g. a software keyboard), play
+becomes an **internal** scroller with a 160px minimum wheel and 40px controls; the seed field remains
+above it. This is an intentional extreme-height accessibility fallback, not clipping unreachable
+controls and not reintroducing document scroll. Normal mobile sizes keep the one-screen layout.
+
+Responsive regression contracts live in `mobile-layout.test.ts` and `fixedViewport.test.ts`;
+they check CSS sizing/fallback order, conservative space budgets, keyboard metadata cleanup and
+route/sheet lock release order, **not rendered layout or actual Firefox APZ behaviour**. Browser QA
+must cover Firefox Android with chrome expanded/collapsed, rotation, keyboard open/closed, tray
+internal scroll, nested history, then route exit to home/style guide and back. Also check 375×667,
+390×844, 360×740, short landscape and desktop. No browser-specific success is inferred from the
+unit contracts.

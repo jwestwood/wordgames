@@ -84,8 +84,12 @@ If it was already manually open, a discovery never closes it for you.
 Its Close button, Escape or shaded backdrop returns to the wheel. A deliberate close wins over
 pending automatic work; nothing reopens it later. Closing keeps clue state and the tray's scroll
 position. Focus, background isolation and page scroll lock remain in place until the exit finishes.
-Reduced motion removes sheet/reveal motion but keeps the readable 750ms hold. Wider screens keep
-the side-by-side wheel and list with no automatic sheet or hold.
+Reduced motion removes sheet/reveal motion but keeps the readable 750ms hold. The mobile game's
+own document is fixed to the available dynamic viewport, including browser toolbar changes;
+home/style guide still scroll normally and history/trays keep their internal scrollers. Short
+landscape puts the wheel beside its controls. When a keyboard makes a portrait window extremely
+short, the play area can scroll internally so controls remain reachable, while the seed field stays
+above it. Wider screens keep the side-by-side wheel and list with no automatic sheet or hold.
 
 _Comfort, not a rules change._ The tray briefly shows where a word belongs, then gives the table
 back to the wheel. You can interrupt that rhythm to study the list or take a clue.
