@@ -25,10 +25,13 @@
 .btn:active {
   box-shadow: var(--shadow-tile-pressed);
 }
-.btn:disabled {
+.btn:disabled,
+.btn:disabled:hover,
+.btn:disabled:active {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
+  filter: none;
 }
 /* Size only changes padding/type — height stays --control-height. */
 .btn--sm {
@@ -47,7 +50,7 @@
   background: var(--color-green);
   color: var(--color-text-inverse);
 }
-.btn--primary:hover {
+.btn--primary:hover:not(:disabled) {
   background: var(--color-green-dark);
   color: var(--color-text-inverse);
 }
@@ -55,7 +58,7 @@
   background: var(--color-red);
   color: var(--color-text-inverse);
 }
-.btn--danger:hover {
+.btn--danger:hover:not(:disabled) {
   background: var(--color-red-dark);
   color: var(--color-text-inverse);
 }
@@ -65,7 +68,7 @@
   color: var(--color-ink);
   border-color: var(--color-tile-edge);
 }
-.btn--secondary:hover {
+.btn--secondary:hover:not(:disabled) {
   filter: brightness(0.96);
 }
 .btn--ghost {
@@ -74,7 +77,7 @@
   box-shadow: none;
   border-color: var(--color-border);
 }
-.btn--ghost:hover {
+.btn--ghost:hover:not(:disabled) {
   background: var(--color-paper-dark);
 }
 
@@ -175,6 +178,10 @@ button.tile:active {
 }
 .tile--absent .tile__letter {
   opacity: 0.85;
+}
+.tile--error {
+  background-color: var(--tile-error-bg);
+  color: var(--tile-error-fg);
 }
 
 /* Board */
@@ -575,7 +582,7 @@ button.tile:active {
   color: var(--color-ink);
   border-color: var(--color-yellow-dark);
 }
-.btn--warning:hover {
+.btn--warning:hover:not(:disabled) {
   background: var(--color-yellow-dark);
   color: var(--color-ink);
 }

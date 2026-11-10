@@ -69,7 +69,7 @@ A JS mirror of the colours is in `theme/tokens.ts` (keep in sync).
 | Component                 | Props / states                                                                                                                                                                                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Button`                  | **One height** (`--control-height` / 2.5rem) for every button. `variant`: primary · secondary · danger · warning · ghost; `.btn--icon` for icon-only (same height, min-width 2.75rem); `size` only changes padding/type; icon+label OK                                                                      |
-| `Tile`                    | `letter`, `state`: default · selected · correct · present · absent; `value` (points), `size`, `static` (non-interactive span)                                                                                                                                                                               |
+| `Tile`                    | `letter`, `state`: default · selected · correct · present · absent · error; `value` (points), `size`, `static` (non-interactive span)                                                                                                                                                                       |
 | `LetterTiles`             | rack of static tiles; optional `states[]`                                                                                                                                                                                                                                                                   |
 | `Board`                   | wooden grid, `cols`; arrow keys / Home / End move focus between tiles                                                                                                                                                                                                                                       |
 | `Panel`                   | paper card, `title`, `variant`: paper · wood                                                                                                                                                                                                                                                                |
@@ -94,7 +94,7 @@ Motion (`motion.ts`, `queue.ts`, `transient.ts`): `flyElement(fromRect, to, cont
 
 Pure helpers (tested in `ui.test.ts`): `evaluateGuess`, `tileLabel`, `formatScore`, `gridNavigate`, `trapFocusIndex`; `contrastRatio`/`meetsAA` in `theme/contrast.ts`.
 
-Tile states: correct = green + filled dot, present = red + hollow ring, absent = muted brown, selected = wood + lifted. Shapes give a non-colour cue.
+Tile states: correct = green + filled dot, present = red + hollow ring, absent = muted brown, selected = wood + lifted, error = red with no ring (a kept incorrect guess). Shapes give a non-colour cue.
 
 ## Do / Don't
 
@@ -136,6 +136,8 @@ export function MyGame() {
 Register it in `src/games`; global styles load automatically via `@core/ui`. If you need something new and reusable, add it to `src/core/ui` with tokens, a style-guide entry, and tests for any logic.
 
 **Button height:** every `.btn` (including `.btn--sm` / `.btn--icon` / header / seed / Clue) is `--control-height` (2.5rem / ~40px). Never ship a shorter control — reuse `.btn` / `.btn--icon`. Header buttons also use `.site-header__btn` (secondary paper). The sound-theme dropdown matches via `.sound-theme__select`. Icon-only: `.btn--icon` (min-width 2.75rem). Buttons never move on hover or press — feedback is colour and shadow only.
+
+**Disabled buttons:** `.btn:disabled` keeps that same 40px height. It uses opacity 0.55 and `cursor: not-allowed`, and does not change colour, shadow or position on hover or press. Letter Wheel's Guess button is disabled when the input is empty, and after a kept incorrect guess until a letter is added or removed.
 
 Text selection (`::selection`, incl. inputs) uses `--color-selection-bg` (red-dark) / `--color-selection-fg` (paper-light); pairs are in the contrast tests.
 

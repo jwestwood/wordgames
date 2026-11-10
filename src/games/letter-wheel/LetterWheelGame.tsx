@@ -10,7 +10,12 @@ import {
   shuffle,
 } from '@core/random';
 import { BETA, resolveVersion, versionId, type PuzzleVersion } from '@core/versions';
-import { progressFor as coreProgressFor, useSeedState } from '@core/game';
+import {
+  isGuessSubmitLocked,
+  progressFor as coreProgressFor,
+  shouldKeepGuess,
+  useSeedState,
+} from '@core/game';
 import { useHistoryEntry } from '@core/history';
 import { pickTier, useSound } from '@core/audio';
 import { useGameSettings } from '@core/settings';
@@ -216,6 +221,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   }, [mobile, closeWords]);
   const [clueMode, setClueMode] = useState(false);
   const [guess, setGuess] = useState<number[]>([]);
+  const [rejectedGuess, setRejectedGuess] = useState<number[] | null>(null);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
   const shuffles = useRef(0);
   const [toast, showToast] = useToast(2800);
@@ -232,6 +238,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const { values: settings } = useGameSettings(GAME_ID, LETTER_WHEEL_SETTINGS);
   const autoScroll = useRef(settings.autoScroll);
   autoScroll.current = !mobile && settings.autoScroll;
+  const submitLocked = settings.keepWrongGuesses && isGuessSubmitLocked(rejectedGuess, guess);
   const queue = useRef(createAnimationQueue());
   const wheelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -292,6 +299,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     (i: number) => {
       if (guess.includes(i)) return;
       play('tap');
+      setRejectedGuess(null);
       setGuess([...guess, i]);
     },
     [guess, play],
@@ -307,11 +315,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const backspace = useCallback(() => {
     if (!guess.length) return;
     play('delete');
+    setRejectedGuess(null);
     setGuess(guess.slice(0, -1));
   }, [guess, play]);
   const clear = useCallback(() => {
     if (!guess.length) return;
     play('clear');
+    setRejectedGuess(null);
     setGuess([]);
   }, [guess, play]);
   const doShuffle = useCallback(() => {
@@ -465,7 +475,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   );
 
   const submit = useCallback(() => {
-    if (!word) return;
+    if (!word || submitLocked) return;
     setGuessed(true);
     const res = rules.checkGuess(word, puzzle, found, bonusFound);
     if (isBonusSuccess(res)) {
@@ -526,7 +536,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         showToast(MESSAGES[res.reason], 'bad');
       }
     }
-    setGuess([]);
+    if (shouldKeepGuess(settings.keepWrongGuesses, res)) {
+      setRejectedGuess(guess);
+    } else {
+      setRejectedGuess(null);
+      setGuess([]);
+    }
   }, [
     word,
     puzzle,
@@ -542,6 +557,9 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     animateStar,
     animateLetter,
     play,
+    guess,
+    settings.keepWrongGuesses,
+    submitLocked,
   ]);
 
   useEffect(() => {
@@ -555,7 +573,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         e.preventDefault();
         backspace();
       } else if (e.key === 'Enter') {
-        submitGuessOnEnter(e, Boolean(word), `${trayId}-opener`, submit);
+        submitGuessOnEnter(e, Boolean(word), `${trayId}-opener`, submit, !submitLocked);
       } else if (e.key === 'Escape') {
         if (clueMode) setClueMode(false);
         else clear();
@@ -563,7 +581,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [typeLetter, backspace, submit, clear, clueMode, word, trayId]);
+  }, [typeLetter, backspace, submit, clear, clueMode, word, trayId, submitLocked]);
 
   return (
     <div className="lw">
@@ -653,11 +671,15 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
             >
               <IconShuffle />
             </Button>
-            <Button onClick={submit} disabled={!guess.length}>
+            <Button onClick={submit} disabled={!guess.length || submitLocked}>
               Guess
             </Button>
           </div>
-          <div className="lw__guess" aria-live="polite" aria-label={`Guess: ${word || 'empty'}`}>
+          <div
+            className="lw__guess"
+            aria-live="polite"
+            aria-label={`Guess: ${word || 'empty'}${submitLocked ? ', incorrect' : ''}`}
+          >
             {guess.length === 0 ? (
               <span className="lw__placeholder">Tap or type letters</span>
             ) : (
@@ -667,7 +689,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                   static
                   size="sm"
                   letter={letterAt(i)}
-                  state={i === CENTRE ? 'correct' : 'default'}
+                  state={submitLocked ? 'error' : i === CENTRE ? 'correct' : 'default'}
                 />
               ))
             )}

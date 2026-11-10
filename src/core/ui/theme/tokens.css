@@ -46,6 +46,8 @@
   --tile-present-fg: var(--color-paper-light);
   --tile-absent-bg: var(--color-absent);
   --tile-absent-fg: var(--color-paper-light);
+  --tile-error-bg: var(--color-red);
+  --tile-error-fg: var(--color-paper-light);
 
   /* Typography */
   --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;

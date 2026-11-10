@@ -7,4 +7,10 @@ export const LETTER_WHEEL_SETTINGS = defineSettings([
     type: 'toggle',
     default: true,
   },
+  {
+    key: 'keepWrongGuesses',
+    label: 'Keep wrong guesses',
+    type: 'toggle',
+    default: false,
+  },
 ] as const);

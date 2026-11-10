@@ -6,6 +6,7 @@ describe('tileLabel', () => {
     expect(tileLabel('a')).toBe('A');
     expect(tileLabel('a', 'correct')).toBe('A, correct');
     expect(tileLabel(' ', 'absent')).toBe('blank, not in word');
+    expect(tileLabel('a', 'error')).toBe('A, incorrect');
   });
 });
 

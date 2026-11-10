@@ -180,7 +180,9 @@ const { values } = useGameSettings(GAME_ID, MY_SETTINGS); // typed: values.autoS
 (Modal, auto-rendered from the schema, Reset to defaults). Mute is **not** a setting: it stays the
 global header button. Letter Wheel: `autoScroll` (default on) — when off, the found-word animation never
 scrolls; an off-screen word pops and fades over the wheel (`popElement`), and stars only fly if the
-score card is visible (`isInView`), otherwise they just fill.
+score card is visible (`isInView`), otherwise they just fill. `keepWrongGuesses` (default off) keeps
+an incorrect guess in the input, turns its tiles red, and disables Guess until a letter is added or
+removed.
 
 ## Deployment
 

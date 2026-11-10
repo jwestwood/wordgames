@@ -58,7 +58,7 @@ const DEMO_SETTINGS: readonly SettingDefinition[] = [
   },
 ];
 
-const STATES: TileState[] = ['default', 'selected', 'correct', 'present', 'absent'];
+const STATES: TileState[] = ['default', 'selected', 'correct', 'present', 'absent', 'error'];
 
 /** Living showcase of the shared design system (route: #/style-guide). */
 function ToastDemo() {
@@ -177,7 +177,9 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
         <p>
           Every <code>.btn</code> is <strong>2.5rem</strong> tall (<code>--control-height</code>) —
           icon-only (<code>.btn--icon</code>), labelled, and icon+label all match the header mute /
-          settings buttons. Size only changes padding and type; never omit the shared height.
+          settings buttons. Size only changes padding and type; never omit the shared height. A
+          disabled button keeps that height, with opacity 0.55 and <code>cursor: not-allowed</code>,
+          and does not change colour or position on hover.
         </p>
         <p>
           Toasts (<code>useToast</code> / <code>ToastStack</code>) slide in from the top of a
@@ -251,6 +253,10 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
             </div>
           ))}
         </div>
+        <p style={{ marginTop: 12, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+          The <code>error</code> state is red with no ring, used when a kept incorrect guess stays
+          in the input. Adding or removing a letter clears it.
+        </p>
         <div className="row" style={{ marginTop: 16 }}>
           <Tile letter="s" size="sm" static />
           <Tile letter="m" size="md" static />

@@ -34,6 +34,7 @@ export const contrastPairs: Array<[name: string, fg: string, bg: string]> = [
   ['tile correct', colors.paperLight, colors.green],
   ['tile present', colors.paperLight, colors.red],
   ['tile absent', colors.paperLight, colors.absent],
+  ['tile error', colors.paperLight, colors.red],
   ['primary button', colors.paperLight, colors.green],
   ['danger button', colors.paperLight, colors.red],
   ['warning button', colors.ink, colors.yellow],

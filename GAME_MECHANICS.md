@@ -160,7 +160,7 @@ _Comfort / light strategy._ On a long list, or with auto-scroll off, it answers 
 
 ### Scroll-to-found setting
 
-Letter Wheel’s settings cog currently has one toggle: **Scroll to found words** (on by default).
+Letter Wheel’s settings cog has two toggles. **Scroll to found words** is on by default.
 On desktop, when on, a new word scrolls into view before its in-place reveal. When off,
 the page stays put: an off-screen new word is filled without motion rather than delaying other
 celebrations. The found count and percentage update immediately.
@@ -175,6 +175,21 @@ or pop over the wheel when the tray is closed.
 
 _Comfort._ This does not change the puzzle. On desktop, turn it off to keep the page still.
 Mobile always keeps the page still, while the tray handles discoveries.
+
+### Keep wrong guesses
+
+**Keep wrong guesses** is off by default. When on, an incorrect guess (too short, missing the
+centre letter, or not in the word list) stays in the input. Its tiles turn red (the `error`
+state) and Guess — including Enter — stays disabled until you add or remove a letter. As soon as
+the input changes, the red styling clears and Guess is enabled again. The existing error toast
+and sound still play. Wheel tiles stay selected to match the kept letters, so you can extend or
+backspace the guess.
+
+A word you have already found (official or bonus) is not treated as incorrect: the input clears
+as usual, with the already-found toast and sound. Successful finds also clear the input. With
+the setting off, every submitted guess still clears.
+
+_Comfort._ This does not change the puzzle, only how a bounced guess is edited.
 
 ---
 

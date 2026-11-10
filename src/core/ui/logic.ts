@@ -1,6 +1,6 @@
 /** Pure helpers behind the shared UI components (tested in ui.test.ts). */
 
-export type TileState = 'default' | 'selected' | 'correct' | 'present' | 'absent';
+export type TileState = 'default' | 'selected' | 'correct' | 'present' | 'absent' | 'error';
 
 const STATE_LABEL: Record<TileState, string> = {
   default: '',
@@ -8,6 +8,7 @@ const STATE_LABEL: Record<TileState, string> = {
   correct: 'correct',
   present: 'in word, wrong place',
   absent: 'not in word',
+  error: 'incorrect',
 };
 
 /** Accessible label for a tile, e.g. "A, correct". */

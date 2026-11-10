@@ -45,3 +45,14 @@ describe('Enter after closing the Words tray', () => {
     expect(submit).toHaveBeenCalledOnce();
   });
 });
+
+it('does not submit a locked incorrect guess, and still suppresses Words activation', () => {
+  const event = keyEvent('words-opener');
+  const submit = vi.fn();
+  const openTray = vi.fn();
+  submitGuessOnEnter(event, true, 'words-opener', submit, false);
+  if (!event.preventDefault.mock.calls.length) openTray();
+  expect(event.preventDefault).toHaveBeenCalledOnce();
+  expect(submit).not.toHaveBeenCalled();
+  expect(openTray).not.toHaveBeenCalled();
+});
