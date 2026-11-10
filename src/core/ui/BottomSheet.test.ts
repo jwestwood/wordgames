@@ -35,6 +35,25 @@ describe('BottomSheet single content tree', () => {
     expect(html).toContain('bottom-sheet__scroll');
     expect(html.match(/data-word="abide"/g)).toHaveLength(1);
   });
+  it('renders heading actions beside Close, at the same 40px control height', () => {
+    const html = renderToStaticMarkup(
+      createElement(BottomSheet, {
+        enabled: true,
+        open: true,
+        onClose() {},
+        title: 'Words · 2/6',
+        actions: createElement(
+          'button',
+          { className: 'btn btn--secondary lw__clue', type: 'button' },
+          'Clue',
+        ),
+        children: createElement('div', null, 'list'),
+      }),
+    );
+    expect(html).toContain('bottom-sheet__actions');
+    expect(html.indexOf('Clue')).toBeLessThan(html.indexOf('Close words tray'));
+    expect(html).toContain('Words · 2/6');
+  });
   it('desktop is just inline content without a dialog or hidden duplicate list', () => {
     const html = render(false, false);
     expect(html).not.toContain('role="dialog"');

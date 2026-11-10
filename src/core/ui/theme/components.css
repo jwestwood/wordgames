@@ -483,10 +483,7 @@ button.tile:active {
   gap: var(--word-slot-gap, 1px);
   break-inside: avoid;
   margin-bottom: var(--space-2);
-  position: relative; /* anchor for clue-mode outline / hit-area; no size change */
-  /* Transparent outline reserved so clue mode only changes colour, not box size. */
-  outline: 1.5px dashed transparent;
-  outline-offset: 2px;
+  position: relative; /* anchor for clue-mode hit-area; no size change */
 }
 .word-slots__cell {
   flex: none; /* never squash letters in narrow columns (keeps fly-in alignment exact) */
@@ -511,7 +508,6 @@ button.tile:active {
 .word-slots--picking .word-slots__item--pickable {
   cursor: pointer;
   border-radius: var(--radius-sm);
-  outline-color: var(--color-wood-dark);
 }
 .word-slots--picking .word-slots__item--pickable::after {
   /* Larger tap target without changing the item's layout box. */
@@ -519,10 +515,31 @@ button.tile:active {
   position: absolute;
   inset: -0.4rem -0.2rem;
 }
-.word-slots--picking .word-slots__item--pickable:hover,
-.word-slots--picking .word-slots__item--pickable:focus-visible {
-  outline-style: solid;
-  background: var(--color-paper-light);
+/* Warm wash on the blank cells only; geometry, borders and type stay put. */
+.word-slots--picking .word-slots__item--pickable .word-slots__cell {
+  background-color: color-mix(in srgb, var(--color-wood) 22%, var(--color-paper-light));
+  background-image: linear-gradient(
+    105deg,
+    transparent 25%,
+    color-mix(in srgb, var(--color-tile) 70%, transparent) 50%,
+    transparent 75%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  background-position: 120% 0;
+  animation: clue-shimmer 2.4s ease-in-out infinite;
+}
+.word-slots--picking .word-slots__item--pickable:hover .word-slots__cell,
+.word-slots--picking .word-slots__item--pickable:focus-visible .word-slots__cell {
+  background-color: color-mix(in srgb, var(--color-wood) 40%, var(--color-paper-light));
+}
+@keyframes clue-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
 }
 .word-slots__item--latest .word-slots__cell {
   color: var(--color-green-dark);
@@ -573,6 +590,10 @@ button.tile:active {
   }
   .word-slots__item--latest .word-slots__cell {
     animation: none;
+  }
+  .word-slots--picking .word-slots__item--pickable .word-slots__cell {
+    animation: none;
+    background-image: none;
   }
 }
 
@@ -1529,6 +1550,18 @@ button.tile:active {
 .bottom-sheet__head h2 {
   margin: 0;
   font-size: var(--text-lg);
+  flex: 1;
+  min-width: 0;
+}
+.bottom-sheet__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+.bottom-sheet__actions .btn {
+  height: var(--control-height);
+  min-height: var(--control-height);
 }
 .bottom-sheet__scroll {
   min-height: 0;
@@ -1596,30 +1629,16 @@ button.tile:active {
   letter-spacing: 0.08em;
   color: var(--color-ink);
 }
-.bonus-counter--collapsible {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
+.bonus-counter__toggle {
+  flex: none;
+  white-space: nowrap;
 }
-.bonus-counter--collapsible > summary {
-  list-style: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-}
-.bonus-counter--collapsible > summary::-webkit-details-marker {
-  display: none;
-}
-.bonus-counter--collapsible > summary::after {
-  content: '▸';
+.bonus-counter__toggle .bonus-counter__chevron {
   font-size: 0.75em;
   color: var(--color-ink-muted);
+  margin-left: 0.15em;
 }
-.bonus-counter--collapsible[open] > summary::after {
-  content: '▾';
-}
-.bonus-counter--collapsible .bonus-counter__list {
+.bonus-counter__list--tray {
   max-height: 4.5rem;
   overflow-y: auto;
   overscroll-behavior: contain;

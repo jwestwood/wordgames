@@ -116,13 +116,23 @@ describe('mobile layout contracts (visual checks still required)', () => {
       flex: '1',
       'min-height': '0',
     });
+    expect(declarations('.app--letter-wheel .lw__words-chrome')).toMatchObject({
+      'margin-bottom': '0',
+    });
     expect(declarations('.app--letter-wheel .lw__words-toolbar')).toMatchObject({
       'min-height': '40px',
-      'margin-bottom': '0',
     });
     expect(declarations('.app--letter-wheel .lw__clue')).toMatchObject({
       height: '40px',
       'min-height': '40px',
+    });
+    expect(declarations('.app--letter-wheel .bonus-counter__toggle')).toMatchObject({
+      height: '40px',
+      'min-height': '40px',
+    });
+    expect(declarations('.app--letter-wheel .lw__words-list-wrap')).toMatchObject({
+      position: 'relative',
+      'min-height': '0',
     });
     expect(declarations('.app--letter-wheel .lw__words-scroller')).toMatchObject({
       'overflow-y': 'auto',

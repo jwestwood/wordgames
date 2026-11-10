@@ -11,6 +11,8 @@ export interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
+  /** Extra 40px controls in the sheet heading, immediately before Close. */
+  actions?: ReactNode;
   children: ReactNode;
   id?: string;
   /** Explicit focus return for auto-open sheets whose triggering button may become disabled. */
@@ -28,6 +30,7 @@ export function BottomSheet({
   open,
   onClose,
   title,
+  actions,
   children,
   id,
   returnFocusId,
@@ -152,14 +155,17 @@ export function BottomSheet({
         {enabled && (
           <div className="bottom-sheet__head">
             <h2 id={titleId}>{title}</h2>
-            <Button
-              variant="secondary"
-              className="btn--icon"
-              aria-label="Close words tray"
-              onClick={onClose}
-            >
-              <IconX />
-            </Button>
+            <div className="bottom-sheet__actions">
+              {actions}
+              <Button
+                variant="secondary"
+                className="btn--icon"
+                aria-label="Close words tray"
+                onClick={onClose}
+              >
+                <IconX />
+              </Button>
+            </div>
           </div>
         )}
         <div className={enabled ? 'bottom-sheet__scroll' : undefined}>{children}</div>

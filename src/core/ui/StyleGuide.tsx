@@ -121,6 +121,42 @@ function WordRevealDemo() {
   );
 }
 
+function CluePickDemo() {
+  const [picking, setPicking] = useState(true);
+  const known = new Map<string, readonly (string | null)[]>([
+    ['bead', [null, null, null, 'd']],
+    ['deal', [null, null, 'a', 'l']],
+  ]);
+  return (
+    <Panel title="Clue pick highlight">
+      <p>
+        Eligible blanks get a wood-and-paper tint and a slow shimmer across the letter cells — no
+        outline and no size change. Hover or focus deepens the tint. Found words and words already
+        given two clues stay plain. Reduced motion keeps the tint still. Letter Wheel uses the same
+        cells on desktop and in the mobile tray.
+      </p>
+      <Button
+        variant="secondary"
+        size="sm"
+        aria-pressed={picking}
+        onClick={() => setPicking((on) => !on)}
+      >
+        {picking ? 'Clue on' : 'Clue off'}
+      </Button>
+      <div style={{ marginTop: 16 }}>
+        <WordSlots
+          words={['able', 'bale', 'bead', 'deal']}
+          revealed={new Set(['able'])}
+          known={known}
+          picking={picking}
+          pickable={new Set(['bale', 'bead'])}
+          onPick={() => undefined}
+        />
+      </div>
+    </Panel>
+  );
+}
+
 export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }) {
   const [open, setOpen] = useState(false);
   const [trayOpen, setTrayOpen] = useState(false);
@@ -379,15 +415,18 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
 
       <WordRevealDemo />
 
+      <CluePickDemo />
+
       <Panel title="Bottom sheet / mobile game table">
         <p>
           Letter Wheel below 860px uses a fixed viewport table: wheel, guess, stars and a Words
           count stay on screen. The paper tray slides up/down in 280ms, keeping focus and scroll
-          lock through exit. Inside, a compact toolbar holds progress, last word, Clue and a
-          collapsible bonus count; the word list fills two columns; LETTERS stays at the bottom. A
-          discovery auto-opens, reveals, holds 750ms, then closes; interacting with it keeps it open
-          for browsing. This manual demo stays open until closed. Internal scroll and clue state
-          survive closing; the base page never auto-scrolls. Desktop stays side-by-side.
+          lock through exit. The heading shows Words · found/total with Clue beside Close; the
+          toolbar keeps last word and a 40px Bonus control, whose list opens underneath. The word
+          list fills two columns; LETTERS stays at the bottom. A discovery auto-opens, reveals,
+          holds 750ms, then closes; interacting with it keeps it open for browsing. This manual demo
+          stays open until closed. Internal scroll and clue state survive closing; the base page
+          never auto-scrolls. Desktop stays side-by-side.
         </p>
         <Button variant="primary" onClick={() => setTrayOpen(true)}>
           Words · 2/6

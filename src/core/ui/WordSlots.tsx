@@ -18,7 +18,7 @@ export interface WordSlotsProps {
    * Used for clues: e.g. `[null,null,null,'t']` then `[null,null,'n','t']`.
    */
   known?: ReadonlyMap<string, readonly (string | null)[]>;
-  /** When true, eligible unrevealed words get layout-neutral outlines and expanded hit areas. */
+  /** When true, eligible unrevealed words get a layout-neutral cell tint and expanded hit areas. */
   picking?: boolean;
   /** Words that can be picked while `picking` (defaults to every unrevealed word). */
   pickable?: ReadonlySet<string>;

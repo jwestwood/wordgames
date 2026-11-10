@@ -147,22 +147,16 @@
   gap: var(--space-2);
 }
 
+.lw__words-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
 .lw__words-toolbar {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-.lw__words-status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-2);
-  flex: 1;
-  min-width: 0;
-}
-.lw__words-progress {
-  display: none;
 }
 .lw__last-word {
   margin-right: auto;
@@ -179,9 +173,6 @@
 .lw__clue-hint {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
-}
-.lw__bonus {
-  flex: 1 0 100%;
 }
 .lw__bonus .bonus-counter__list {
   font-size: var(--text-sm);
@@ -447,37 +438,24 @@
     flex-direction: column;
     gap: 8px;
   }
+  .app--letter-wheel .lw__words-chrome {
+    flex: none;
+    gap: 8px;
+    margin-bottom: 0;
+  }
   .app--letter-wheel .lw__words-toolbar {
     flex: none;
     flex-wrap: nowrap;
     align-items: center;
     gap: 8px;
-    margin-bottom: 0;
     min-height: 40px;
   }
-  .app--letter-wheel .lw__words-status {
-    align-items: center;
-    gap: 4px 10px;
-  }
-  .app--letter-wheel .lw__words-progress {
-    display: inline;
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    white-space: nowrap;
-  }
-  .app--letter-wheel .lw__words-progress strong {
-    font-family: var(--font-accent);
-    font-weight: var(--weight-medium);
-    color: var(--color-ink);
-  }
   .app--letter-wheel .lw__last-word {
+    flex: 1;
     margin-right: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  .app--letter-wheel .lw__bonus {
-    flex: 0 1 auto;
   }
   /* Keep announced, but do not add a row or change toolbar size in clue mode. */
   .app--letter-wheel .lw__clue-hint {
@@ -495,6 +473,21 @@
     flex: none;
     height: 40px;
     min-height: 40px;
+  }
+  .app--letter-wheel .bonus-counter__toggle {
+    flex: none;
+    height: 40px;
+    min-height: 40px;
+  }
+  .app--letter-wheel .lw__words-list-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .app--letter-wheel .lw__words-list-wrap .toast-stack {
+    top: var(--space-2);
   }
   .app--letter-wheel .lw__words-scroller {
     flex: 1 1 auto;

@@ -24,6 +24,8 @@ import { submitGuessOnEnter } from './keyboard';
 import { toWheelPreview } from './preview';
 import {
   BonusCounter,
+  BonusToggle,
+  BonusWordList,
   BottomSheet,
   Button,
   centredRect,
@@ -230,6 +232,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     if (!mobile) closeWords();
   }, [mobile, closeWords]);
   const [clueMode, setClueMode] = useState(false);
+  const [bonusOpen, setBonusOpen] = useState(false);
+  const bonusListId = useId();
   const [guess, setGuess] = useState<number[]>([]);
   const [rejectedGuess, setRejectedGuess] = useState<number[] | null>(null);
   const [order, setOrder] = useState(() => puzzle.outer.map((_, i) => i));
@@ -247,6 +251,23 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const play = useSound();
   const { values: settings } = useGameSettings(GAME_ID, LETTER_WHEEL_SETTINGS);
   const submitLocked = settings.keepWrongGuesses && isGuessSubmitLocked(rejectedGuess, guess);
+  const clueButton = (
+    <Button
+      variant="secondary"
+      size="sm"
+      className={`lw__clue${clueMode ? ' lw__clue--on' : ''}`}
+      aria-pressed={clueMode}
+      title={
+        clueMode
+          ? 'Cancel clue'
+          : 'Reveal a letter: last first, then 2nd-to-last. Click a blank word.'
+      }
+      onClick={() => setClueMode((on) => !on)}
+    >
+      <IconHint />
+      Clue
+    </Button>
+  );
   const queue = useRef(createAnimationQueue());
   const wheelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -736,19 +757,15 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
             open={wordsOpen}
             onClose={closeWords}
             title={`Words · ${found.length}/${puzzle.pool.length}`}
+            actions={mobile ? clueButton : undefined}
             id={trayId}
             returnFocusId={`${trayId}-opener`}
             onPhaseChange={onSheetPhase}
             onInteract={interactWords}
           >
             <Panel className="lw__words">
-              {mobile && wordsOpen && <ToastStack toast={toast} />}
-              <div className="lw__words-toolbar">
-                <div className="lw__words-status">
-                  <span className="lw__words-progress">
-                    <strong>{found.length}</strong>
-                    <span className="lw__of">/{puzzle.pool.length}</span>
-                  </span>
+              <div className="lw__words-chrome">
+                <div className="lw__words-toolbar">
                   <span className="lw__last-word" aria-live="polite">
                     Last word:{' '}
                     <strong>
@@ -756,13 +773,16 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                       {(latest ?? found.at(-1))?.toUpperCase() ?? '—'}
                     </strong>
                   </span>
-                  {puzzle.bonusPool && (
-                    <BonusCounter
-                      className="lw__bonus"
+                  {mobile && puzzle.bonusPool && (
+                    <BonusToggle
                       count={bonusFound.length}
-                      words={bonusFound}
-                      showWords
-                      collapsible={mobile}
+                      open={bonusOpen}
+                      listId={bonusListId}
+                      disabled={bonusFound.length === 0}
+                      onClick={() => {
+                        play('button');
+                        setBonusOpen((on) => !on);
+                      }}
                     />
                   )}
                   {clueMode && (
@@ -770,47 +790,51 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                       Tap a blank for a clue
                     </span>
                   )}
+                  {!mobile && clueButton}
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className={`lw__clue${clueMode ? ' lw__clue--on' : ''}`}
-                  aria-pressed={clueMode}
-                  title={
-                    clueMode
-                      ? 'Cancel clue'
-                      : 'Reveal a letter: last first, then 2nd-to-last. Click a blank word.'
-                  }
-                  onClick={() => setClueMode((on) => !on)}
-                >
-                  <IconHint />
-                  Clue
-                </Button>
+                {mobile && bonusOpen && (
+                  <BonusWordList
+                    id={bonusListId}
+                    className="lw__bonus-list bonus-counter__list--tray"
+                    words={bonusFound}
+                  />
+                )}
+                {!mobile && puzzle.bonusPool && (
+                  <BonusCounter
+                    className="lw__bonus"
+                    count={bonusFound.length}
+                    words={bonusFound}
+                    showWords
+                  />
+                )}
               </div>
-              <div ref={listRef} className="lw__words-scroller">
-                <WordSlots
-                  words={puzzle.pool}
-                  revealed={revealed}
-                  latest={latest}
-                  hidden={hidden}
-                  revealing={revealingWords}
-                  known={known}
-                  picking={clueMode}
-                  pickable={pickable}
-                  onPick={(w) => {
-                    setProgressState((p) => {
-                      const cur = parseProgress(p);
-                      return {
-                        found: cur.found,
-                        clues: applyClue(cur.clues, w, new Set(cur.found)),
-                        bonus: cur.bonus,
-                      };
-                    });
-                    play('copy');
-                    setClueMode(false);
-                    setGuessed(true);
-                  }}
-                />
+              <div className="lw__words-list-wrap">
+                {mobile && wordsOpen && <ToastStack toast={toast} />}
+                <div ref={listRef} className="lw__words-scroller">
+                  <WordSlots
+                    words={puzzle.pool}
+                    revealed={revealed}
+                    latest={latest}
+                    hidden={hidden}
+                    revealing={revealingWords}
+                    known={known}
+                    picking={clueMode}
+                    pickable={pickable}
+                    onPick={(w) => {
+                      setProgressState((p) => {
+                        const cur = parseProgress(p);
+                        return {
+                          found: cur.found,
+                          clues: applyClue(cur.clues, w, new Set(cur.found)),
+                          bonus: cur.bonus,
+                        };
+                      });
+                      play('copy');
+                      setClueMode(false);
+                      setGuessed(true);
+                    }}
+                  />
+                </div>
               </div>
               <div ref={stripRef} className="lw__letters">
                 <LetterStrip letters={puzzle.target} complete={completeSet} />

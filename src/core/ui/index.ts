@@ -40,4 +40,11 @@ export { transitionSheet, SHEET_TRANSITION_MS, type SheetPhase } from './sheetMo
 export { createAutoDismiss, DISCOVERY_HOLD_MS } from './autoDismiss';
 
 export { useFixedGameViewport } from './fixedViewport';
-export { BonusCounter, type BonusCounterProps } from './BonusCounter';
+export {
+  BonusCounter,
+  BonusToggle,
+  BonusWordList,
+  type BonusCounterProps,
+  type BonusToggleProps,
+  type BonusWordListProps,
+} from './BonusCounter';

@@ -1,13 +1,67 @@
+import { Button } from './Button';
+
+export interface BonusToggleProps {
+  count: number;
+  open: boolean;
+  onClick: () => void;
+  className?: string;
+  listId?: string;
+  disabled?: boolean;
+}
+
+/** 40px disclosure control for a found-bonus count. */
+export function BonusToggle({
+  count,
+  open,
+  onClick,
+  className = '',
+  listId,
+  disabled = false,
+}: BonusToggleProps) {
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      className={`bonus-counter__toggle ${className}`.trim()}
+      aria-expanded={open}
+      aria-controls={listId}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      Bonus: <strong>{count}</strong>
+      {count > 0 && (
+        <span className="bonus-counter__chevron" aria-hidden="true">
+          {open ? '▾' : '▸'}
+        </span>
+      )}
+    </Button>
+  );
+}
+
+export interface BonusWordListProps {
+  words: readonly string[];
+  className?: string;
+  id?: string;
+}
+
+/** Found bonus words, in discovery order. */
+export function BonusWordList({ words, className = '', id }: BonusWordListProps) {
+  if (!words.length) return null;
+  return (
+    <ul id={id} className={`bonus-counter__list ${className}`.trim()}>
+      {words.map((w) => (
+        <li key={w}>{w.toUpperCase()}</li>
+      ))}
+    </ul>
+  );
+}
+
 export interface BonusCounterProps {
   count: number;
   /** Found bonus words, in discovery order. Shown when `showWords` is true. */
   words?: readonly string[];
   showWords?: boolean;
-  /**
-   * When true and there are words to show, the list sits behind a compact
-   * disclosure so it does not take a permanent block of space.
-   */
-  collapsible?: boolean;
   className?: string;
 }
 
@@ -16,34 +70,15 @@ export function BonusCounter({
   count,
   words = [],
   showWords = false,
-  collapsible = false,
   className = '',
 }: BonusCounterProps) {
   const shown = showWords ? words : [];
-  const list =
-    shown.length > 0 ? (
-      <ul className="bonus-counter__list">
-        {shown.map((w) => (
-          <li key={w}>{w.toUpperCase()}</li>
-        ))}
-      </ul>
-    ) : null;
-  if (collapsible && list) {
-    return (
-      <details className={`bonus-counter bonus-counter--collapsible ${className}`.trim()}>
-        <summary className="bonus-counter__label">
-          Bonus: <strong>{count}</strong>
-        </summary>
-        {list}
-      </details>
-    );
-  }
   return (
     <div className={`bonus-counter ${className}`.trim()}>
       <p className="bonus-counter__label" aria-live="polite">
         Bonus: <strong>{count}</strong>
       </p>
-      {list}
+      <BonusWordList words={shown} />
     </div>
   );
 }

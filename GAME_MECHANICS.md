@@ -80,9 +80,11 @@ How you can tell how you are doing, and what “done enough” means.
 
 Below 860px, Letter Wheel is a fixed, one-screen table: compact branding and seed controls,
 progress/stars, wheel, guess and 40px controls remain on the base screen. **Words · 12/30**
-shows the live found/total count and opens a paper bottom tray. Inside, a compact header holds
-progress, the last-word reminder, a collapsible bonus count (on beta) and the Clue button; the
-word list fills the remaining space in two tight columns; the LETTERS strip stays at the bottom.
+shows the live found/total count and opens a paper bottom tray. The tray heading is the only
+found/total counter inside the tray; Clue sits in that heading next to Close (both 40px). A
+toolbar under it keeps the last-word reminder and, on beta, a 40px Bonus control whose word list
+opens below the toolbar. The official word list fills the remaining space in two tight columns;
+the LETTERS strip stays at the bottom. Success toasts appear over the list, not the heading.
 It slides up from the bottom in **280ms**,
 and slides down before it is hidden. Every **new official discovery** opens it automatically,
 scrolls only its internal surface to the blank, reveals the word with a satisfying themed sound,
@@ -140,7 +142,12 @@ Optional tools. None of them change stars or the accepted word list.
 
 ### Clues
 
-The Clue button arms pick mode; you tap a blank to reveal letters on that word, then the button turns off (tap it again or press Escape to cancel without spending a clue).
+The Clue button arms pick mode; you tap a blank to reveal letters on that word, then the button
+turns off (tap it again or press Escape to cancel without spending a clue). Eligible blanks
+(unfound words that still have a clue left) get a warm paper tint and a gentle shimmer across the
+letter spaces, with no outline and no change in size. Hover or focus deepens the tint. Found
+words and words already given two clues stay unhighlighted. If you prefer reduced motion, the
+tint is static.
 
 - First clue on a word: its **last** letter.
 - Second clue on the same word: the **second-to-last** letter as well (so `alert` goes `____T` then `___RT`).
