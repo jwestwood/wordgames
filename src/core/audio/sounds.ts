@@ -19,6 +19,7 @@ export type SoundName =
   | 'clear'
   | 'word-land'
   | 'already-found'
+  | 'bonus-word'
   | 'copy'
   | 'dice'
   | 'open'
@@ -49,6 +50,7 @@ export const SOUNDS: SoundRegistry<SoundName> = {
   clear: s('clear', 0.4),
   'word-land': s('word-land', 0.5, 0.06),
   'already-found': s('already-found', 0.45),
+  'bonus-word': s('bonus-word', 0.55),
   copy: s('copy', 0.45),
   dice: s('dice', 0.5, 0.05),
   open: s('open', 0.35),

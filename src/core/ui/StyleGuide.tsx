@@ -84,7 +84,8 @@ function WordRevealDemo() {
         Only the ink flips, left to right, with a warm-to-green wash (520ms for ALERT). Blank cell
         size stays fixed. Reduced motion fills immediately. In Letter Wheel a new mobile discovery
         slides the Words tray open first (280ms), reveals with one themed sound, holds the word for
-        750ms, then slides closed. Manual browsing cancels the automatic close.
+        750ms, then slides closed. Manual browsing cancels the automatic close. Bonus finds on beta
+        play a distinct sound and update a Bonus counter; they leave the tray closed.
       </p>
       <Button
         variant="secondary"

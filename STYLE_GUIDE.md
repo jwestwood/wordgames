@@ -80,6 +80,7 @@ A JS mirror of the colours is in `theme/tokens.ts` (keep in sync).
 | `LetterWheel`             | segmented SVG circle: `centre`, `letters`, `used` indices, `onCentre`, `onLetter` (geometry in `wheel.ts`)                                                                                                                                                                                                  |
 | `ToastStack` / `useToast` | paper toast overlay (slide from top of a `position: relative` parent); new toast replaces the previous                                                                                                                                                                                                      |
 | `LetterStrip`             | `LETTERS:` + mini wood letter tiles (distinct, A–Z); `complete` set highlights tiles; equal padding around the divider                                                                                                                                                                                      |
+| `BonusCounter`            | `Bonus: N` count plus an optional compact list of found bonus words (`showWords`); Special Elite numerals and word stamps                                                                                                                                                                                   |
 | `WordSlots`               | word list (column-major, ~8rem cols); letter cells sized to fit 10-letter words; blank slots, optional `known` clue letters + `picking`/`onPick`; `latest` highlighted                                                                                                                                      |
 | `Confetti`                | seeded CSS paper-confetti burst; hidden under reduced motion                                                                                                                                                                                                                                                |
 | `ScoreCard`               | wooden plaque: `found`, `total`, `percent`, `stars`, `maxStars`, `thresholds`; star slots carry `data-star-slot`                                                                                                                                                                                            |
@@ -184,23 +185,25 @@ sheet transform. `.bottom-sheet__scroll` owns scrolling and overscroll containme
 remain outside it. The Style Guide includes manual sliding-sheet and ink-reveal demos.
 
 Letter Wheel's solid green, inverse-text **primary** `Words · found/total` opener remains 40px, with
-normal focus/hover feedback and no movement. The tray contains the existing list, Clue, last word
-and LETTERS strip — no duplicate IDs or competing hidden targets. Mobile never page-auto-scrolls.
+normal focus/hover feedback and no movement. On beta the same 40px button also shows `· Bonus N`.
+The tray contains the existing list, Clue, last word, the `BonusCounter` (count plus found bonus
+words) and LETTERS strip — no duplicate IDs or competing hidden targets. Mobile never page-auto-scrolls.
 
 **Automatic discovery sequence:** slide open completely → internally scroll blank into view →
 ink reveal (495–600ms for 4–10 letters) + one rich themed word-found sound at the start → 750ms
 readable hold → slide closed completely → queued stars/letters/perfect. Reduced motion uses
 immediate sheet/ink changes, retains the readable hold and respects global mute/theme. Sound tiers
 are existing `success` / `success-big` (6+) / `success-epic` (target length); no submission success
-or additional `word-land` sound. Skipped invisible reveals are silent.
+or additional `word-land` sound. Skipped invisible reveals are silent. Official finds only: a bonus
+word plays the `bonus-word` slot, toasts, and updates the counter, and does not open the tray.
 
 `createAutoDismiss` gives each automatic discovery a generation/lease. Only its current owner can
 hold/close; close, explicit browsing, another discovery, resize to desktop and unmount invalidate
 old work and release pending holds immediately. Manual opens have no lease and stay open. Any
 pointer/keyboard/wheel/touch-scroll interaction within an automatic tray promotes it to manual
 browsing, including clue use; programmatic focus/scroll does **not**. A discovery while manually
-browsing preserves that intent. Queued work never opens the tray; only a new valid guess or explicit
-opener does. Repeated/invalid guesses never auto-open.
+browsing preserves that intent. Queued work never opens the tray; only a new official guess or explicit
+opener does. Repeated, invalid and bonus guesses never auto-open.
 
 `WordSlots.revealing` commits real ink under an opacity mask before shared `revealWordInPlace`
 animates it. Only ink transforms (perspective flip), opacity/filter and row background change:

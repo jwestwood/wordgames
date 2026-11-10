@@ -39,8 +39,10 @@ export function letterShortfall(target: string, pool: readonly string[]): number
 export interface Dictionaries {
   /** common tier: answers and pool */
   common: WordIndex;
-  /** common + extended: used for the unique-anagram check */
+  /** common + bonus/extended: used for the unique-anagram check */
   all: WordIndex;
+  /** wider words accepted as bonus finds */
+  bonus: WordIndex;
   /** candidate targets (targets list, 8-10 letters), alphabetical */
   targets: readonly string[];
 }
@@ -55,6 +57,8 @@ export interface Puzzle extends Candidate {
   seed: string;
   /** Wheel letters around the centre: target minus one copy of the required letter. */
   outer: string[];
+  /** Spellable bonus words (not in the official pool). */
+  bonusPool: string[];
   attempts: number;
   passed: boolean;
 }
@@ -63,17 +67,21 @@ export interface Puzzle extends Candidate {
 export interface WordLists {
   /** answers (pool) */
   common: readonly string[];
-  /** only used for the unique-anagram check */
+  /** only used for the unique-anagram check when bonus is absent */
   extended: readonly string[];
   /** stricter, familiar subset of common: full-wheel targets are drawn from here */
   targets: readonly string[];
+  /** accepted bonus words; also used for the unique-anagram check */
+  bonus?: readonly string[];
 }
 
 export function prepare(words: WordLists): Dictionaries {
   const common = words.common;
-  const all = [...words.common, ...words.extended].sort();
+  const bonus = words.bonus ?? words.extended ?? [];
+  const all = [...new Set([...common, ...bonus])].sort();
   return {
     common: createWordIndex(common),
+    bonus: createWordIndex(bonus),
     all: createWordIndex(all),
     targets: words.targets.filter(
       (w) => w.length >= TARGET_LENGTH.min && w.length <= TARGET_LENGTH.max,
@@ -83,6 +91,18 @@ export function prepare(words: WordLists): Dictionaries {
 
 export function buildPool(target: string, required: string, dict: Dictionaries): string[] {
   return findSubwords(target, dict.common, { minLength: MIN_WORD, required });
+}
+
+export function buildBonusPool(
+  target: string,
+  required: string,
+  dict: Dictionaries,
+  official: readonly string[],
+): string[] {
+  const skip = new Set(official);
+  return findSubwords(target, dict.bonus, { minLength: MIN_WORD, required }).filter(
+    (w) => !skip.has(w),
+  );
 }
 
 /**
@@ -148,6 +168,7 @@ export function generate(seed: string, dict: Dictionaries): Puzzle {
     target,
     required,
     pool,
+    bonusPool: buildBonusPool(target, required, dict, pool),
     outer: shuffle(rng, letters),
     attempts: res.attempts,
     passed: res.passed,
@@ -155,16 +176,27 @@ export function generate(seed: string, dict: Dictionaries): Puzzle {
 }
 
 export type GuessResult =
-  | { ok: true; word: string }
-  | { ok: false; reason: 'too-short' | 'missing-required' | 'already-found' | 'not-in-pool' };
+  | { ok: true; word: string; bonus?: boolean }
+  | {
+      ok: false;
+      reason:
+        'too-short' | 'missing-required' | 'already-found' | 'already-found-bonus' | 'not-in-pool';
+    };
 
-export function checkGuess(guess: string, puzzle: Puzzle, found: readonly string[]): GuessResult {
+export function checkGuess(
+  guess: string,
+  puzzle: Puzzle,
+  found: readonly string[],
+  bonusFound: readonly string[] = [],
+): GuessResult {
   const word = guess.toLowerCase();
   if (word.length < MIN_WORD) return { ok: false, reason: 'too-short' };
   if (!word.includes(puzzle.required)) return { ok: false, reason: 'missing-required' };
   if (found.includes(word)) return { ok: false, reason: 'already-found' };
-  if (!puzzle.pool.includes(word)) return { ok: false, reason: 'not-in-pool' };
-  return { ok: true, word };
+  if (bonusFound.includes(word)) return { ok: false, reason: 'already-found-bonus' };
+  if (puzzle.pool.includes(word)) return { ok: true, word };
+  if (puzzle.bonusPool.includes(word)) return { ok: true, word, bonus: true };
+  return { ok: false, reason: 'not-in-pool' };
 }
 
 /** Fraction thresholds for 1, 2, 3 stars. */

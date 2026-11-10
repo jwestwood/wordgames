@@ -18,6 +18,7 @@ import { LETTER_WHEEL_SETTINGS } from './settings';
 import { submitGuessOnEnter } from './keyboard';
 import { toWheelPreview } from './preview';
 import {
+  BonusCounter,
   BottomSheet,
   Button,
   centredRect,
@@ -71,6 +72,12 @@ import {
   type PuzzleProgress,
 } from './clues';
 import { completedLetters, newlyCompletedLetters } from './letters';
+import {
+  isBonusSuccess,
+  isRepeatGuess,
+  shouldAutoOpenWordTray,
+  shouldFlashOfficialRow,
+} from './guess';
 import { LetterWheelLogo } from './brand/Logo';
 import './letter-wheel.css';
 
@@ -82,6 +89,7 @@ const messages = (
   'too-short': `Words need at least ${minWord} letters.`,
   'missing-required': 'Every word must use the centre letter.',
   'already-found': 'Already found!',
+  'already-found-bonus': 'Already found!',
   'not-in-pool': 'Not in the word list.',
 });
 
@@ -154,12 +162,22 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const progress = useMemo(() => parseProgress(progressState), [progressState]);
   const found = progress.found;
   const clues = progress.clues;
+  const bonusFound = progress.bonus;
   const setFound = useCallback(
     (next: string[] | ((prev: string[]) => string[])) =>
       setProgressState((p) => {
         const cur = parseProgress(p);
         const found = typeof next === 'function' ? next(cur.found) : next;
-        return { found, clues: pruneClues(cur.clues, new Set(found)) };
+        return { found, clues: pruneClues(cur.clues, new Set(found)), bonus: cur.bonus };
+      }),
+    [setProgressState],
+  );
+  const setBonusFound = useCallback(
+    (next: string[] | ((prev: string[]) => string[])) =>
+      setProgressState((p) => {
+        const cur = parseProgress(p);
+        const bonus = typeof next === 'function' ? next(cur.bonus) : next;
+        return { found: cur.found, clues: cur.clues, bonus };
       }),
     [setProgressState],
   );
@@ -248,7 +266,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     maxStars: score.maxStars,
     completed: score.perfect,
     version: vid,
-    started: guessed || found.length > 0 || Object.keys(clues).length > 0,
+    started: guessed || found.length > 0 || bonusFound.length > 0 || Object.keys(clues).length > 0,
   });
   const revealed = useMemo(() => new Set(found), [found]);
   const completeSet = useMemo(
@@ -449,8 +467,13 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   const submit = useCallback(() => {
     if (!word) return;
     setGuessed(true);
-    const res = rules.checkGuess(word, puzzle, found);
-    if (res.ok) {
+    const res = rules.checkGuess(word, puzzle, found, bonusFound);
+    if (isBonusSuccess(res)) {
+      setClueMode(false);
+      setBonusFound([...bonusFound, res.word]);
+      play('bonus-word');
+      showToast(`${res.word.toUpperCase()} — bonus word!`, 'good');
+    } else if (res.ok) {
       setClueMode(false);
       const next = [...found, res.word];
       const before = progressFor(found.length, puzzle.pool.length).stars;
@@ -464,7 +487,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
         afterComplete,
       );
       let autoToken: number | undefined;
-      if (view.current.mobile && !browsingWords.current) {
+      if (shouldAutoOpenWordTray(res) && view.current.mobile && !browsingWords.current) {
         autoToken = autoDismiss.current.begin();
         view.current.wordsOpen = true;
         setWordsOpen(true);
@@ -483,19 +506,21 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           setCelebrate(true);
         });
     } else {
-      play(res.reason === 'already-found' ? 'already-found' : 'error');
-      if (res.reason === 'already-found') {
+      play(isRepeatGuess(res) ? 'already-found' : 'error');
+      if (isRepeatGuess(res)) {
         showToast(`${word.toUpperCase()} already found!`, 'info');
-        const el = listRef.current?.querySelector<HTMLElement>(`[data-word="${word}"]`);
-        if (el && (!view.current.mobile || view.current.wordsOpen)) {
-          void (async () => {
-            if (autoScroll.current) await ensureInView(el);
-            const scroller = el.closest<HTMLElement>('.bottom-sheet__scroll');
-            if (view.current.mobile && view.current.wordsOpen && scroller) {
-              await ensureInScrollContainer(el, scroller);
-            }
-            await attentionFlash(el, { times: 3 });
-          })();
+        if (shouldFlashOfficialRow(res)) {
+          const el = listRef.current?.querySelector<HTMLElement>(`[data-word="${word}"]`);
+          if (el && (!view.current.mobile || view.current.wordsOpen)) {
+            void (async () => {
+              if (autoScroll.current) await ensureInView(el);
+              const scroller = el.closest<HTMLElement>('.bottom-sheet__scroll');
+              if (view.current.mobile && view.current.wordsOpen && scroller) {
+                await ensureInScrollContainer(el, scroller);
+              }
+              await attentionFlash(el, { times: 3 });
+            })();
+          }
         }
       } else {
         showToast(MESSAGES[res.reason], 'bad');
@@ -506,10 +531,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     word,
     puzzle,
     found,
+    bonusFound,
     rules,
     MESSAGES,
     progressFor,
     setFound,
+    setBonusFound,
     showToast,
     animateWord,
     animateStar,
@@ -567,7 +594,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
             gameId={GAME_ID}
             seed={seed}
             version={vid}
-            started={guessed || found.length > 0}
+            started={guessed || found.length > 0 || bonusFound.length > 0}
             after={
               <GameSettingsButton
                 gameId={GAME_ID}
@@ -657,7 +684,9 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
               browseWords();
             }}
           >
-            Words · {found.length}/{puzzle.pool.length}
+            {puzzle.bonusPool
+              ? `Words · ${found.length}/${puzzle.pool.length} · Bonus ${bonusFound.length}`
+              : `Words · ${found.length}/${puzzle.pool.length}`}
           </Button>
         </Panel>
 
@@ -693,6 +722,14 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                       {(latest ?? found.at(-1))?.toUpperCase() ?? '—'}
                     </strong>
                   </span>
+                  {puzzle.bonusPool && (
+                    <BonusCounter
+                      className="lw__bonus"
+                      count={bonusFound.length}
+                      words={bonusFound}
+                      showWords
+                    />
+                  )}
                   {clueMode && (
                     <span className="lw__clue-hint" role="status">
                       Tap a blank for a clue
@@ -729,6 +766,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                       return {
                         found: cur.found,
                         clues: applyClue(cur.clues, w, new Set(cur.found)),
+                        bonus: cur.bonus,
                       };
                     });
                     play('copy');

@@ -41,6 +41,10 @@ const len: Record<number, number> = {};
 rows.forEach((r) => (len[r.p.target.length] = (len[r.p.target.length] ?? 0) + 1));
 console.log('target lengths', len);
 const ex = generatePuzzle('K7Q2MX', dict);
+const bonus =
+  'bonusPool' in ex && Array.isArray((ex as { bonusPool?: string[] }).bonusPool)
+    ? ` bonus=${(ex as { bonusPool: string[] }).bonusPool.length}`
+    : '';
 console.log(
-  `example K7Q2MX: ${ex.target} required=${ex.required} pool=${ex.pool.length} attempts=${ex.attempts}`,
+  `example K7Q2MX: ${ex.target} required=${ex.required} pool=${ex.pool.length}${bonus} attempts=${ex.attempts}`,
 );

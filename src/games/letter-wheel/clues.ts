@@ -11,9 +11,11 @@ export type ClueMap = Readonly<Record<string, ClueLevel>>;
 export interface PuzzleProgress {
   found: string[];
   clues: ClueMap;
+  /** Bonus words found on this seed (beta). Missing on older saves. */
+  bonus: string[];
 }
 
-export const EMPTY_PROGRESS: PuzzleProgress = { found: [], clues: {} };
+export const EMPTY_PROGRESS: PuzzleProgress = { found: [], clues: {}, bonus: [] };
 
 /** Accept a legacy bare found-array or a progress object. */
 export function parseProgress(raw: unknown): PuzzleProgress {
@@ -21,6 +23,7 @@ export function parseProgress(raw: unknown): PuzzleProgress {
     return {
       found: raw.filter((w): w is string => typeof w === 'string'),
       clues: {},
+      bonus: [],
     };
   }
   if (!raw || typeof raw !== 'object') return EMPTY_PROGRESS;
@@ -28,13 +31,16 @@ export function parseProgress(raw: unknown): PuzzleProgress {
   const found = Array.isArray(r.found)
     ? r.found.filter((w): w is string => typeof w === 'string')
     : [];
+  const bonus = Array.isArray(r.bonus)
+    ? r.bonus.filter((w): w is string => typeof w === 'string')
+    : [];
   const clues: Record<string, ClueLevel> = {};
   if (r.clues && typeof r.clues === 'object' && !Array.isArray(r.clues)) {
     for (const [w, n] of Object.entries(r.clues as Record<string, unknown>)) {
       if (n === 1 || n === 2) clues[w] = n;
     }
   }
-  return { found, clues };
+  return { found, clues, bonus };
 }
 
 export function clueLevel(clues: ClueMap, word: string): ClueLevel {

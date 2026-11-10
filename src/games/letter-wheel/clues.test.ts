@@ -25,12 +25,22 @@ describe('clues', () => {
   });
 
   it('parseProgress accepts legacy found arrays and progress objects', () => {
-    expect(parseProgress(['able', 'bake'])).toEqual({ found: ['able', 'bake'], clues: {} });
+    expect(parseProgress(['able', 'bake'])).toEqual({
+      found: ['able', 'bake'],
+      clues: {},
+      bonus: [],
+    });
     expect(parseProgress({ found: ['able'], clues: { plant: 1, x: 9 } })).toEqual({
       found: ['able'],
       clues: { plant: 1 },
+      bonus: [],
     });
-    expect(parseProgress(null)).toEqual({ found: [], clues: {} });
+    expect(parseProgress({ found: ['able'], clues: {}, bonus: ['color', 3, 'gray'] })).toEqual({
+      found: ['able'],
+      clues: {},
+      bonus: ['color', 'gray'],
+    });
+    expect(parseProgress(null)).toEqual({ found: [], clues: {}, bonus: [] });
   });
 
   it('pruneClues drops entries for found words', () => {

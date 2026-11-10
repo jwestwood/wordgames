@@ -59,7 +59,7 @@ describe.each(ALL_VERSIONS.filter((v) => v === 'beta' || v >= 2))('rules %s word
     },
   );
 
-  it.skipIf(v === 2)('v3+ GSP0MH is debating / i (20–40 pool + letter coverage)', () => {
+  it.skipIf(v !== 3)('v3 GSP0MH is debating / i (20–40 pool + letter coverage)', () => {
     const rules = rulesFor(v);
     const p = rules.generate('GSP0MH', rules.prepare(wordsFor(v)));
     expect([p.target, p.required]).toEqual(['debating', 'i']);
@@ -89,5 +89,34 @@ describe('beta rules', () => {
     expect(letterShortfall('exam', ['exam', 'maxe', 'amex', 'mame'])).toBe(0);
     expect(letterShortfall('exam', ['exam', 'mame', 'meam'])).toBe(2); // x appears once
     expect(letterShortfall('aab', ['aab', 'aa', 'ba'])).toBe(1); // b in 2 words
+  });
+});
+
+describe('beta bonus words', () => {
+  it('accepts bonus words without counting them as official answers', () => {
+    const rules = rulesFor('beta');
+    const dict = rules.prepare(wordsFor('beta'));
+    const p = rules.generate('GSP0MH', dict);
+    expect(p.passed).toBe(true);
+    expect(p.bonusPool!.length).toBeGreaterThan(0);
+    const w = p.bonusPool![0];
+    expect(p.pool).not.toContain(w);
+    expect(rules.checkGuess(w, p, [])).toEqual({ ok: true, word: w, bonus: true });
+    expect(rules.checkGuess(w, p, [], [w])).toEqual({ ok: false, reason: 'already-found-bonus' });
+    const official = p.pool[0];
+    expect(rules.checkGuess(official, p, [])).toEqual({ ok: true, word: official });
+  });
+
+  it('keeps official pools in 20-40 and letter coverage, with a bonus pool', () => {
+    const rules = rulesFor('beta');
+    const dict = rules.prepare(wordsFor('beta'));
+    for (const seed of ['GSP0MH', 'K7Q2MX', '000000', 'A1B2C3']) {
+      const p = rules.generate(seed, dict);
+      expect(p.passed).toBe(true);
+      expect(p.pool.length).toBeGreaterThanOrEqual(20);
+      expect(p.pool.length).toBeLessThanOrEqual(40);
+      expect(p.bonusPool).toBeDefined();
+      expect(p.bonusPool!.every((w) => !p.pool.includes(w))).toBe(true);
+    }
   });
 });

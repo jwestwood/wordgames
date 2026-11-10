@@ -5,7 +5,8 @@
     "words": {
       "common": "src/core/words/data/common.txt",
       "extended": "src/core/words/data/extended.txt",
-      "targets": "src/core/words/data/targets.txt"
+      "targets": "src/core/words/data/targets.txt",
+      "bonus": "src/core/words/data/bonus.txt"
     }
   },
   "versions": [

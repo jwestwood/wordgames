@@ -19,14 +19,22 @@ export interface LetterWheelRules {
   /** Build indexes from the version's named word lists (names come from the manifest). */
   prepare(words: WordLists): Dictionaries;
   generate(seed: string, dict: Dictionaries): Puzzle;
-  checkGuess(guess: string, puzzle: Puzzle, found: readonly string[]): GuessResult;
+  checkGuess(
+    guess: string,
+    puzzle: Puzzle,
+    found: readonly string[],
+    bonusFound?: readonly string[],
+  ): GuessResult;
   stars(found: number, total: number): number;
   STAR_THRESHOLDS: readonly number[];
   MIN_WORD: number;
 }
 export type WordLists = Readonly<Record<string, readonly string[]>>;
-export type Puzzle = RulesV1.Puzzle;
-export type GuessResult = RulesV1.GuessResult;
+export type Puzzle = RulesV1.Puzzle & { bonusPool?: readonly string[] };
+export type GuessResult =
+  | RulesV1.GuessResult
+  | { ok: true; word: string; bonus: true }
+  | { ok: false; reason: 'already-found-bonus' };
 export type Dictionaries = RulesV1.Dictionaries;
 
 export const manifest = manifestJson as VersionManifest;
@@ -40,6 +48,7 @@ const loader = createVersionedLoader<LetterWheelRules>({
     common: () => loadTier('common'),
     extended: () => loadTier('extended'),
     targets: () => loadTier('targets'),
+    bonus: () => loadTier('bonus'),
   },
 });
 

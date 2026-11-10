@@ -1,70 +1,176 @@
 #!/usr/bin/env python3
 """Build curated word lists for src/core/words/data/. See scripts/README.md.
 
-Usage: python3 scripts/build-wordlist.py /path/to/scowl-2020.12.07
+Usage:
+  python3 scripts/build-wordlist.py
+  python3 scripts/build-wordlist.py --out src/core/words/data --store-hashed
+
 Requires: pip install wordfreq  (tested with wordfreq 3.x)
 """
-import os, re, sys
+from __future__ import annotations
+
+import argparse
+import hashlib
+import os
+import re
+import sys
 from wordfreq import zipf_frequency
 
-SCOWL = sys.argv[1] if len(sys.argv) > 1 else '/tmp/scowl-2020.12.07'
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, 'src/core/words/data')
-MIN_LEN, MAX_LEN = 3, 12
-# tier: (max SCOWL size, min Zipf frequency)
-# v1 used common (35, 3.3); loosened to 2.6 so everyday words like pant, veal, antler count.
-TIERS = {'common': (35, 2.6), 'extended': (50, 2.5)}
-# Spelling-neutral + British-specific lists only (American-only spellings excluded).
-FAMILIES = ['english-words', 'british-words']
-SIZES = [10, 20, 35, 40, 50]
-VALID = re.compile(r'^[a-z]+$')
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+SOURCES = os.path.join(HERE, "wordlist-sources")
+VALID = re.compile(r"^[a-z]+$")
+# 12dicts annotation suffixes on 3of6game ($ + ! ^ & and rare others).
+ANNOTATION = re.compile(r"[:$+!^&=#%;>~]+$")
 
-def read(path):
-    with open(path, encoding='latin-1') as f:
+# Official answers: 12dicts 3of6game, British forms, Zipf at or above this floor.
+# Targets stay at 3.3 so the pangram is familiar. 2.2 is a mild floor on a list
+# that is already a learner-dictionary intersection (see docs/DICTIONARY_OPTIONS.md).
+COMMON_ZIPF = 2.2
+TARGET_ZIPF = 3.3
+MIN_LEN, MAX_LEN = 3, 12
+
+
+def read_lines(path, encoding="utf-8"):
+    with open(path, encoding=encoding) as f:
         return [l.strip() for l in f]
 
-size_of = {}
-for fam in FAMILIES:
-    for s in SIZES:
-        p = os.path.join(SCOWL, 'final', f'{fam}.{s}')
-        if not os.path.exists(p):
+
+def parse_list(path, encoding="utf-8"):
+    words = []
+    for raw in read_lines(path, encoding):
+        if not raw or raw.startswith("#"):
             continue
-        for w in read(p):
-            if VALID.match(w):  # drops capitalised proper nouns, apostrophes, accents
-                size_of[w] = min(size_of.get(w, 99), s)
+        words.append(raw.split()[0].lower())
+    return words
 
-here = os.path.dirname(os.path.abspath(__file__))
-bad = {w.lower() for w in read(os.path.join(here, 'wordlist-sources/ldnoobw-en.txt')) if w}
-bad |= {w for w in read(os.path.join(here, 'wordlist-sources/extra-blocklist.txt')) if w and not w.startswith('#')}
 
-# Hand-picked everyday words the frequency data under-rates (e.g. regular agent nouns: leaper).
-allow = {w for w in read(os.path.join(here, 'wordlist-sources/extra-allowlist.txt')) if w and not w.startswith('#')}
-for w in allow:
-    if VALID.match(w):
-        size_of[w] = min(size_of.get(w, 99), 10)
+def parse_3of6game(path):
+    words = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            raw = line.strip().lower()
+            if not raw:
+                continue
+            w = ANNOTATION.sub("", raw)
+            if VALID.match(w):
+                words.append(w)
+    return words
 
-tiers = {t: [] for t in TIERS}
-for w, s in sorted(size_of.items()):
-    if not (MIN_LEN <= len(w) <= MAX_LEN) or w in bad:
-        continue
-    if not re.search(r'[aeiouy]', w):  # vowel-less strings are abbreviations (e.g. "nth", "tbsp")
-        continue
-    z = 99 if w in allow else zipf_frequency(w, 'en')
-    for t, (maxsize, minz) in TIERS.items():
-        if s <= maxsize and z >= minz:
-            tiers[t].append(w)
-            break
 
-# Letter Wheel targets (the full-wheel word): stricter than common so the pangram is always familiar.
-# SCOWL <= 35 and Zipf >= 3.3 -- identical to the v1 common tier (allowlist words excluded).
-TARGETS = (35, 3.3)
-tiers['targets'] = [w for w in tiers['common']
-                    if w not in allow and size_of[w] <= TARGETS[0] and zipf_frequency(w, 'en') >= TARGETS[1]]
+def usable(w):
+    return MIN_LEN <= len(w) <= MAX_LEN and bool(re.search(r"[aeiouy]", w))
 
-os.makedirs(OUT, exist_ok=True)
-for t, words in tiers.items():
-    with open(os.path.join(OUT, f'{t}.txt'), 'w') as f:
-        f.write('\n'.join(words) + '\n')
-    print(t, len(words))
-for L in range(MIN_LEN, MAX_LEN + 1):
-    print(L, *(sum(1 for w in tiers[t] if len(w) == L) for t in tiers))
+
+def write_list(path, words):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(words) + "\n")
+
+
+def content_hash(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        h.update(f.read())
+    return h.hexdigest()[:16]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", default=os.path.join(ROOT, "src/core/words/data"))
+    ap.add_argument(
+        "--game",
+        default=os.path.join(SOURCES, "12dicts-6.0.2-3of6game.txt"),
+        help="path to 12dicts 6.0.2 International/3of6game.txt",
+    )
+    ap.add_argument(
+        "--american-only",
+        default=os.path.join(SOURCES, "scowl-2020.12.07-american-only.txt"),
+    )
+    ap.add_argument(
+        "--store-hashed",
+        action="store_true",
+        help="copy each output list to src/versioned/words/<sha256-16>.txt",
+    )
+    args = ap.parse_args()
+
+    bad = {w.lower() for w in read_lines(os.path.join(SOURCES, "ldnoobw-en.txt")) if w}
+    bad |= {
+        w
+        for w in read_lines(os.path.join(SOURCES, "extra-blocklist.txt"))
+        if w and not w.startswith("#")
+    }
+    allow = {
+        w
+        for w in read_lines(os.path.join(SOURCES, "extra-allowlist.txt"))
+        if w and not w.startswith("#")
+    }
+    amer_only = {w for w in parse_list(args.american_only) if VALID.match(w)}
+
+    game = []
+    seen = set()
+    for w in parse_3of6game(args.game):
+        if w in seen or w in bad or not usable(w):
+            continue
+        seen.add(w)
+        game.append(w)
+
+    # Everyday words the frequency data under-rates (e.g. leaper).
+    for w in sorted(allow):
+        if VALID.match(w) and usable(w) and w not in bad and w not in seen:
+            seen.add(w)
+            game.append(w)
+
+    def zipf(w):
+        return 99.0 if w in allow else zipf_frequency(w, "en")
+
+    common, bonus = [], []
+    for w in sorted(seen):
+        if w in amer_only:
+            bonus.append(w)
+            continue
+        if zipf(w) >= COMMON_ZIPF:
+            common.append(w)
+        else:
+            bonus.append(w)
+
+    targets = [
+        w
+        for w in common
+        if w not in allow and zipf_frequency(w, "en") >= TARGET_ZIPF
+    ]
+
+    # extended: bonus words only, so loadWords('extended') can still mean common + wider.
+    extended = list(bonus)
+
+    tiers = {
+        "common": common,
+        "targets": targets,
+        "bonus": bonus,
+        "extended": extended,
+    }
+    os.makedirs(args.out, exist_ok=True)
+    hashed = os.path.join(ROOT, "src/versioned/words")
+    for name, words in tiers.items():
+        path = os.path.join(args.out, f"{name}.txt")
+        write_list(path, words)
+        digest = content_hash(path)
+        print(f"{name} {len(words)} {digest}")
+        if args.store_hashed:
+            dest = os.path.join(hashed, f"{digest}.txt")
+            if not os.path.exists(dest):
+                with open(path, "rb") as src, open(dest, "wb") as out:
+                    out.write(src.read())
+                print(f"  stored {dest}")
+            else:
+                print(f"  exists {dest}")
+    for L in range(MIN_LEN, MAX_LEN + 1):
+        print(L, *(sum(1 for w in tiers[t] if len(w) == L) for t in tiers))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except ModuleNotFoundError as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)

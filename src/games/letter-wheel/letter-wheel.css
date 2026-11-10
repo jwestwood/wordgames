@@ -169,6 +169,12 @@
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
+.lw__bonus {
+  flex: 1 0 100%;
+}
+.lw__bonus .bonus-counter__list {
+  font-size: var(--text-sm);
+}
 .lw__clue--on {
   background: var(--color-green);
   color: var(--color-text-inverse);
