@@ -147,11 +147,22 @@
   gap: var(--space-2);
 }
 
-.lw__words-head {
+.lw__words-toolbar {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   margin-bottom: var(--space-2);
+}
+.lw__words-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+.lw__words-progress {
+  display: none;
 }
 .lw__last-word {
   margin-right: auto;
@@ -412,21 +423,113 @@
     width: 100%;
     height: 40px;
   }
+  .app--letter-wheel .bottom-sheet__head {
+    padding: 8px 12px;
+  }
+  .app--letter-wheel .bottom-sheet__head h2 {
+    font-size: var(--text-md);
+  }
+  .app--letter-wheel .bottom-sheet__scroll {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    padding: 8px;
+  }
   .app--letter-wheel .lw__words {
     border: 0;
     box-shadow: none;
-    padding: 3px;
+    padding: 0;
     background: none;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  .app--letter-wheel .lw__words-head {
-    flex-wrap: wrap;
+  .app--letter-wheel .lw__words-toolbar {
+    flex: none;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+    min-height: 40px;
   }
+  .app--letter-wheel .lw__words-status {
+    align-items: center;
+    gap: 4px 10px;
+  }
+  .app--letter-wheel .lw__words-progress {
+    display: inline;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+  .app--letter-wheel .lw__words-progress strong {
+    font-family: var(--font-accent);
+    font-weight: var(--weight-medium);
+    color: var(--color-ink);
+  }
+  .app--letter-wheel .lw__last-word {
+    margin-right: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .app--letter-wheel .lw__bonus {
+    flex: 0 1 auto;
+  }
+  /* Keep announced, but do not add a row or change toolbar size in clue mode. */
   .app--letter-wheel .lw__clue-hint {
-    order: 3;
-    width: 100%;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .app--letter-wheel .lw__clue {
+    flex: none;
+    height: 40px;
+    min-height: 40px;
+  }
+  .app--letter-wheel .lw__words-scroller {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app--letter-wheel .lw__letters {
+    flex: none;
+  }
+  .app--letter-wheel .lw__letters .letter-strip {
+    margin-top: 0;
+    padding-top: 8px;
+  }
+  .app--letter-wheel .lw__letters .letter-strip__tile {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  /* Two columns fill a 375px tray; 10 letters at 1rem + 1px gaps still fit. */
+  .app--letter-wheel .bottom-sheet {
+    --word-slot-cell: 1rem;
+    --word-slot-gap: 1px;
   }
   .app--letter-wheel .bottom-sheet .word-slots {
-    font-size: 1rem;
+    columns: 2;
+    column-gap: 8px;
+  }
+  .app--letter-wheel .bottom-sheet .word-slots__item {
+    margin-bottom: 6px;
+  }
+  .app--letter-wheel .bottom-sheet .word-slots__cell {
+    width: var(--word-slot-cell);
+    height: 1.25rem;
+    font-size: 0.8rem;
   }
 }
 

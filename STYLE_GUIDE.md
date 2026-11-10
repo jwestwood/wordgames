@@ -183,13 +183,20 @@ reference-counted body lock survive until exit completes. Then it hides the root
 without scrolling. Escape/backdrop/clear close remain available through exit. Interruptions snapshot
 the live transform; stale animation completions cannot hide a reopened sheet. Reduced motion/no
 WAAPI completes immediately; a 360ms fallback prevents a stranded exit. Inline desktop clears the
-sheet transform. `.bottom-sheet__scroll` owns scrolling and overscroll containment; header/close
-remain outside it. The Style Guide includes manual sliding-sheet and ink-reveal demos.
+sheet transform. Header/close remain outside the scroll surface. On mobile Letter Wheel the
+sheet body is a column: a compact toolbar, a list scroller (`.lw__words-scroller`), and a
+fixed LETTERS footer. `.bottom-sheet__scroll` no longer scrolls that column as a whole;
+the list scroller owns overflowing words and overscroll containment. The Style Guide includes
+manual sliding-sheet and ink-reveal demos.
 
 Letter Wheel's solid green, inverse-text **primary** `Words · found/total` opener remains 40px, with
 normal focus/hover feedback and no movement. On beta the same 40px button also shows `· Bonus N`.
-The tray contains the existing list, Clue, last word, the `BonusCounter` (count plus found bonus
-words) and LETTERS strip — no duplicate IDs or competing hidden targets. Mobile never page-auto-scrolls.
+The tray stacks a compact toolbar (found/total, last word, Clue, and on beta a collapsible
+`BonusCounter`), the official word list in two columns, and a compact LETTERS strip pinned to the
+bottom of the sheet — no duplicate IDs or competing hidden targets. Bonus words stay behind the
+disclosure so they do not push the list down. Clue stays 40px and clue mode does not change
+element sizes. Mobile never page-auto-scrolls. Desktop keeps the side-by-side list, with the
+bonus list expanded and LETTERS following the words.
 
 **Automatic discovery sequence:** slide open completely → internally scroll blank into view →
 ink reveal (495–600ms for 4–10 letters) + one rich themed word-found sound at the start → 750ms
@@ -213,7 +220,8 @@ animates it. Only ink transforms (perspective flip), opacity/filter and row back
 visibility gate waits for the sheet's `open` phase before scrolling/revealing, then checks viewport
 **and** scroll clipping. Phase gates are bounded to 600ms; row visibility has a 250ms grace period.
 Closed/offscreen targets complete found state without motion or stale replay, so they cannot hold
-the shared celebration queue. Desktop auto-scroll off never scrolls to an offscreen row. Saved found
+the shared celebration queue. Desktop always scrolls the page to a new official row; mobile
+scrolls only the tray list. Saved found
 words always load normally, without auto-opening/revealing. Abort on unmount cancels waits/ink
 animations; the AutoDismiss lease cancels its readable hold. The ALERT demo resets/replays only
 when explicitly requested.

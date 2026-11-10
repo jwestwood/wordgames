@@ -172,17 +172,16 @@ unknown keys are ignored, invalid/missing values fall back to the default, and o
 are written. In the game:
 
 ```tsx
-const { values } = useGameSettings(GAME_ID, MY_SETTINGS); // typed: values.autoScroll is boolean
+const { values } = useGameSettings(GAME_ID, MY_SETTINGS); // typed: values.keepWrongGuesses is boolean
 <GameSettingsButton gameId={GAME_ID} definitions={MY_SETTINGS} />; // cog next to the seed field
 ```
 
 `GameSettingsButton` renders nothing when there are no settings and opens the core `SettingsPanel`
 (Modal, auto-rendered from the schema, Reset to defaults). Mute is **not** a setting: it stays the
-global header button. Letter Wheel: `autoScroll` (default on) — when off, the found-word animation never
-scrolls; an off-screen word pops and fades over the wheel (`popElement`), and stars only fly if the
-score card is visible (`isInView`), otherwise they just fill. `keepWrongGuesses` (default off) keeps
-an incorrect guess in the input, turns its tiles red, and disables Guess until a letter is added or
-removed.
+global header button. Letter Wheel: `keepWrongGuesses` (default off) keeps an incorrect guess in
+the input, turns its tiles red, and disables Guess until a letter is added or removed. A retired
+`autoScroll` key in older saves is ignored and dropped; desktop always scrolls to a new official
+find, and mobile keeps the fixed one-screen table.
 
 ## Deployment
 

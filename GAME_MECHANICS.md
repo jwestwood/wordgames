@@ -80,8 +80,10 @@ How you can tell how you are doing, and what “done enough” means.
 
 Below 860px, Letter Wheel is a fixed, one-screen table: compact branding and seed controls,
 progress/stars, wheel, guess and 40px controls remain on the base screen. **Words · 12/30**
-shows the live found/total count and opens a paper bottom tray with the existing word list,
-Clue button, last-word reminder and LETTERS strip. It slides up from the bottom in **280ms**,
+shows the live found/total count and opens a paper bottom tray. Inside, a compact header holds
+progress, the last-word reminder, a collapsible bonus count (on beta) and the Clue button; the
+word list fills the remaining space in two tight columns; the LETTERS strip stays at the bottom.
+It slides up from the bottom in **280ms**,
 and slides down before it is hidden. Every **new official discovery** opens it automatically,
 scrolls only its internal surface to the blank, reveals the word with a satisfying themed sound,
 holds the finished word for **750ms**, then slides closed. Invalid and already-found guesses do
@@ -156,29 +158,28 @@ _Strategy, lightly._ A fresh arrangement can break fixation — you notice stems
 
 The list header shows the most recently found word (“Last word: …”), including across a reload.
 
-_Comfort / light strategy._ On a long list, or with auto-scroll off, it answers “what did I just find?” It is not a hint about remaining words.
+_Comfort / light strategy._ On a long list it answers “what did I just find?” It is not a hint
+about remaining words.
 
-### Scroll-to-found setting
+### Discovery scrolling
 
-Letter Wheel’s settings cog has two toggles. **Scroll to found words** is on by default.
-On desktop, when on, a new word scrolls into view before its in-place reveal. When off,
-the page stays put: an off-screen new word is filled without motion rather than delaying other
-celebrations. The found count and percentage update immediately.
-On mobile, page auto-scroll is **always off**, regardless of this saved setting. Each new valid
-word opens the Words tray and scrolls **only its internal surface** to the new blank before revealing.
-An automatic tray closes after the reveal and readable hold unless you start browsing it.
-If you deliberately close it before the reveal starts, the word fills without motion; no stale
-reveal reopens the tray. Visibility races are bounded, so stars,
-letter-complete celebrations and perfect completion never wait for a hidden word. The progress plaque stays
-on the base screen, outside the tray. Completed-letter tiles still fly to a visible LETTERS strip
-or pop over the wheel when the tray is closed.
+There is no setting for page scrolling. On desktop, a new official word, a re-guessed official
+word, and letter-complete or star celebrations scroll the page so their target is in view, then
+play as before. On mobile, the one-screen table keeps the document fixed (the Firefox viewport
+lock); each new official word opens the Words tray and scrolls **only the list inside the tray**
+to the new blank before revealing. An automatic tray closes after the reveal and readable hold
+unless you start browsing it. If you deliberately close it before the reveal starts, the word
+fills without motion; no stale reveal reopens the tray. Visibility races are bounded, so stars,
+letter-complete celebrations and perfect completion never wait for a hidden word. The progress
+plaque stays on the base screen, outside the tray. Completed-letter tiles still fly to a visible
+LETTERS strip or pop over the wheel when the tray is closed.
 
-_Comfort._ This does not change the puzzle. On desktop, turn it off to keep the page still.
-Mobile always keeps the page still, while the tray handles discoveries.
+_Comfort._ This does not change the puzzle. Mobile always keeps the page still, while the tray
+handles discoveries.
 
 ### Keep wrong guesses
 
-**Keep wrong guesses** is off by default. When on, an incorrect guess (too short, missing the
+Letter Wheel’s settings cog has one toggle, **Keep wrong guesses**, off by default. When on, an incorrect guess (too short, missing the
 centre letter, or not in the word list) stays in the input. Its tiles turn red (the `error`
 state) and Guess — including Enter — stays disabled until you add or remove a letter. As soon as
 the input changes, the red styling clears and Guess is enabled again. The existing error toast
@@ -206,7 +207,7 @@ _Feedback._ The messages name the failure mode so you can adjust (too short vs m
 ### Re-guess flash
 
 Submitting a word you have already found plays a distinct sound and toasts `WORD already found!`.
-It pulses the row if the list is visible (on desktop, scrolling to it if auto-scroll is on;
+It pulses the row if the list is visible (on desktop, scrolling the page to it;
 on mobile, scrolling only inside an open Words tray). A closed tray stays closed.
 
 _Feedback, with a small use._ If you cannot remember whether you already entered something, submitting it again _finds it for you_ in the list. That is bookkeeping, not a new scoring trick.

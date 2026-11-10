@@ -31,8 +31,8 @@ import { contrastRatio } from './theme/contrast';
 
 const DEMO_SETTINGS: readonly SettingDefinition[] = [
   {
-    key: 'autoScroll',
-    label: 'Scroll to found words',
+    key: 'hints',
+    label: 'Show hints',
     type: 'toggle',
     default: true,
   },
@@ -383,10 +383,11 @@ export function StyleGuide({ games = [] }: { games?: readonly GameDefinition[] }
         <p>
           Letter Wheel below 860px uses a fixed viewport table: wheel, guess, stars and a Words
           count stay on screen. The paper tray slides up/down in 280ms, keeping focus and scroll
-          lock through exit. A discovery auto-opens, reveals, holds 750ms, then closes; interacting
-          with it keeps it open for browsing. This manual demo stays open until closed. Internal
-          scroll and clue state survive closing; the base page never auto-scrolls. Desktop stays
-          side-by-side.
+          lock through exit. Inside, a compact toolbar holds progress, last word, Clue and a
+          collapsible bonus count; the word list fills two columns; LETTERS stays at the bottom. A
+          discovery auto-opens, reveals, holds 750ms, then closes; interacting with it keeps it open
+          for browsing. This manual demo stays open until closed. Internal scroll and clue state
+          survive closing; the base page never auto-scrolls. Desktop stays side-by-side.
         </p>
         <Button variant="primary" onClick={() => setTrayOpen(true)}>
           Words · 2/6

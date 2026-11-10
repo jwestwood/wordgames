@@ -103,6 +103,45 @@ describe('mobile layout contracts (visual checks still required)', () => {
       'overscroll-behavior': 'contain',
     });
   });
+  it('packs the mobile words tray so the list fills remaining sheet space', () => {
+    expect(declarations('.app--letter-wheel .bottom-sheet__scroll')).toMatchObject({
+      display: 'flex',
+      'flex-direction': 'column',
+      overflow: 'hidden',
+      padding: '8px',
+    });
+    expect(declarations('.app--letter-wheel .lw__words')).toMatchObject({
+      display: 'flex',
+      'flex-direction': 'column',
+      flex: '1',
+      'min-height': '0',
+    });
+    expect(declarations('.app--letter-wheel .lw__words-toolbar')).toMatchObject({
+      'min-height': '40px',
+      'margin-bottom': '0',
+    });
+    expect(declarations('.app--letter-wheel .lw__clue')).toMatchObject({
+      height: '40px',
+      'min-height': '40px',
+    });
+    expect(declarations('.app--letter-wheel .lw__words-scroller')).toMatchObject({
+      'overflow-y': 'auto',
+      'min-height': '0',
+    });
+    expect(declarations('.app--letter-wheel .lw__letters').flex).toBe('none');
+    expect(declarations('.app--letter-wheel .bottom-sheet')).toMatchObject({
+      '--word-slot-cell': '1rem',
+      '--word-slot-gap': '1px',
+    });
+    expect(declarations('.app--letter-wheel .bottom-sheet .word-slots')).toMatchObject({
+      columns: '2',
+      'column-gap': '8px',
+    });
+    // 375px tray: 8px padding each side, 8px column gap, 10 letters at 1rem + 9px gaps.
+    const column = (375 - 16 - 8) / 2;
+    const tenLetter = 10 * 16 + 9 * 1;
+    expect(tenLetter).toBeLessThanOrEqual(column);
+  });
   it('scopes the redesign below 860px only', () => {
     css.walkRules((rule) => {
       if (rule.selector.startsWith('.app--letter-wheel')) {

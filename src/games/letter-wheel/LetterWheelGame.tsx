@@ -19,7 +19,7 @@ import {
 import { useHistoryEntry } from '@core/history';
 import { pickTier, useSound } from '@core/audio';
 import { useGameSettings } from '@core/settings';
-import { LETTER_WHEEL_SETTINGS } from './settings';
+import { dropRetiredLetterWheelSettings, LETTER_WHEEL_SETTINGS } from './settings';
 import { submitGuessOnEnter } from './keyboard';
 import { toWheelPreview } from './preview';
 import {
@@ -88,6 +88,16 @@ import './letter-wheel.css';
 
 const CENTRE = -1;
 const GAME_ID = 'letter-wheel';
+
+function trayScroller(el: Element): HTMLElement | null {
+  return (
+    el.closest<HTMLElement>('.lw__words-scroller') ??
+    el.closest<HTMLElement>('.bottom-sheet__scroll')
+  );
+}
+
+if (typeof window !== 'undefined') dropRetiredLetterWheelSettings();
+
 const messages = (
   minWord: number,
 ): Record<Exclude<GuessResult, { ok: true }>['reason'], string> => ({
@@ -236,8 +246,6 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
   );
   const play = useSound();
   const { values: settings } = useGameSettings(GAME_ID, LETTER_WHEEL_SETTINGS);
-  const autoScroll = useRef(settings.autoScroll);
-  autoScroll.current = !mobile && settings.autoScroll;
   const submitLocked = settings.keepWrongGuesses && isGuessSubmitLocked(rejectedGuess, guess);
   const queue = useRef(createAnimationQueue());
   const wheelRef = useRef<HTMLDivElement>(null);
@@ -346,15 +354,15 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       let visible = false;
       if (ready && slot) {
         if (view.current.mobile) {
-          const scroller = slot.closest<HTMLElement>('.bottom-sheet__scroll');
+          const scroller = trayScroller(slot);
           if (scroller) await ensureInScrollContainer(slot, scroller);
-        } else if (autoScroll.current) await ensureInView(slot);
-        // A closed tray or offscreen desktop row with auto-scroll off completes silently.
-        // Other clipping/visibility races get a short bounded grace period, not an endless wait.
+        } else {
+          await ensureInView(slot);
+        }
+        // A closed tray completes silently. Other clipping/visibility races get a short
+        // bounded grace period, not an endless wait.
         visible = await waitForRevealVisibility(() => isRevealTargetVisible(slot), signal, {
-          shouldStop: () =>
-            trayClosed() ||
-            (!view.current.mobile && !autoScroll.current && !isRevealTargetVisible(slot)),
+          shouldStop: () => trayClosed(),
         });
       }
       if (signal.aborted) return;
@@ -406,8 +414,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
     async (i: number) => {
       const wheel = wheelRef.current;
       const slot = cardRef.current?.querySelector<HTMLElement>(`[data-star-slot="${i}"]`);
-      if (wheel && slot && (autoScroll.current || isInView(slot))) {
-        if (autoScroll.current) await ensureInView(slot);
+      if (wheel && slot && (!view.current.mobile || isInView(slot))) {
+        if (!view.current.mobile) await ensureInView(slot);
         const wr = wheel.getBoundingClientRect();
         const from = centredRect(wr, wr.width * 0.4, wr.width * 0.4);
         const holder = document.createElement('div');
@@ -440,12 +448,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
       } else if (
         wheel &&
         tile &&
-        ((view.current.mobile && view.current.wordsOpen) || autoScroll.current || isInView(tile))
+        (!view.current.mobile || view.current.wordsOpen || isInView(tile))
       ) {
         // Cache the visible size before an awaited scroll: closing the tray may hide the tile.
         const landingSize = tile.getBoundingClientRect().width;
-        if (autoScroll.current) await ensureInView(tile);
-        const scroller = tile.closest<HTMLElement>('.bottom-sheet__scroll');
+        if (!view.current.mobile) await ensureInView(tile);
+        const scroller = trayScroller(tile);
         if (view.current.mobile && view.current.wordsOpen && scroller) {
           await ensureInScrollContainer(tile, scroller);
         }
@@ -523,8 +531,8 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           const el = listRef.current?.querySelector<HTMLElement>(`[data-word="${word}"]`);
           if (el && (!view.current.mobile || view.current.wordsOpen)) {
             void (async () => {
-              if (autoScroll.current) await ensureInView(el);
-              const scroller = el.closest<HTMLElement>('.bottom-sheet__scroll');
+              if (!view.current.mobile) await ensureInView(el);
+              const scroller = trayScroller(el);
               if (view.current.mobile && view.current.wordsOpen && scroller) {
                 await ensureInScrollContainer(el, scroller);
               }
@@ -735,8 +743,12 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
           >
             <Panel className="lw__words">
               {mobile && wordsOpen && <ToastStack toast={toast} />}
-              <div ref={listRef}>
-                <div className="lw__words-head">
+              <div className="lw__words-toolbar">
+                <div className="lw__words-status">
+                  <span className="lw__words-progress">
+                    <strong>{found.length}</strong>
+                    <span className="lw__of">/{puzzle.pool.length}</span>
+                  </span>
                   <span className="lw__last-word" aria-live="polite">
                     Last word:{' '}
                     <strong>
@@ -750,6 +762,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                       count={bonusFound.length}
                       words={bonusFound}
                       showWords
+                      collapsible={mobile}
                     />
                   )}
                   {clueMode && (
@@ -757,22 +770,24 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                       Tap a blank for a clue
                     </span>
                   )}
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className={`lw__clue${clueMode ? ' lw__clue--on' : ''}`}
-                    aria-pressed={clueMode}
-                    title={
-                      clueMode
-                        ? 'Cancel clue'
-                        : 'Reveal a letter: last first, then 2nd-to-last. Click a blank word.'
-                    }
-                    onClick={() => setClueMode((on) => !on)}
-                  >
-                    <IconHint />
-                    Clue
-                  </Button>
                 </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={`lw__clue${clueMode ? ' lw__clue--on' : ''}`}
+                  aria-pressed={clueMode}
+                  title={
+                    clueMode
+                      ? 'Cancel clue'
+                      : 'Reveal a letter: last first, then 2nd-to-last. Click a blank word.'
+                  }
+                  onClick={() => setClueMode((on) => !on)}
+                >
+                  <IconHint />
+                  Clue
+                </Button>
+              </div>
+              <div ref={listRef} className="lw__words-scroller">
                 <WordSlots
                   words={puzzle.pool}
                   revealed={revealed}
@@ -796,9 +811,9 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                     setGuessed(true);
                   }}
                 />
-                <div ref={stripRef}>
-                  <LetterStrip letters={puzzle.target} complete={completeSet} />
-                </div>
+              </div>
+              <div ref={stripRef} className="lw__letters">
+                <LetterStrip letters={puzzle.target} complete={completeSet} />
               </div>
             </Panel>
           </BottomSheet>
