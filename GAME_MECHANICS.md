@@ -1,6 +1,6 @@
 # Letter Wheel — game mechanics
 
-How Letter Wheel plays, mechanic by mechanic: what it is, and what it adds (strategy, or honest comfort/feedback). This is the player-facing companion to [ARCHITECTURE.md](./ARCHITECTURE.md), which covers how the code is put together. Word-list sources and the v4/beta bonus tier are covered in [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
+How Letter Wheel plays, mechanic by mechanic: what it is, and what it adds (strategy, or honest comfort/feedback). This is the player-facing companion to [ARCHITECTURE.md](./ARCHITECTURE.md), which covers how the code is put together. A short abstract of the v4 design, for contrasting Letter Wheel with other word games, is in [docs/MECHANICS_ABSTRACT.md](./docs/MECHANICS_ABSTRACT.md). Word-list sources and the v4/beta bonus tier are covered in [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
 
 **As shipped:** the public default is puzzle **version 4**. Older numbered versions and beta are noted only where a shared seed would not be the same puzzle. UI, clues, the LETTERS strip, and similar aids apply to every version — they are not versioned with the rules.
 

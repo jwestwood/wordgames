@@ -1,6 +1,7 @@
 # Architecture
 
 How the codebase is put together. How Letter Wheel _plays_ — each mechanic and the strategy (or comfort) it adds — is in [GAME_MECHANICS.md](./GAME_MECHANICS.md).
+A short abstract of the v4 design, for comparison with other games, is in [docs/MECHANICS_ABSTRACT.md](./docs/MECHANICS_ABSTRACT.md).
 Word-list sources, licences, and why v4 (and beta) use 12dicts `3of6game` plus a bonus tier are in [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
 
 ```
