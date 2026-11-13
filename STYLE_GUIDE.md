@@ -194,7 +194,7 @@ Letter Wheel's solid green, inverse-text **primary** `Words · found/total` open
 normal focus/hover feedback and no movement. On beta the same 40px button also shows `· Bonus N`.
 The tray heading is `Words · found/total` (the only found/total counter in the tray; the opener
 button keeps its own). Clue sits in that heading next to Close; both are 40px. The toolbar under
-it keeps last word and, on beta, a 40px Bonus disclosure. Expanded bonus words render in a short
+it keeps last word and, on v4 and beta, a 40px Bonus disclosure. Expanded bonus words render in a short
 list below the toolbar, not inside the Bonus cell. A success toast is anchored to the list wrap
 so it overlays the word list, not the heading or toolbar. The official list stays in two columns,
 with LETTERS pinned to the bottom — no duplicate IDs or competing hidden targets. Clue mode never

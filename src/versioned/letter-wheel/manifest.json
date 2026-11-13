@@ -35,6 +35,16 @@
         "extended": "49f0cc357a3de157",
         "targets": "542e059d3b91d28c"
       }
+    },
+    {
+      "v": 4,
+      "rules": "v4",
+      "words": {
+        "common": "445313bad56f7031",
+        "extended": "650a6a6e6122301b",
+        "targets": "6faf465c0cb33f12",
+        "bonus": "650a6a6e6122301b"
+      }
     }
   ]
 }

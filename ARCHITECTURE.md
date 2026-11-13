@@ -1,7 +1,7 @@
 # Architecture
 
 How the codebase is put together. How Letter Wheel _plays_ — each mechanic and the strategy (or comfort) it adds — is in [GAME_MECHANICS.md](./GAME_MECHANICS.md).
-Word-list sources, licences, and why beta uses 12dicts `3of6game` plus a bonus tier are in [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
+Word-list sources, licences, and why v4 (and beta) use 12dicts `3of6game` plus a bonus tier are in [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
 
 ```
 src/
@@ -134,12 +134,14 @@ integrity checks. It refuses if beta is identical to the latest version. Review,
 v2 — looser common answers (Zipf ≥ 2.6 + allowlist: _pant, veal, antler, leaper_, …); wheel drawn/sized
 from strict `targets` (= v1 common), answer pool capped at 100.
 v3 — same lists as v2; answer pool must be 20–40 words; every distinct wheel letter in ≥ 3 answers
-(target included); wheel still from `targets`. Public default. Stats:
-`npx vite-node scripts/letter-wheel-stats.ts 300 <1|2|3|beta>`.
+(target included); wheel still from `targets`.
+v4 — official answers and targets rebuilt from 12dicts `3of6game` (British forms in the official
+pool; Zipf ≥ 2.2). American-only spellings and rarer `3of6game` words are accepted as bonus finds.
+Same 20–40 pool and letter-coverage rules as v3. Public default. Stats:
+`npx vite-node scripts/letter-wheel-stats.ts 300 <1|2|3|4|beta>`.
 
-Beta (unreleased working copy): official answers and targets rebuilt from 12dicts `3of6game`
-(British forms in the official pool; American-only spellings and rarer `3of6game` words accepted
-as bonus finds). Edit freely until the next release. See [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
+Beta (opt-in working copy of v4): `?v=beta`. Edit freely until the next release. See
+[docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
 
 **Touch input:** interactive wheels act on press via `pressProps`/`createPressGuard` (`src/core/ui/tap.ts`):
 fire on pointerdown, swallow the follow-up click, keyboard clicks still work. Pair with the

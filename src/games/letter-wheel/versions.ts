@@ -40,6 +40,22 @@ export type Dictionaries = RulesV1.Dictionaries;
 export const manifest = manifestJson as VersionManifest;
 export const LATEST = latestVersion(manifest);
 
+/** True when this version's manifest lists a bonus word list (v4+ and beta). */
+export function versionHasBonusList(
+  version: PuzzleVersion,
+  m: VersionManifest = manifest,
+): boolean {
+  const words = version === BETA ? m.beta.words : m.versions.find((e) => e.v === version)?.words;
+  return Boolean(words && 'bonus' in words);
+}
+
+/** True when the loaded puzzle exposes a bonus pool from its rules. */
+export function hasBonusPool(
+  puzzle: Pick<Puzzle, 'bonusPool'>,
+): puzzle is Puzzle & { bonusPool: readonly string[] } {
+  return Array.isArray(puzzle.bonusPool);
+}
+
 const loader = createVersionedLoader<LetterWheelRules>({
   manifest,
   rules: import.meta.glob('../../versioned/letter-wheel/rules/*/index.ts'),

@@ -17,7 +17,14 @@ function snapshot(v: number) {
   const dict = rules.prepare(wordsFor(v));
   return SEEDS.map((seed) => {
     const p = rules.generate(seed, dict);
-    return { seed, target: p.target, required: p.required, outer: p.outer, pool: p.pool };
+    return {
+      seed,
+      target: p.target,
+      required: p.required,
+      outer: p.outer,
+      pool: p.pool,
+      ...('bonusPool' in p && p.bonusPool ? { bonusPool: p.bonusPool } : {}),
+    };
   });
 }
 

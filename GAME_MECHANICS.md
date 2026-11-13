@@ -1,8 +1,8 @@
 # Letter Wheel — game mechanics
 
-How Letter Wheel plays, mechanic by mechanic: what it is, and what it adds (strategy, or honest comfort/feedback). This is the player-facing companion to [ARCHITECTURE.md](./ARCHITECTURE.md), which covers how the code is put together. Word-list sources and the beta bonus tier are covered in [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
+How Letter Wheel plays, mechanic by mechanic: what it is, and what it adds (strategy, or honest comfort/feedback). This is the player-facing companion to [ARCHITECTURE.md](./ARCHITECTURE.md), which covers how the code is put together. Word-list sources and the v4/beta bonus tier are covered in [docs/DICTIONARY_OPTIONS.md](./docs/DICTIONARY_OPTIONS.md).
 
-**As shipped:** the public default is puzzle **version 3**. Older numbered versions and beta are noted only where a shared seed would not be the same puzzle. UI, clues, the LETTERS strip, and similar aids apply to every version — they are not versioned with the rules.
+**As shipped:** the public default is puzzle **version 4**. Older numbered versions and beta are noted only where a shared seed would not be the same puzzle. UI, clues, the LETTERS strip, and similar aids apply to every version — they are not versioned with the rules.
 
 ---
 
@@ -30,7 +30,7 @@ _Strategy._ Three-letter words are off the table, so the obvious crumbs are gone
 
 ### Answer pool
 
-The official list is every 4+ letter word that can be spelled from the wheel, uses the centre, and appears in the **common** vocabulary list (see Word list tiers). A guess that is English but not in that pool is rejected (“Not in the word list.”), except on **beta**, where a wider real word can count as a bonus find (see Bonus words). You cannot reuse a word you have already found.
+The official list is every 4+ letter word that can be spelled from the wheel, uses the centre, and appears in the **common** vocabulary list (see Word list tiers). A guess that is English but not in that pool is rejected (“Not in the word list.”), except on **v4 and beta**, where a wider real word can count as a bonus find (see Bonus words). You cannot reuse a word you have already found.
 
 _Strategy._ You are not proving a word exists in English; you are finding the words _this_ puzzle accepted. If a clever spelling bounces, it is usually too rare for the list (or it uses a letter you do not have). That pushes play toward ordinary vocabulary first.
 
@@ -42,13 +42,13 @@ _Strategy._ Hunting the “whole wheel” word is a real goal with a single answ
 
 ### Pool size (20–40)
 
-Version 3 only accepts wheels whose answer pool has between **20 and 40** words (inclusive).
+From version 3 onwards (including the current default, v4), only wheels whose answer pool has between **20 and 40** words (inclusive) are accepted.
 
 _Strategy._ The session is meant to be finishable, not a marathon. The blank count is a budget: you can see at a glance how much remains, and 60/80/90% stars fall on whole numbers you can feel (for example, 18 of 30 is exactly 60%). Older versions differ here — see Meta › Puzzle versions.
 
 ### Letter coverage
 
-Version 3 also requires that **every distinct letter** on the wheel appears in at least **three** answers (the target counts). “Appears in” means the letter occurs _somewhere_ in the word, not that the word starts with it.
+From version 3 onwards, **every distinct letter** on the wheel must appear in at least **three** answers (the target counts). “Appears in” means the letter occurs _somewhere_ in the word, not that the word starts with it.
 
 _Strategy._ No letter is decorative. If you are stuck, it is reasonable to try constructions that use a neglected tile — the generator promised that tile is doing work in at least three words. This is a different idea from the LETTERS strip, which tracks words _starting_ with a letter.
 
@@ -57,16 +57,16 @@ _Strategy._ No letter is decorative. If you are stuck, it is reasonable to try c
 Three lists sit behind a puzzle:
 
 - **Targets** — a stricter, familiar subset of everyday words, length 8–10. The wheel word is drawn from here, so the pangram should feel like a word people know.
-- **Common** — the official answer list. v2/v3 use a looser SCOWL list (roughly Zipf ≥ 2.6, plus a small allowlist). Beta rebuilds this from 12dicts `3of6game` (British spellings, Zipf ≥ 2.2, plus the allowlist).
-- **Extended / bonus** — on v1-v3, used only so the unique-anagram check also rejects targets that have an obscure twin. On beta, this wider list is also accepted as bonus finds (see Bonus words).
+- **Common** — the official answer list. v2/v3 use a looser SCOWL list (roughly Zipf ≥ 2.6, plus a small allowlist). v4 and beta use 12dicts `3of6game` (British spellings, Zipf ≥ 2.2, plus the allowlist).
+- **Extended / bonus** — on v1-v3, used only so the unique-anagram check also rejects targets that have an obscure twin. On v4 and beta, this wider list is also accepted as bonus finds (see Bonus words).
 
 _Strategy._ You are rewarded for thinking of ordinary words, not dictionary oddities. The unique-anagram check is about fairness: the full-wheel word should not secretly be two rare anagrams.
 
 ### Bonus words
 
-Beta only (`?v=beta`). A guess that fits the wheel and the centre, and sits in the bonus list rather than the official pool, is accepted as a **bonus word**. It is counted in a **Bonus: N** display (on the Words button on small screens, and next to the last-word row in the list, with the found bonus words listed there). A distinct `bonus-word` sound plays, and a toast reads `WORD — bonus word!`.
+On **v4 and beta**, a guess that fits the wheel and the centre, and sits in the bonus list rather than the official pool, is accepted as a **bonus word**. It is counted in a **Bonus: N** display (on the Words button on small screens, and next to the last-word row in the list, with the found bonus words listed there). A distinct `bonus-word` sound plays, and a toast reads `WORD — bonus word!`.
 
-Bonus words do not fill official blanks, and they do not count toward completion, stars, clues, or the LETTERS strip. They do not open the mobile Words tray or play the official reveal. A repeat bonus guess toasts `WORD already found!` and also leaves the tray closed. Found bonus words are saved with the beta seed.
+Bonus words do not fill official blanks, and they do not count toward completion, stars, clues, or the LETTERS strip. They do not open the mobile Words tray or play the official reveal. A repeat bonus guess toasts `WORD already found!` and also leaves the tray closed. Found bonus words are saved with that seed and version.
 
 _Comfort._ A real, slightly rarer word is acknowledged instead of bouncing, while the official hunt stays a finishable 20-40 word list.
 
@@ -82,7 +82,7 @@ Below 860px, Letter Wheel is a fixed, one-screen table: compact branding and see
 progress/stars, wheel, guess and 40px controls remain on the base screen. **Words · 12/30**
 shows the live found/total count and opens a paper bottom tray. The tray heading is the only
 found/total counter inside the tray; Clue sits in that heading next to Close (both 40px). A
-toolbar under it keeps the last-word reminder and, on beta, a 40px Bonus control whose word list
+toolbar under it keeps the last-word reminder and, on v4 and beta, a 40px Bonus control whose word list
 opens below the toolbar. The official word list fills the remaining space in two tight columns;
 the LETTERS strip stays at the bottom. Success toasts appear over the list, not the heading.
 It slides up from the bottom in **280ms**,
@@ -207,7 +207,7 @@ These tell you what just happened. They do not change the rules.
 
 ### Toasts
 
-Short paper toasts slide in over the wheel: a found word (`ABIDE — nice!`), a bonus word on beta (`COLOR — bonus word!`), an error (`Words need at least 4 letters.`, `Not in the word list.`, and so on), a repeat guess, or a completed letter (`All A words found!`). A new toast replaces the previous one.
+Short paper toasts slide in over the wheel: a found word (`ABIDE — nice!`), a bonus word on v4 or beta (`COLOR — bonus word!`), an error (`Words need at least 4 letters.`, `Not in the word list.`, and so on), a repeat guess, or a completed letter (`All A words found!`). A new toast replaces the previous one.
 
 _Feedback._ The messages name the failure mode so you can adjust (too short vs missing the centre vs not in the list) instead of guessing why a word bounced.
 
@@ -260,7 +260,7 @@ How puzzles are named, shared, remembered, and kept fair.
 
 ### Seeded puzzles
 
-Every puzzle is generated from a **seed** — a six-character code (Crockford-style: digits and letters, no I/L/O/U; typed O becomes 0, I/L become 1). The same seed plus the same puzzle version always yields the same wheel, centre, tile order, and answer pool. The seed lives in the URL (`#/games/letter-wheel?seed=GSP0MH&v=3`) and in the seed field at the top of the game. A new seed (the dice control) asks for confirmation if you have already started the current one, so you do not wipe progress by accident.
+Every puzzle is generated from a **seed** — a six-character code (Crockford-style: digits and letters, no I/L/O/U; typed O becomes 0, I/L become 1). The same seed plus the same puzzle version always yields the same wheel, centre, tile order, and answer pool. The seed lives in the URL (`#/games/letter-wheel?seed=GSP0MH&v=4`) and in the seed field at the top of the game. A new seed (the dice control) asks for confirmation if you have already started the current one, so you do not wipe progress by accident.
 
 _Strategy, at the table._ Seeds are how you share a specific puzzle, rematch a friend, or return to one you liked. There is no hidden daily rotation you cannot point at: if two people use the same seed and version, they are playing the same game.
 
@@ -268,16 +268,17 @@ _Strategy, at the table._ Seeds are how you share a specific puzzle, rematch a f
 
 A puzzle is identified by **(seed, version)**. Numbered versions are frozen:
 
-| Version                 | What changes (fairness)                                                                                                                                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **v1**                  | Original generator and lists. Answers = older common list. Pool sized about 40–80. No “every letter in ≥ 3 answers” rule.                                                                                                |
-| **v2**                  | Same _wheel_ selection idea as v1 for most seeds (so `GSP0MH` stays `prevalent`), but answers come from the looser common list, capped at 100.                                                                           |
-| **v3** (public default) | Same lists as v2; the _accepted_ pool must be 20–40 words, and every distinct wheel letter must appear in ≥ 3 answers. The same seed can therefore pick a **different** wheel than v1/v2 (`GSP0MH` is `debating` on v3). |
-| **beta**                | Opt-in (`?v=beta`). Official lists rebuilt from 12dicts `3of6game`, plus a bonus tier for wider real words. May change at any time; saves and history stay separate from numbered versions.                              |
+| Version                 | What changes (fairness)                                                                                                                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **v1**                  | Original generator and lists. Answers = older common list. Pool sized about 40–80. No “every letter in ≥ 3 answers” rule.                                                                                                                |
+| **v2**                  | Same _wheel_ selection idea as v1 for most seeds (so `GSP0MH` stays `prevalent`), but answers come from the looser common list, capped at 100.                                                                                           |
+| **v3**                  | Same lists as v2; the _accepted_ pool must be 20–40 words, and every distinct wheel letter must appear in ≥ 3 answers. The same seed can therefore pick a **different** wheel than v1/v2 (`GSP0MH` is `debating` on v3).                 |
+| **v4** (public default) | Official lists and targets rebuilt from 12dicts `3of6game` (British forms in the official pool; Zipf ≥ 2.2), plus a bonus tier for wider real words. Same 20–40 pool and letter-coverage rules as v3. `GSP0MH` is `husbands` (centre S). |
+| **beta**                | Opt-in (`?v=beta`). Editable working copy of v4. May change at any time; saves and history stay separate from numbered versions.                                                                                                         |
 
-Share links include `v`. A missing or unknown `v` is pinned to the latest numbered version (currently 3). History entries remember the version they were played on, and an older entry reopens with those exact rules and lists.
+Share links include `v`. A missing or unknown `v` is pinned to the latest numbered version (currently 4). History entries remember the version they were played on, and an older entry reopens with those exact rules and lists.
 
-_Fairness, not an in-puzzle tactic._ If you challenge someone, send the link (seed **and** version). Comparing scores on `GSP0MH` without saying `v=1` or `v=3` is comparing different boards.
+_Fairness, not an in-puzzle tactic._ If you challenge someone, send the link (seed **and** version). Comparing scores on `GSP0MH` without saying the version is comparing different boards (`v=1`/`v=2` are `prevalent`, `v=3` is `debating`, `v=4` is `husbands`).
 
 ### Puzzle history
 
@@ -287,7 +288,7 @@ _Meta strategy._ History is how you resume a half-finished wheel and see which s
 
 ### Progress persistence
 
-Found official words, per-word clue levels, and (on beta) found bonus words are saved for that seed and version in the browser. Letter-complete highlights are not stored separately; they are computed from the official found list, so they come back the same on reload.
+Found official words, per-word clue levels, and (on v4 and beta) found bonus words are saved for that seed and version in the browser. Letter-complete highlights are not stored separately; they are computed from the official found list, so they come back the same on reload.
 
 _Comfort._ You can close the tab without losing a session. The save is local to the device/browser.
 

@@ -61,6 +61,7 @@ import {
   WordSlots,
 } from '@core/ui';
 import {
+  hasBonusPool,
   LATEST,
   loadVersion,
   manifest,
@@ -735,7 +736,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
               browseWords();
             }}
           >
-            {puzzle.bonusPool
+            {hasBonusPool(puzzle)
               ? `Words · ${found.length}/${puzzle.pool.length} · Bonus ${bonusFound.length}`
               : `Words · ${found.length}/${puzzle.pool.length}`}
           </Button>
@@ -773,7 +774,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                       {(latest ?? found.at(-1))?.toUpperCase() ?? '—'}
                     </strong>
                   </span>
-                  {mobile && puzzle.bonusPool && (
+                  {mobile && hasBonusPool(puzzle) && (
                     <BonusToggle
                       count={bonusFound.length}
                       open={bonusOpen}
@@ -799,7 +800,7 @@ function Game({ seed, loaded }: { seed: string; loaded: LoadedRules }) {
                     words={bonusFound}
                   />
                 )}
-                {!mobile && puzzle.bonusPool && (
+                {!mobile && hasBonusPool(puzzle) && (
                   <BonusCounter
                     className="lw__bonus"
                     count={bonusFound.length}

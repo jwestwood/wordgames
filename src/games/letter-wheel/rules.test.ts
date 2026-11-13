@@ -3,6 +3,7 @@ import { canSpellFrom, findAnagrams } from '@core/words';
 import { versionId } from '@core/versions';
 import { ALL_VERSIONS, rulesFor, wordsFor } from './versions.node';
 import { letterShortfall } from '../../versioned/letter-wheel/rules/beta';
+import { versionHasBonusList } from './versions';
 
 describe.each(ALL_VERSIONS.map((v) => [versionId(v), v] as const))('rules %s', (_, version) => {
   const rules = rulesFor(version);
@@ -66,6 +67,19 @@ describe.each(ALL_VERSIONS.filter((v) => v === 'beta' || v >= 2))('rules %s word
     expect(p.pool.length).toBeGreaterThanOrEqual(20);
     expect(p.pool.length).toBeLessThanOrEqual(40);
   });
+
+  it.skipIf(v !== 4 && v !== 'beta')(
+    'v4/beta GSP0MH is husbands / s with a bonus pool (3of6game lists)',
+    () => {
+      const rules = rulesFor(v);
+      const p = rules.generate('GSP0MH', rules.prepare(wordsFor(v)));
+      expect([p.target, p.required]).toEqual(['husbands', 's']);
+      expect(p.pool.length).toBeGreaterThanOrEqual(20);
+      expect(p.pool.length).toBeLessThanOrEqual(40);
+      expect(p.bonusPool).toBeDefined();
+      expect(p.bonusPool!.length).toBeGreaterThan(0);
+    },
+  );
 });
 
 describe('beta rules', () => {
@@ -92,31 +106,36 @@ describe('beta rules', () => {
   });
 });
 
-describe('beta bonus words', () => {
-  it('accepts bonus words without counting them as official answers', () => {
-    const rules = rulesFor('beta');
-    const dict = rules.prepare(wordsFor('beta'));
-    const p = rules.generate('GSP0MH', dict);
-    expect(p.passed).toBe(true);
-    expect(p.bonusPool!.length).toBeGreaterThan(0);
-    const w = p.bonusPool![0];
-    expect(p.pool).not.toContain(w);
-    expect(rules.checkGuess(w, p, [])).toEqual({ ok: true, word: w, bonus: true });
-    expect(rules.checkGuess(w, p, [], [w])).toEqual({ ok: false, reason: 'already-found-bonus' });
-    const official = p.pool[0];
-    expect(rules.checkGuess(official, p, [])).toEqual({ ok: true, word: official });
-  });
+const BONUS_VERSIONS = ALL_VERSIONS.filter((v) => versionHasBonusList(v));
 
-  it('keeps official pools in 20-40 and letter coverage, with a bonus pool', () => {
-    const rules = rulesFor('beta');
-    const dict = rules.prepare(wordsFor('beta'));
-    for (const seed of ['GSP0MH', 'K7Q2MX', '000000', 'A1B2C3']) {
-      const p = rules.generate(seed, dict);
+describe.each(BONUS_VERSIONS.map((v) => [String(v), v] as const))(
+  'bonus words %s',
+  (_, version) => {
+    it('accepts bonus words without counting them as official answers', () => {
+      const rules = rulesFor(version);
+      const dict = rules.prepare(wordsFor(version));
+      const p = rules.generate('GSP0MH', dict);
       expect(p.passed).toBe(true);
-      expect(p.pool.length).toBeGreaterThanOrEqual(20);
-      expect(p.pool.length).toBeLessThanOrEqual(40);
-      expect(p.bonusPool).toBeDefined();
-      expect(p.bonusPool!.every((w) => !p.pool.includes(w))).toBe(true);
-    }
-  });
-});
+      expect(p.bonusPool!.length).toBeGreaterThan(0);
+      const w = p.bonusPool![0];
+      expect(p.pool).not.toContain(w);
+      expect(rules.checkGuess(w, p, [])).toEqual({ ok: true, word: w, bonus: true });
+      expect(rules.checkGuess(w, p, [], [w])).toEqual({ ok: false, reason: 'already-found-bonus' });
+      const official = p.pool[0];
+      expect(rules.checkGuess(official, p, [])).toEqual({ ok: true, word: official });
+    });
+
+    it('keeps official pools in 20-40 and letter coverage, with a bonus pool', () => {
+      const rules = rulesFor(version);
+      const dict = rules.prepare(wordsFor(version));
+      for (const seed of ['GSP0MH', 'K7Q2MX', '000000', 'A1B2C3']) {
+        const p = rules.generate(seed, dict);
+        expect(p.passed).toBe(true);
+        expect(p.pool.length).toBeGreaterThanOrEqual(20);
+        expect(p.pool.length).toBeLessThanOrEqual(40);
+        expect(p.bonusPool).toBeDefined();
+        expect(p.bonusPool!.every((w) => !p.pool.includes(w))).toBe(true);
+      }
+    });
+  },
+);

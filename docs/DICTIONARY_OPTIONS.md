@@ -145,5 +145,6 @@ wanted later. Loosening the old SCOWL cutoffs, without changing source,
 is the smaller alternative. Collins, NWL, OSPD, raw Wiktionary, dwyl and
 Moby stay unused as bundled official lists.
 
-When the new lists and bonus play feel right, they can be released as v4.
-Existing v1-v3 seeds and saves stay on their frozen lists.
+These lists and the bonus tier were released as **v4**, the public default.
+Existing v1–v3 seeds and saves stay on their frozen lists. Beta remains an editable
+working copy of v4 (`?v=beta`).

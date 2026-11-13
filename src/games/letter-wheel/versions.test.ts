@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StorageLike } from '@core/game';
 import { readHistory, upsertHistory } from '@core/history';
-import { LEGACY_V1, migrateLetterWheel } from './versions';
+import { BETA, LATEST, LEGACY_V1, migrateLetterWheel, versionHasBonusList } from './versions';
 
 function mem(): StorageLike & { data: Map<string, string> } {
   const data = new Map<string, string>();
@@ -19,5 +19,16 @@ describe('letter wheel legacy migration', () => {
     const byseed = Object.fromEntries(readHistory(s).map((e) => [e.seed, e.version]));
     expect(byseed).toEqual({ GSPOMH: '1', K7Q2MX: 'lw1-deadbeef' });
     expect(s.getItem('wordgames:letter-wheel:v1:seed:GSPOMH')).toBe('["able","bake"]');
+  });
+});
+
+describe('bonus list capability', () => {
+  it('is present on v4 and beta, and absent on v1-v3', () => {
+    expect(LATEST).toBe(4);
+    expect(versionHasBonusList(1)).toBe(false);
+    expect(versionHasBonusList(2)).toBe(false);
+    expect(versionHasBonusList(3)).toBe(false);
+    expect(versionHasBonusList(4)).toBe(true);
+    expect(versionHasBonusList(BETA)).toBe(true);
   });
 });
